@@ -1,0 +1,2106 @@
+You are the lead product architect, senior full-stack engineer, database architect, UI/UX engineer, QA engineer, and business-systems analyst for this project.
+
+I want you to build a production-quality Coconut Processing Business Management System for a real client.
+
+IMPORTANT:
+Do not treat this as a generic farm-management application.
+This is a coconut PROCUREMENT + HARVESTING + LABOUR + TRANSPORT + PROCESSING + INVENTORY + SALES + BILLING + FINANCE + PROFIT MANAGEMENT system.
+
+I have provided a requirements PDF in the conversation:
+"Coconut Business Management System"
+
+Use that PDF as the primary requirements reference, but apply the following corrections/additions from the actual client requirements.
+
+==================================================
+1. CRITICAL BUSINESS CLARIFICATION
+==================================================
+
+THE BUSINESS DOES NOT PURCHASE FARMS, LAND, GARDENS, OR LOTS.
+
+The business purchases COCONUTS from different farms/gardens.
+
+Therefore:
+
+FARM = permanent master entity/source
+PURCHASE = actual coconut procurement transaction
+PURCHASE BATCH = one particular coconut purchase
+
+Do NOT create a "land purchase" concept.
+
+Do NOT model "Lot" as land ownership.
+
+The PDF uses the term "Lot" for traceability, but in this implementation replace that concept with:
+
+Purchase
+or
+Purchase Batch
+
+Use a unique Purchase ID such as:
+
+PUR-2026-0001
+
+Every purchase must remain traceable through:
+
+FARM
+→ PURCHASE
+→ CUTTING
+→ GROUPING
+→ TRANSPORT
+→ GODOWN
+→ DEHUSKING
+→ READY STOCK
+→ SALE
+→ DISPATCH
+→ BILL
+→ PAYMENT
+→ PROFIT/LOSS
+
+==================================================
+2. ACTUAL BUSINESS WORKFLOW
+==================================================
+
+The real business workflow is:
+
+FARM
+↓
+Owner purchases coconuts from farm
+↓
+Harvest / Cutting
+↓
+Grouping
+↓
+Transport to Godown/Yard
+↓
+Receive and reconcile quantity
+↓
+Dehusking / Peeling
+↓
+Processed/Ready Stock
+↓
+Dealer separates different qualities
+↓
+Sale
+↓
+Dispatch to dealer/buyer
+↓
+Bill / Invoice
+↓
+Payment
+↓
+Profit/Loss calculation
+
+The business may operate with multiple farms, multiple harvesting teams, multiple grouping teams, multiple peeling teams, multiple vehicles and multiple buyers.
+
+The application must support this naturally.
+
+==================================================
+3. FARM MANAGEMENT
+==================================================
+
+Every farm must have a permanent unique Farm ID.
+
+Example:
+
+FARM-0001
+FARM-0002
+FARM-0003
+
+Farm is NOT a purchase.
+
+A farm can have many purchases over time.
+
+Example:
+
+FARM-0001
+    ├── PUR-0001
+    ├── PUR-0002
+    ├── PUR-0003
+    └── PUR-0004
+
+Farm fields should include:
+
+- farm_id
+- farm_code
+- owner_name
+- phone
+- alternate_phone
+- village
+- city
+- district
+- address
+- notes
+- status
+- created_at
+- updated_at
+
+The owner should be able to view complete history of each farm.
+
+Farm detail page should show:
+
+- Farm information
+- Owner information
+- Contact
+- Location
+- Last harvest
+- Next expected harvest
+- Purchase history
+- Harvest history
+- Total coconuts purchased
+- Average purchase quantity
+- Average purchase rate
+- Total money paid
+- Outstanding amount
+- Notes
+- Upcoming follow-up/reminder
+
+==================================================
+4. 40-DAY HARVEST CYCLE / FARM REMINDERS
+==================================================
+
+THIS IS A CRITICAL CLIENT REQUIREMENT.
+
+After a harvest is completed, the next expected harvest is approximately 40 days later.
+
+Business rule:
+
+next_expected_harvest_date =
+actual_harvest_date + 40 days
+
+Example:
+
+Harvest completed:
+17 September 2026
+
+Next expected harvest:
+27 October 2026
+
+The system must automatically create a follow-up/reminder.
+
+The owner needs to be reminded to approach/contact the farmer before the next expected harvest.
+
+Do NOT assume the harvest is guaranteed exactly after 40 days.
+
+Call it:
+
+"Expected Harvest"
+or
+"Farm Follow-up Date"
+
+not a guaranteed harvest date.
+
+Reminder system should support:
+
+- upcoming
+- due today
+- overdue
+- contacted
+- negotiating
+- purchased
+- postponed
+- skipped
+
+The owner should be able to manually change the follow-up date if needed.
+
+Recommended reminders:
+
+- Early reminder
+- Due reminder
+- Overdue reminder
+
+These should be configurable in Settings.
+
+Example:
+
+35 days after harvest → early reminder
+38 days → reminder
+40 days → due
+42+ days → overdue
+
+Do not hard-code these reminder offsets if they can reasonably be configurable.
+
+Dashboard must prominently show:
+
+FARM FOLLOW-UPS
+
+TODAY
+Ravi Farm
+Expected harvest: Today
+[Approach Farmer]
+
+UPCOMING
+Kumar Farm — 2 days
+Muthu Farm — 5 days
+Raja Farm — 7 days
+
+OVERDUE
+Farm X — 3 days overdue
+
+The owner must be able to mark:
+
+[Contacted]
+[Negotiating]
+[Purchased]
+[Postponed]
+[Skipped]
+
+When a new purchase is created for the farm, the previous reminder should automatically be resolved and a new 40-day cycle should begin after the actual harvest completion.
+
+==================================================
+5. COCONUT PURCHASE MANAGEMENT
+==================================================
+
+Create a Purchase module.
+
+A Purchase represents actual coconuts bought from a farm.
+
+Fields:
+
+- purchase_id
+- purchase_number
+- farm_id
+- purchase_date
+- expected_quantity
+- actual_quantity
+- purchase_rate
+- total_purchase_amount
+- advance_amount
+- balance_amount
+- payment_status
+- status
+- notes
+- created_by
+- created_at
+- updated_at
+
+Example:
+
+PUR-2026-0001
+
+Farm:
+FARM-0001
+
+Expected:
+5,000 coconuts
+
+Actual:
+4,850 coconuts
+
+Rate:
+₹8/coconut
+
+Purchase Amount:
+₹38,800
+
+Do not automatically classify quantity differences as losses.
+
+Allow a reason to be recorded.
+
+Purchase should support:
+
+- draft
+- scheduled
+- harvesting
+- completed
+- cancelled
+- settled
+- archived
+
+==================================================
+6. PURCHASE QUALITY/SIZE BREAKDOWN
+==================================================
+
+The client may purchase based on coconut size/quality.
+
+Quality categories must be configurable.
+
+Do not hard-code only A/B/C.
+
+Allow categories such as:
+
+- Large
+- Medium
+- Small
+- Fresh
+- Dry
+- Grade A
+- Grade B
+- Grade C
+- Custom categories
+
+Purchase quality table:
+
+- purchase_id
+- grade_id
+- quantity
+- rate
+- amount
+
+Automatically calculate amount where the rule is quantity × rate.
+
+==================================================
+7. HARVESTING / CUTTING MANAGEMENT
+==================================================
+
+There can be many cutting teams working in different farms.
+
+A cutting assignment must be linked to:
+
+Farm
++
+Purchase
+
+Create Cutting Batch IDs:
+
+CUT-2026-0001
+
+Fields:
+
+- cutting_batch_id
+- purchase_id
+- farm_id
+- team_id
+- team_leader
+- expected_quantity
+- actual_quantity
+- rate
+- rate_type
+- labour_amount
+- amount_paid
+- balance
+- start_date
+- completion_date
+- status
+- notes
+
+Statuses:
+
+- Assigned
+- In Progress
+- Completed
+- Cancelled
+
+Labour amount should be automatically calculated according to the configured rate/formula.
+
+Support partial payments.
+
+==================================================
+8. GROUPING MANAGEMENT
+==================================================
+
+The actual client workflow includes:
+
+CUTTING
+→ GROUPING
+→ TRANSPORT
+
+Therefore create a separate Grouping module.
+
+Grouping Batch:
+
+GRP-2026-0001
+
+Fields:
+
+- grouping_batch_id
+- purchase_id
+- team_id
+- quantity_received
+- quantity_grouped
+- rate
+- rate_type
+- labour_amount
+- amount_paid
+- balance
+- status
+- notes
+
+Grouping must be treated as a real operational activity, not as an arbitrary expense.
+
+==================================================
+9. LABOUR MANAGEMENT
+==================================================
+
+Support both:
+
+1. Labour Groups/Teams
+2. Individual Workers
+
+Labour group fields:
+
+- team_id
+- team_name
+- team_type
+- leader_id
+- status
+- notes
+
+Team types:
+
+- Cutting
+- Grouping
+- Dehusking
+- Loading
+- Unloading
+- Other
+
+Worker fields:
+
+- worker_id
+- name
+- phone
+- address
+- team_id
+- role
+- default_rate
+- rate_type
+- status
+- notes
+
+The owner must be able to:
+
+- create team
+- add workers
+- remove worker
+- change team
+- view worker history
+- view work quantity
+- view total earned
+- view paid
+- view balance
+
+==================================================
+10. DEHUSKING / PEELING MANAGEMENT
+==================================================
+
+Dehusking/peeling is a separate processing stage.
+
+Create Processing Batch IDs:
+
+PROC-2026-0001
+
+Fields:
+
+- processing_batch_id
+- purchase_id
+- team_id
+- quantity_given
+- rate
+- rate_type
+- labour_amount
+- quantity_returned
+- damaged_quantity
+- rejected_quantity
+- ready_quantity
+- amount_paid
+- balance
+- start_date
+- completion_date
+- status
+- notes
+
+Example:
+
+Quantity given:
+4,950
+
+Rate:
+₹0.80/coconut
+
+Labour:
+₹3,960
+
+Returned:
+4,900
+
+Damaged:
+30
+
+Rejected:
+20
+
+Ready:
+4,850
+
+Labour calculation must be automatic:
+
+quantity × rate
+
+but allow configurable rate types.
+
+==================================================
+11. TRANSPORT MANAGEMENT
+==================================================
+
+There are TWO major transport types.
+
+TYPE 1:
+Farm → Godown/Yard
+
+TYPE 2:
+Godown/Yard → Interstate Buyer
+
+Transport Trip fields:
+
+- trip_id
+- trip_type
+- source
+- destination
+- purchase_id
+- sale_id
+- vehicle_id
+- driver_id
+- quantity_loaded
+- quantity_received
+- trip_cost
+- trip_date
+- status
+- difference_reason
+- notes
+
+Example:
+
+Loaded:
+5,000
+
+Received:
+4,950
+
+Difference:
+50
+
+The system MUST NOT silently remove quantity differences.
+
+Require explanation/reason where appropriate.
+
+Vehicle master:
+
+- vehicle_id
+- registration_number
+- vehicle_type
+- owner/provider
+- phone
+- status
+
+Driver master:
+
+- driver_id
+- name
+- phone
+- license details if required
+- status
+
+==================================================
+12. GODOWN / INVENTORY MANAGEMENT
+==================================================
+
+Maintain real stock.
+
+Stock states:
+
+- RECEIVED
+- PROCESSING
+- READY
+- DAMAGED
+- REJECTED
+- RESERVED
+- DISPATCHED
+
+Every stock movement must record:
+
+- stock_movement_id
+- purchase_id
+- processing_batch_id
+- movement_type
+- quantity
+- from_state
+- to_state
+- reason
+- timestamp
+- created_by
+
+Stock must retain source traceability.
+
+Example:
+
+2,000 coconuts
+→ PROC-005
+→ PUR-002
+→ FARM-001
+
+The owner must be able to trace stock back to its source purchase/farm.
+
+Warn when a sale exceeds available READY stock.
+
+Do not allow negative stock.
+
+Support multiple godowns in the database architecture even if MVP starts with one godown.
+
+==================================================
+13. DEALER / BUYER MANAGEMENT
+==================================================
+
+Buyers are manually created and maintained by the owner.
+
+Do NOT build an automated marketplace.
+
+Buyer fields:
+
+- buyer_id
+- buyer_code
+- name
+- company_name
+- phone
+- state
+- city
+- address
+- GST number if applicable
+- payment terms
+- credit limit
+- notes
+- status
+
+Buyer history:
+
+- total purchases
+- invoices
+- payments
+- outstanding
+- dispatches
+
+==================================================
+14. QUALITY / SALES
+==================================================
+
+The dealer may segregate coconuts into different quality categories.
+
+Sale must support multiple quality lines.
+
+Example:
+
+Grade A:
+2,000 × ₹30
+
+Grade B:
+1,500 × ₹24
+
+Grade C:
+500 × ₹18
+
+Each sale item:
+
+- sale_item_id
+- sale_id
+- grade_id
+- quantity
+- rate
+- amount
+- source_stock
+
+The owner must be able to configure grades.
+
+==================================================
+15. SALES ORDER
+==================================================
+
+Sales Order:
+
+- sale_id
+- sale_number
+- buyer_id
+- sale_date
+- status
+- subtotal
+- discount
+- additional_charges
+- total_amount
+- amount_received
+- balance
+- payment_status
+- notes
+
+Statuses:
+
+- Draft
+- Confirmed
+- Reserved
+- Dispatched
+- Completed
+- Cancelled
+
+Stock must be reserved when appropriate.
+
+==================================================
+16. INTERSTATE DISPATCH
+==================================================
+
+Dispatch must link:
+
+- buyer
+- sale
+- stock
+- quantity
+- vehicle
+- driver
+- destination
+
+Statuses:
+
+Prepared
+→ Loaded
+→ Dispatched
+→ In Transit
+→ Delivered
+→ Payment Pending
+→ Paid
+
+Track loaded quantity and delivered quantity separately.
+
+==================================================
+17. BILL MANAGEMENT
+==================================================
+
+BILL MANAGEMENT IS A REQUIRED CORE MODULE.
+
+Support:
+
+1. Purchase Bill
+2. Labour Bill
+3. Grouping Bill
+4. Transport Bill
+5. Processing/Dehusking Bill
+6. Sales Invoice
+7. Expense Bill
+8. Other business bills if needed
+
+Every bill must link to its underlying business transaction.
+
+Examples:
+
+Purchase Bill → PUR-0001
+Labour Bill → CUT-0001
+Grouping Bill → GRP-0001
+Transport Bill → TRIP-0001
+Processing Bill → PROC-0001
+Sales Invoice → SALE-0001
+
+Bill fields:
+
+- bill_id
+- bill_number
+- bill_type
+- reference_type
+- reference_id
+- party_type
+- party_id
+- bill_date
+- subtotal
+- tax if applicable
+- discount
+- total_amount
+- amount_paid
+- balance
+- payment_status
+- due_date
+- notes
+- created_by
+- created_at
+
+Support:
+
+- PDF generation
+- printable bills
+- bill preview
+- download/print
+- bill history
+- payment status
+- attachments
+
+Do not assume GST/tax rules unless configured by the owner.
+
+==================================================
+18. DOCUMENT / RECEIPT ATTACHMENTS
+==================================================
+
+Allow users to attach:
+
+- bill images
+- receipts
+- PDFs
+- payment proofs
+- other relevant documents
+
+Use Supabase Storage.
+
+Every document must be linked to the relevant record.
+
+==================================================
+19. PAYMENT MANAGEMENT
+==================================================
+
+Support:
+
+- advance payments
+- partial payments
+- final settlements
+- incoming payments
+- outgoing payments
+
+Parties:
+
+PAYABLES:
+- Farm owners
+- Cutting teams
+- Grouping teams
+- Dehusking teams
+- Transport providers
+- Other vendors
+
+RECEIVABLES:
+- Buyers
+
+Never overwrite original bill amounts.
+
+Example:
+
+Invoice:
+₹1,00,000
+
+Payment 1:
+₹40,000
+
+Payment 2:
+₹20,000
+
+Total paid:
+₹60,000
+
+Outstanding:
+₹40,000
+
+Payment fields:
+
+- payment_id
+- party_type
+- party_id
+- reference_type
+- reference_id
+- amount
+- payment_date
+- payment_method
+- transaction_reference
+- notes
+- created_by
+
+==================================================
+20. EXPENSE MANAGEMENT
+==================================================
+
+Categories:
+
+- Coconut Purchase
+- Cutting
+- Grouping
+- Transport
+- Dehusking
+- Loading
+- Unloading
+- Godown
+- Vehicle
+- Maintenance
+- Other
+
+Expenses should be linked to Purchase/Batch wherever possible.
+
+General business expenses may remain unlinked.
+
+==================================================
+21. PROFIT / LOSS ENGINE
+==================================================
+
+This is one of the most important modules.
+
+Profit should not simply mean:
+
+money received - money paid
+
+Maintain proper business profitability separately from cash flow.
+
+Calculate:
+
+Sales Revenue
+-
+Relevant Costs
+=
+Profit
+
+Relevant costs can include:
+
+- Coconut purchase
+- Cutting labour
+- Grouping labour
+- Farm-to-godown transport
+- Dehusking labour
+- Handling
+- Buyer dispatch transport
+- Other directly attributable expenses
+
+Support:
+
+1. Purchase-wise profitability
+2. Processing-batch profitability
+3. Daily profitability
+4. Monthly profitability
+5. Overall business profitability
+
+Example:
+
+Purchase:
+₹40,000
+
+Cutting:
+₹3,500
+
+Grouping:
+₹1,200
+
+Transport:
+₹2,500
+
+Dehusking:
+₹3,960
+
+Handling:
+₹1,000
+
+Other:
+₹500
+
+Total Cost:
+₹52,660
+
+Revenue:
+₹78,000
+
+Profit:
+₹25,340
+
+Also calculate:
+
+- cost per coconut
+- revenue per coconut
+- profit per coconut
+- gross margin %
+- processing yield
+- damage %
+- rejection %
+- transport loss/difference
+
+==================================================
+22. CASH FLOW
+==================================================
+
+Maintain separate cash-flow reporting.
+
+Cash flow:
+
+Opening Balance
++
+Money Received
+-
+Money Paid
+=
+Closing Balance
+
+Do not confuse cash balance with accounting/business profit.
+
+Support multiple accounts if practical:
+
+- Cash
+- Bank
+- Other
+
+==================================================
+23. DASHBOARD
+==================================================
+
+Build a professional owner dashboard.
+
+Show:
+
+TODAY:
+
+- Coconut purchases
+- Coconuts harvested
+- Coconuts received
+- Coconuts processing
+- Ready stock
+- Sales
+- Sales revenue
+- Expenses
+- Profit
+
+FINANCIAL:
+
+- Receivables
+- Payables
+- Cash balance
+- Bank balance
+- Pending payments
+
+OPERATIONS:
+
+- Active cutting batches
+- Active grouping batches
+- Active processing batches
+- Active transport
+- Pending dispatches
+
+FARM FOLLOW-UP:
+
+- Due today
+- Upcoming
+- Overdue
+
+INVENTORY:
+
+- Ready
+- Processing
+- Damaged
+- Reserved
+
+==================================================
+24. FARM FOLLOW-UP DASHBOARD
+==================================================
+
+Create a dedicated section:
+
+"Farm Harvest Follow-ups"
+
+Display:
+
+TODAY
+Upcoming 7 Days
+Overdue
+
+Each card:
+
+Farm ID
+Farm Name
+Owner
+Phone
+Last Harvest
+Expected Next Harvest
+Days Remaining
+Status
+
+Actions:
+
+Call
+Contacted
+Negotiating
+Create Purchase
+Postpone
+Skip
+
+==================================================
+25. REPORTS
+==================================================
+
+Required reports:
+
+Farm Report
+Purchase Report
+Harvest Report
+Cutting Report
+Grouping Report
+Labour Report
+Transport Report
+Processing Report
+Stock Report
+Buyer Report
+Sales Report
+Dispatch Report
+Bill Report
+Payment Report
+Receivable Report
+Payable Report
+Expense Report
+Profit/Loss Report
+Cash Flow Report
+Farm Follow-up Report
+
+Filters:
+
+- Date range
+- Farm
+- Purchase
+- Buyer
+- Worker
+- Team
+- Status
+- Category
+- Payment status
+
+Support:
+
+- table view
+- search
+- filtering
+- sorting
+- pagination
+- CSV export where useful
+- PDF reports where useful
+
+==================================================
+26. AUDIT TRAIL
+==================================================
+
+Do not silently delete important records.
+
+Use:
+
+- Active
+- Completed
+- Cancelled
+- Archived
+
+For important corrections record:
+
+- original value
+- new value
+- reason
+- user
+- timestamp
+- record ID
+
+Audit log:
+
+- audit_id
+- user_id
+- action
+- entity_type
+- entity_id
+- old_data
+- new_data
+- reason
+- timestamp
+
+==================================================
+27. USER ROLES
+==================================================
+
+Implement role-based access.
+
+OWNER / ADMIN:
+Full access.
+
+MANAGER:
+Operations + reports.
+
+ACCOUNTANT:
+Bills + payments + expenses + financial reports.
+
+CUTTING TEAM LEAD:
+Assigned cutting batches + quantity submission.
+
+PEELING TEAM LEAD:
+Assigned processing batches + quantity submission.
+
+DRIVER:
+Assigned trips + trip/delivery status.
+
+Design RLS/authorization so permissions are enforced at backend/database level, not only in the UI.
+
+==================================================
+28. DATABASE DESIGN
+==================================================
+
+Use PostgreSQL through Supabase.
+
+Do not create an unnecessarily complicated schema.
+
+Recommended core tables:
+
+MASTER DATA:
+
+users
+farms
+workers
+labour_groups
+vehicles
+drivers
+buyers
+product_grades
+godowns
+expense_categories
+payment_methods
+
+PROCUREMENT:
+
+purchases
+purchase_quality_details
+
+OPERATIONS:
+
+cutting_batches
+grouping_batches
+transport_trips
+processing_batches
+stock_movements
+
+SALES:
+
+sales_orders
+sale_items
+dispatches
+
+FINANCE:
+
+bills
+bill_items
+payments
+expenses
+receivables
+payables
+ledger_entries
+
+REMINDERS:
+
+farm_harvest_cycles
+farm_reminders
+
+DOCUMENTS:
+
+documents
+
+SYSTEM:
+
+notifications
+audit_logs
+settings
+
+Use foreign keys, indexes, constraints and appropriate numeric types.
+
+Use DECIMAL/NUMERIC for money.
+Do not use floating point for financial calculations.
+
+Use integer/numeric quantities appropriately.
+
+==================================================
+29. DATABASE INTEGRITY
+==================================================
+
+Important rules:
+
+- Farm ID unique
+- Purchase ID unique
+- Batch IDs unique
+- Bill numbers unique
+- Invoice numbers unique
+- No negative ready stock
+- Payment cannot exceed outstanding amount unless explicitly configured
+- Quantity reconciliation must remain auditable
+- Completed records cannot be silently deleted
+- Every transaction should have created_by
+- Important records need created_at/updated_at
+- Financial values must use NUMERIC/DECIMAL
+- Use database constraints wherever practical
+- Use transactions for multi-step inventory/financial operations
+
+==================================================
+30. UI/UX REQUIREMENTS
+==================================================
+
+Build a professional modern business application.
+
+This is NOT a generic admin template.
+
+It should feel like a purpose-built agricultural processing ERP.
+
+Design principles:
+
+- Mobile-first
+- Desktop responsive
+- Fast data entry
+- Clear hierarchy
+- Minimal unnecessary fields
+- Large numeric values
+- Excellent tables
+- Clear statuses
+- Search everywhere
+- Filters
+- Quick actions
+- Confirmation for destructive actions
+- Empty states
+- Loading states
+- Error states
+- Success feedback
+- Responsive forms
+- Accessible components
+
+Primary navigation:
+
+Dashboard
+
+Operations
+  Farms
+  Purchases
+  Cutting
+  Grouping
+  Transport
+  Processing
+  Stock
+
+Labour
+  Teams
+  Workers
+  Labour Payments
+
+Sales
+  Buyers
+  Sales
+  Dispatch
+
+Finance
+  Bills
+  Payments
+  Receivables
+  Payables
+  Expenses
+  Profit & Loss
+  Cash Flow
+
+Reports
+
+Farm Follow-ups
+
+Notifications
+
+Settings
+
+==================================================
+31. STITCH MCP
+==================================================
+
+You are connected to Stitch MCP.
+
+USE STITCH MCP when useful for generating/refining the UI designs.
+
+Before implementing major UI sections, use Stitch to create/refine designs for:
+
+1. Owner Dashboard
+2. Farm List
+3. Farm Detail
+4. Create Purchase
+5. Purchase Detail
+6. Cutting Batch
+7. Labour Management
+8. Grouping Batch
+9. Transport
+10. Godown/Stock
+11. Processing Batch
+12. Buyer Management
+13. Sales
+14. Dispatch
+15. Bills
+16. Payments
+17. Profit/Loss
+18. Farm Follow-up/Reminder screen
+19. Reports
+20. Settings
+
+Do not blindly accept Stitch-generated business logic.
+
+Stitch is for UI/design support.
+The business rules in this command and the provided requirements document are authoritative.
+
+If Stitch MCP needs to be connected/authorized for a specific operation, tell me exactly what needs to be connected rather than inventing a result.
+
+Maintain one coherent design system across all screens.
+
+==================================================
+32. VISUAL DESIGN DIRECTION
+==================================================
+
+Use a clean premium business-ERP aesthetic.
+
+Suggested visual language:
+
+- white/light neutral base
+- coconut/agriculture-inspired restrained accent colors
+- dark readable typography
+- clean cards
+- subtle borders
+- compact but comfortable tables
+- professional charts
+- clear status badges
+- minimal gradients
+- no excessive decorative graphics
+
+The UI should look appropriate for a real business owner, not a student demo.
+
+Use icons consistently.
+
+Prioritize usability over visual complexity.
+
+==================================================
+33. TECH STACK
+==================================================
+
+Preferred:
+
+Frontend:
+Next.js
+React
+TypeScript
+Tailwind CSS
+
+Backend/data:
+Supabase
+PostgreSQL
+Supabase Auth
+Supabase Storage
+Supabase Row Level Security
+
+Use server-side operations where appropriate.
+
+Do not add FastAPI unless there is a genuine architectural requirement.
+
+Do not add unnecessary libraries.
+
+First inspect the existing repository and reuse existing architecture/components where appropriate.
+
+==================================================
+34. PROJECT INSPECTION BEFORE CODING
+==================================================
+
+Before changing code:
+
+1. Inspect the complete repository structure.
+2. Identify current framework/version.
+3. Identify existing components.
+4. Identify existing Supabase configuration.
+5. Identify environment variables.
+6. Identify existing authentication.
+7. Identify existing database migrations.
+8. Identify existing UI/design system.
+9. Identify existing packages.
+10. Identify any existing MCP integrations.
+11. Determine whether this should be a new application or an existing project extension.
+
+Do NOT destroy existing work.
+
+Do NOT replace configuration unnecessarily.
+
+Do NOT create duplicate components if reusable components already exist.
+
+==================================================
+35. IMPLEMENTATION STRATEGY
+==================================================
+
+Build in dependency order.
+
+PHASE 0
+Repository inspection
+Architecture decision
+Database design
+UI/design system
+
+PHASE 1
+Authentication
+Users
+Roles
+Settings
+
+PHASE 2
+Farms
+Farm IDs
+Farm detail
+Farm history
+40-day harvest cycle
+Reminder engine
+
+PHASE 3
+Purchases
+Purchase quality
+Purchase payments
+
+PHASE 4
+Labour
+Teams
+Workers
+Cutting
+Grouping
+Dehusking
+
+PHASE 5
+Transport
+Vehicles
+Drivers
+Farm → Godown
+Godown → Buyer
+Quantity reconciliation
+
+PHASE 6
+Inventory
+Stock states
+Stock movements
+Traceability
+
+PHASE 7
+Buyers
+Sales
+Quality grades
+Sale items
+Stock reservation
+
+PHASE 8
+Dispatch
+Delivery tracking
+
+PHASE 9
+Bills
+Invoices
+Documents
+Payment ledger
+
+PHASE 10
+Expenses
+Receivables
+Payables
+Cash flow
+Profit/Loss
+
+PHASE 11
+Reports
+Dashboard analytics
+Audit trail
+Notifications
+
+PHASE 12
+Testing
+Security review
+Performance review
+UX refinement
+Production hardening
+
+==================================================
+36. TRACEABILITY
+==================================================
+
+This is a core feature.
+
+The owner must be able to open:
+
+PUR-2026-0001
+
+and see:
+
+Farm
+↓
+Purchase
+↓
+Cutting
+↓
+Grouping
+↓
+Transport
+↓
+Godown
+↓
+Processing
+↓
+Ready Stock
+↓
+Sale
+↓
+Dispatch
+↓
+Bill
+↓
+Payments
+↓
+Profit
+
+Create a "Purchase Detail / Lifecycle" page showing this as a visual timeline.
+
+Example:
+
+PUR-001
+│
+├── Farm: FARM-001
+├── Purchase: 5,000
+├── Cutting: CUT-001
+├── Grouping: GRP-001
+├── Transport: TRIP-001
+├── Received: 4,950
+├── Processing: PROC-001
+├── Ready: 4,900
+├── Sale: SALE-001
+├── Dispatch: DSP-001
+├── Invoice: INV-001
+├── Paid: ₹1,00,000
+└── Profit: ₹XX,XXX
+
+==================================================
+37. NOTIFICATION SYSTEM
+==================================================
+
+Notifications should cover:
+
+Farm follow-up due
+Farm follow-up overdue
+Buyer payment pending
+Farm payment pending
+Labour payment pending
+Transport quantity mismatch
+Low stock
+Prepared dispatch not sent
+Bill overdue
+Important record modified
+
+Support in-app notifications first.
+
+Do not add WhatsApp/SMS integration unless specifically required later.
+
+==================================================
+38. PERFORMANCE
+==================================================
+
+The application should remain responsive with:
+
+- hundreds of farms
+- thousands of purchases
+- thousands of labour transactions
+- thousands of stock movements
+- thousands of sales
+- years of historical data
+
+Use:
+
+- database indexes
+- server-side pagination
+- filtered queries
+- efficient joins
+- aggregation queries
+- lazy loading where appropriate
+
+Do not load entire transaction tables into the browser.
+
+==================================================
+39. ERROR HANDLING
+==================================================
+
+Every major operation must handle:
+
+- validation errors
+- database errors
+- duplicate records
+- insufficient stock
+- invalid payment
+- invalid quantity
+- missing relationships
+- authorization failure
+- network failure
+
+Show useful user-facing error messages.
+
+Do not expose raw database errors to normal users.
+
+==================================================
+40. TESTING
+==================================================
+
+Create tests for critical business logic.
+
+At minimum test:
+
+Farm creation
+Farm ID uniqueness
+Purchase creation
+Purchase amount calculation
+40-day harvest date calculation
+Reminder creation
+Reminder status changes
+Labour calculation
+Transport quantity reconciliation
+Processing yield
+Stock movement
+Negative stock prevention
+Sale calculation
+Sale stock validation
+Payment calculation
+Outstanding calculation
+Bill calculation
+Profit calculation
+Cash flow calculation
+Role permissions
+
+Create realistic test data.
+
+==================================================
+41. SEED DATA
+==================================================
+
+Create development seed data for:
+
+5 farms
+3 cutting teams
+2 grouping teams
+3 peeling teams
+10 workers
+3 vehicles
+3 drivers
+5 buyers
+5 quality categories
+1 godown
+multiple purchases
+multiple processing batches
+multiple sales
+payments
+expenses
+farm reminders
+
+Use realistic Indian/Tamil Nadu-style business data.
+
+Do not use real people's sensitive information.
+
+==================================================
+42. IMPORTANT ACCOUNTING DISTINCTION
+==================================================
+
+Do NOT define profit as:
+
+cash received - cash paid
+
+Instead:
+
+PROFIT:
+Revenue - relevant business costs
+
+CASH FLOW:
+Cash received - cash paid
+
+RECEIVABLE:
+Money buyer still owes
+
+PAYABLE:
+Money business still owes
+
+These must remain separate throughout the system.
+
+==================================================
+43. IMPORTANT QUANTITY DISTINCTION
+==================================================
+
+Track separately:
+
+Expected Quantity
+Actual Harvested Quantity
+Loaded Quantity
+Received Quantity
+Processing Input
+Processing Output
+Damaged Quantity
+Rejected Quantity
+Ready Quantity
+Reserved Quantity
+Dispatched Quantity
+Delivered Quantity
+
+Never overwrite one quantity with another.
+
+==================================================
+44. DO NOT OVER-AUTOMATE BUSINESS DECISIONS
+==================================================
+
+The application should automate calculations and reminders.
+
+The owner remains responsible for commercial decisions.
+
+Do not automatically:
+
+- choose a buyer
+- change buyer pricing
+- change purchase rate
+- approve a purchase
+- mark a payment as received
+- classify a quantity difference
+- guarantee a harvest date
+- alter business records without authorization
+
+If an AI recommendation is eventually added, it must remain advisory.
+
+==================================================
+45. AI
+==================================================
+
+Do NOT make AI the core dependency of the MVP.
+
+The business system must work completely without an LLM.
+
+Potential future AI features:
+
+- farm follow-up prioritization
+- purchase insights
+- profit analysis
+- anomaly detection
+- team recommendation
+- natural-language business assistant
+
+But these are secondary.
+
+Build a deterministic and reliable business system first.
+
+==================================================
+46. SECURITY
+==================================================
+
+Implement:
+
+- Supabase Auth
+- role-based access
+- Row Level Security
+- secure storage policies
+- protected server operations
+- audit logs
+- validation
+- authorization checks
+
+Never rely only on frontend route protection.
+
+==================================================
+47. BACKUP / DATA SAFETY
+==================================================
+
+Important business history must never disappear.
+
+Use proper database backup strategy.
+
+The application should not have a normal "hard delete" workflow for important financial/inventory records.
+
+Use cancellation/archive/status where appropriate.
+
+==================================================
+48. FINAL UX FLOW
+==================================================
+
+The owner's daily workflow should be extremely simple.
+
+Morning:
+
+Dashboard
+↓
+Farm Follow-ups
+↓
+Approach farmers
+↓
+Create Purchase
+
+When harvesting:
+
+Purchase
+↓
+Assign Cutting Team
+↓
+Record Actual Quantity
+
+After cutting:
+
+Grouping
+↓
+Transport
+↓
+Godown Receipt
+
+Processing:
+
+Processing Batch
+↓
+Assign Peeling Team
+↓
+Record Input
+↓
+Record Output
+↓
+Ready Stock
+
+Selling:
+
+Create Sale
+↓
+Select Buyer
+↓
+Select Quality
+↓
+Reserve Stock
+↓
+Generate Bill
+↓
+Dispatch
+↓
+Record Delivery
+↓
+Record Payment
+
+End of day:
+
+Dashboard
+↓
+Expenses
+↓
+Payments
+↓
+Profit/Loss
+↓
+Cash Flow
+
+==================================================
+49. ACCEPTANCE CRITERIA
+==================================================
+
+The project is NOT complete merely because pages exist.
+
+It is complete only when:
+
+1. A farm can be created with a unique Farm ID.
+2. Multiple purchases can be created against the same farm.
+3. A completed harvest automatically produces a next expected harvest date +40 days.
+4. A reminder is generated.
+5. The owner can manage the reminder.
+6. A purchase can be assigned to cutting teams.
+7. Grouping can be recorded separately.
+8. Transport can reconcile loaded vs received quantity.
+9. Processing can calculate labour and output.
+10. Stock changes correctly through every stage.
+11. Sale cannot exceed ready stock.
+12. Quality-wise sales can be recorded.
+13. Dispatch can be tracked.
+14. Bills can be generated and linked to transactions.
+15. Partial payments work.
+16. Receivables/payables calculate correctly.
+17. Expenses are recorded.
+18. Purchase-wise profit can be calculated.
+19. Daily/monthly profit can be calculated.
+20. Cash flow is separate from profit.
+21. Farm history is preserved.
+22. Purchase lifecycle traceability works.
+23. Audit trail works.
+24. Role permissions work.
+25. Database constraints prevent critical corruption.
+26. The UI works on desktop and mobile.
+27. The application works without AI.
+28. No critical business calculation is hard-coded incorrectly.
+29. Existing project functionality is not broken.
+30. The final system is production-ready rather than a visual prototype.
+
+==================================================
+50. DEVELOPMENT BEHAVIOR
+==================================================
+
+Work systematically.
+
+Do not rush into writing hundreds of files.
+
+First inspect.
+Then plan.
+Then design.
+Then implement.
+
+Before each major implementation phase:
+
+- identify dependencies
+- identify schema requirements
+- identify UI requirements
+- identify business rules
+- implement
+- test
+- verify
+
+If you discover ambiguity in the actual business rules, DO NOT silently invent a rule.
+
+Clearly identify:
+
+AMBIGUITY:
+...
+ASSUMPTION:
+...
+RECOMMENDED IMPLEMENTATION:
+...
+
+Then continue with the safest implementation where possible.
+
+Do not stop unnecessarily for minor UI decisions.
+
+==================================================
+51. FINAL DELIVERABLE
+==================================================
+
+At the end provide:
+
+1. Architecture summary
+2. Database schema summary
+3. Implemented modules
+4. Routes/pages
+5. API/server actions
+6. Database migrations
+7. RLS policies
+8. Authentication/roles
+9. Reminder logic
+10. Billing system
+11. Profit calculation logic
+12. Testing results
+13. Known limitations
+14. Remaining tasks
+15. Production deployment instructions
+
+Also provide a clear:
+
+"BUSINESS FLOW VERIFICATION"
+
+showing:
+
+Farm
+→ Purchase
+→ Cutting
+→ Grouping
+→ Transport
+→ Godown
+→ Processing
+→ Stock
+→ Sale
+→ Dispatch
+→ Bill
+→ Payment
+→ Profit
+
+and:
+
+Harvest
+→ +40 days
+→ Farm Follow-up
+→ Next Purchase
+
+==================================================
+52. START NOW
+==================================================
+
+First:
+
+A. Inspect the existing project/repository.
+B. Inspect the current database/schema.
+C. Inspect the current UI/design system.
+D. Inspect available Stitch MCP capabilities.
+E. Determine what can be reused.
+F. Create an implementation plan.
+G. Identify any conflicts between the existing project and these requirements.
+H. Do NOT delete existing work.
+I. Then begin implementation in dependency order.
+
+Do not build a fake/demo frontend with static numbers.
+
+All major screens must connect to real persistent data.
+
+All important calculations must be implemented as actual business logic.
+
+The final result must be a real working Coconut Processing Business Management System.

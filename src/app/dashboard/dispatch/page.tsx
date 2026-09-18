@@ -1,0 +1,109 @@
+import { createClient } from '@/lib/supabase/server'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Plus, Search, PackageCheck } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+
+export default async function DispatchPage() {
+  const supabase = await createClient()
+  
+  // Fetch dispatches
+  const { data: dispatches, error } = await supabase
+    .from('dispatch')
+    .select(`
+      *,
+      sales_orders:sales_order_id (buyer_id),
+      workers:driver_id (name)
+    `)
+    .order('dispatch_date', { ascending: false })
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Dispatch</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-2">
+            Manage outbound deliveries for sales orders.
+          </p>
+        </div>
+        <Button asChild>
+          <Link href="/dashboard/dispatch/new">
+            <Plus className="mr-2 h-4 w-4" /> Schedule Dispatch
+          </Link>
+        </Button>
+      </div>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center space-x-2">
+            <Search className="h-4 w-4 text-slate-500" />
+            <Input 
+              type="search" 
+              placeholder="Search by Dispatch ID, SO ID, or Vehicle..." 
+              className="max-w-sm h-9" 
+            />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-slate-50 text-slate-600 dark:bg-slate-900 dark:text-slate-400 border-b">
+                <tr>
+                  <th className="px-4 py-3 font-medium">Dispatch ID</th>
+                  <th className="px-4 py-3 font-medium">Sales Order</th>
+                  <th className="px-4 py-3 font-medium">Vehicle / Driver</th>
+                  <th className="px-4 py-3 font-medium">Dispatch Date</th>
+                  <th className="px-4 py-3 font-medium text-right">Dispatched Qty</th>
+                  <th className="px-4 py-3 font-medium text-right">Delivered Qty</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {error || !dispatches || dispatches.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                      <div className="flex flex-col items-center justify-center">
+                        <PackageCheck className="h-10 w-10 text-slate-300 mb-2" />
+                        <p>No dispatch records found.</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  dispatches.map((disp: any) => (
+                    <tr key={disp.id} className="hover:bg-slate-50">
+                      <td className="px-4 py-3 font-medium text-primary">
+                        <Link href={`/dashboard/dispatch/${disp.id}`}>{disp.id}</Link>
+                      </td>
+                      <td className="px-4 py-3">
+                        <Link href={`/dashboard/sales/${disp.sales_order_id}`} className="hover:underline text-slate-900 font-medium">
+                          {disp.sales_order_id}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="font-medium">{disp.vehicle || 'Unknown'}</div>
+                        <div className="text-xs text-slate-500">{disp.workers?.name || 'Unassigned'}</div>
+                      </td>
+                      <td className="px-4 py-3">{disp.dispatch_date ? new Date(disp.dispatch_date).toLocaleDateString() : '-'}</td>
+                      <td className="px-4 py-3 text-right font-medium">{Number(disp.qty_dispatched).toLocaleString()}</td>
+                      <td className="px-4 py-3 text-right text-green-600 font-medium">{Number(disp.qty_delivered).toLocaleString()}</td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-1 text-xs rounded-full font-medium ${
+                          disp.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
+                          disp.status === 'DISPATCHED' ? 'bg-blue-100 text-blue-800' :
+                          'bg-amber-100 text-amber-800'
+                        }`}>
+                          {disp.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}

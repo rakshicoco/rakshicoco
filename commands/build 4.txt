@@ -1,0 +1,584 @@
+Continue the Rakshi Coco ERP implementation.
+
+PHASE 1: AUTHENTICATION & SETTINGS
+
+Do NOT move to Phase 2 until every Phase 1 requirement below is implemented, verified, and the application builds successfully.
+
+IMPORTANT BUSINESS RULES:
+- This is a coconut procurement/processing/sales ERP.
+- Farms are permanent master records.
+- The business purchases coconuts from farms; it does NOT purchase land/farms.
+- Purchase/Purchase Batch is the transaction.
+- Farm → many Purchases.
+- Actual harvest completion starts the approximate +40-day next-harvest cycle.
+- Use Supabase Auth as the authentication source.
+- Never create a duplicate authentication system.
+- Never expose SUPABASE_SERVICE_ROLE_KEY to the browser/client.
+- Never hard-code secrets.
+
+==================================================
+1. AUTHENTICATION
+==================================================
+
+Implement production-ready authentication using:
+
+- Supabase Auth
+- Email/password login
+- Logout
+- Protected application routes
+- Session persistence
+- Server-side session handling
+- Proper redirect behavior
+
+Required routes:
+
+/login
+/dashboard
+
+If unauthenticated:
+→ redirect protected routes to /login
+
+If authenticated:
+→ allow access to protected application routes
+
+Implement proper Supabase SSR architecture compatible with the current Next.js App Router setup.
+
+Verify:
+- browser client
+- server client
+- middleware/session refresh
+- protected routes
+- logout
+- auth state
+
+Do not duplicate auth.users.
+
+==================================================
+2. PROFILE SYSTEM
+==================================================
+
+Use:
+
+Supabase auth.users
+        ↓
+public.profiles
+
+profiles must reference auth.users using the correct foreign-key relationship.
+
+Profile fields should support:
+
+- id
+- full_name
+- phone
+- role
+- avatar_url if useful
+- active/status
+- created_at
+- updated_at
+
+Roles:
+
+OWNER
+MANAGER
+ACCOUNTANT
+CUTTING_LEAD
+PEELING_LEAD
+DRIVER
+
+Do not create an independent users table for login identity.
+
+If the existing schema contains an incorrect duplicate authentication/user model:
+- correct it
+- preserve the intended business functionality
+- document the correction
+
+==================================================
+3. PROFILE CREATION
+==================================================
+
+Implement a safe profile creation flow for newly authenticated users.
+
+Preferred architecture:
+
+auth.users
+   ↓
+profile creation trigger/function
+   ↓
+public.profiles
+
+Ensure signup/login does not fail because the profile is missing.
+
+Do not use insecure client-side service-role operations.
+
+==================================================
+4. ROLE-BASED ACCESS
+==================================================
+
+Implement role awareness throughout the application.
+
+At minimum:
+
+OWNER
+- full business access
+
+MANAGER
+- operational management
+- farms
+- purchases
+- harvesting
+- cutting
+- grouping
+- transport
+- processing
+- stock
+- sales
+- dispatch
+
+ACCOUNTANT
+- bills
+- payments
+- receivables
+- payables
+- expenses
+- financial reports
+
+CUTTING_LEAD
+- cutting assignments
+- cutting batches
+- relevant labour information
+
+PEELING_LEAD
+- processing/dehusking
+- processing labour information
+
+DRIVER
+- assigned transport trips
+- relevant dispatch/transport status
+
+IMPORTANT:
+These permissions must eventually be enforced by Supabase RLS.
+UI hiding alone is NOT security.
+
+Do not overbuild a complicated permission framework yet.
+Establish a clean role foundation that later phases can extend.
+
+==================================================
+5. SUPABASE RLS FOUNDATION
+==================================================
+
+Review the existing RLS policies.
+
+Implement/fix the minimum secure foundation required for profiles and authenticated users.
+
+Requirements:
+
+- unauthenticated users cannot read/write business data
+- authenticated users can access data according to role
+- users can safely read their own profile
+- OWNER has broad access
+- role checks should be reusable
+
+Avoid policies that cause infinite recursion.
+
+If helper SQL functions are useful, implement them safely.
+
+Use auth.uid() correctly.
+
+Do not disable RLS merely to make the application work.
+
+==================================================
+6. SETTINGS PAGE
+==================================================
+
+Create:
+
+/settings
+
+Use the existing Rakshi Coco design system.
+
+Settings should include:
+
+ACCOUNT
+- profile name
+- phone
+- role (read-only where appropriate)
+- avatar if implemented
+
+SECURITY
+- logout
+- password/account security entry point if supported
+
+BUSINESS SETTINGS
+Create the structure required for future configuration without overbuilding.
+
+Include placeholders/configuration support for:
+
+- business name
+- business phone
+- business address
+- GST number
+- default currency
+- default labour settings
+- default reminder settings
+
+Default reminder settings should support the agreed harvest-cycle logic:
+
+35 days → early reminder
+38 days → reminder
+40 days → expected/due
+42+ days → overdue
+
+These values must be configurable rather than hard-coded into business logic.
+
+==================================================
+7. FARM FOLLOW-UP CONFIGURATION
+==================================================
+
+Prepare settings for the future Farm Follow-up module.
+
+Configuration should support:
+
+early reminder days
+second reminder days
+expected harvest days
+overdue threshold
+
+Default:
+
+early_reminder_days = 35
+second_reminder_days = 38
+expected_harvest_days = 40
+overdue_after_days = 42
+
+IMPORTANT:
+Do not start the actual Farm Follow-up implementation in this phase.
+
+Only establish the configuration foundation.
+
+==================================================
+8. NAVIGATION SHELL
+==================================================
+
+Create/refine the authenticated application shell.
+
+Sidebar/navigation should reflect the ERP structure:
+
+Dashboard
+
+OPERATIONS
+- Farms
+- Purchases
+- Cutting
+- Grouping
+- Transport
+- Processing
+- Stock
+
+LABOUR
+- Teams
+- Workers
+- Labour Payments
+
+SALES
+- Buyers
+- Sales
+- Dispatch
+
+FINANCE
+- Bills
+- Payments
+- Receivables
+- Payables
+- Expenses
+- Profit & Loss
+- Cash Flow
+
+REPORTS
+
+Farm Follow-ups
+
+Notifications
+
+Settings
+
+For Phase 1:
+- only Authentication, Dashboard shell, and Settings need to be functional.
+- Other sections may be navigation placeholders.
+- Do NOT build fake business functionality for those sections.
+
+Clearly distinguish placeholder routes from implemented routes.
+
+==================================================
+9. DASHBOARD SHELL
+==================================================
+
+Create a clean authenticated dashboard shell.
+
+Use the existing Stitch/design-system direction:
+
+Primary:
+Deep Green #0B4A28
+
+Accent:
+Amber #D97706
+
+Background:
+Slate/light neutral system
+
+Typography:
+Inter
+
+The dashboard should contain structural KPI cards/placeholders for future:
+
+- Active Farms
+- Recent Purchases
+- Ready Stock
+- Pending Receivables
+- Pending Payables
+- Today's Sales
+- Expected Harvest Follow-ups
+
+For Phase 1, do not invent fake business numbers.
+
+Use empty/zero states or clearly marked placeholder states until real data exists.
+
+==================================================
+10. ERROR / LOADING / EMPTY STATES
+==================================================
+
+Implement appropriate:
+
+- loading states
+- error states
+- empty states
+
+At minimum for:
+- login
+- dashboard
+- settings
+
+Avoid blank white screens.
+
+==================================================
+11. SECURITY CHECK
+==================================================
+
+Search the entire project for:
+
+SUPABASE_SERVICE_ROLE_KEY
+service_role
+secret keys
+hard-coded Supabase credentials
+hard-coded API keys
+private environment variables imported into client components
+
+Ensure:
+
+NEXT_PUBLIC_* variables contain only public-safe values.
+
+Server-only secrets must never enter client bundles.
+
+Do not print secrets in logs.
+
+==================================================
+12. ENVIRONMENT VARIABLES
+==================================================
+
+Review the existing .env.local and standardize Supabase environment variable naming.
+
+Use one consistent public key convention across the entire project.
+
+Prefer the currently supported Supabase public/publishable key convention used by the installed Supabase setup.
+
+Do not maintain conflicting names unless there is a documented compatibility reason.
+
+Update all references consistently.
+
+Keep placeholders if real Supabase credentials are not available.
+
+Never ask for or fabricate credentials.
+
+==================================================
+13. SHADCN/UI
+==================================================
+
+Finalize the shadcn/ui setup that was interrupted during Phase 0.
+
+Verify:
+
+- components.json
+- Tailwind integration
+- utility helpers
+- required UI components
+- imports
+- build compatibility
+
+Install only components actually needed for Phase 1.
+
+Do not blindly install the entire component library.
+
+==================================================
+14. UI QUALITY
+==================================================
+
+The UI must look like a real production ERP, not a demo.
+
+Use:
+
+- responsive layout
+- consistent spacing
+- clear hierarchy
+- tables/cards where appropriate
+- accessible buttons/forms
+- confirmation states
+- sensible typography
+- consistent icons
+- professional financial/operations terminology
+
+Do not add unnecessary animations.
+
+Do not invent additional modules.
+
+==================================================
+15. DATABASE REVIEW BEFORE IMPLEMENTATION
+==================================================
+
+Before changing the database:
+
+Review:
+
+supabase/migrations/0000_initial_schema.sql
+
+Verify that Phase 1 assumptions are compatible with the existing schema.
+
+Pay special attention to:
+
+- profiles
+- auth.users relationship
+- roles
+- RLS
+- timestamps
+- audit_logs
+- business settings/configuration
+
+Do NOT rewrite unrelated Phase 2+ schema unless required to fix a concrete Phase 1 dependency.
+
+Do not silently delete existing business tables.
+
+==================================================
+16. AUDIT FOUNDATION
+==================================================
+
+Ensure the existing audit_logs foundation is compatible with:
+
+- authenticated user
+- action
+- entity/table
+- entity ID
+- old/new data where appropriate
+- reason
+- timestamp
+
+Do not build a complete audit UI yet.
+
+No silent deletion should be introduced.
+
+==================================================
+17. TESTING
+==================================================
+
+After implementation, run:
+
+npm install
+npm run build
+npm run lint
+
+Also perform a TypeScript check if available.
+
+Verify:
+
+- no TypeScript errors
+- no build errors
+- no ESLint errors
+- no broken imports
+- no broken routes
+- no client/server boundary violations
+- no environment variable issues
+
+If tests exist, run them.
+
+==================================================
+18. MANUAL VERIFICATION
+==================================================
+
+Verify this flow:
+
+1. Open protected route while logged out.
+2. User is redirected to /login.
+3. Login page renders correctly.
+4. Authenticated user enters dashboard.
+5. Dashboard shell renders.
+6. User opens Settings.
+7. Profile information loads.
+8. User can update allowed profile fields.
+9. User can logout.
+10. After logout, protected routes redirect back to /login.
+
+Also verify a role other than OWNER cannot automatically receive OWNER permissions through UI defaults.
+
+==================================================
+19. DO NOT DO THESE YET
+==================================================
+
+Do NOT implement:
+
+- Farm CRUD
+- Purchase CRUD
+- Harvest workflow
+- Cutting workflow
+- Grouping workflow
+- Transport workflow
+- Processing workflow
+- Stock transactions
+- Buyer management
+- Sales
+- Dispatch
+- Bills
+- Payment engine
+- Profit calculations
+- Cash flow calculations
+- Farm follow-up engine
+- AI features
+
+Those belong to later phases.
+
+==================================================
+20. FINAL PHASE 1 REPORT
+==================================================
+
+When finished, provide a concise but complete report with:
+
+1. Files created
+2. Files modified
+3. Database/migration changes
+4. Auth implementation
+5. Profile implementation
+6. RLS implementation
+7. Role implementation
+8. Settings implementation
+9. Navigation/dashboard implementation
+10. Security findings
+11. Environment-variable findings
+12. Build result
+13. Lint result
+14. TypeScript result
+15. Tests result
+16. Manual verification result
+17. Any remaining issues
+
+IMPORTANT:
+If anything fails, FIX IT before declaring Phase 1 complete.
+
+Do not proceed automatically to Phase 2.
+
+Stop after Phase 1 and wait for my review.

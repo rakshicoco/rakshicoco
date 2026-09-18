@@ -1,0 +1,944 @@
+RAKSHI COCO ERP — CRITICAL POST-BUILD INTEGRATION AUDIT
+========================================================
+
+The 28-phase UI implementation is complete.
+
+DO NOT add new features yet.
+
+DO NOT redesign the application.
+
+DO NOT proceed to deployment.
+
+Your next task is to perform a COMPLETE TECHNICAL + BUSINESS-LOGIC AUDIT of the application you just built.
+
+The previous report says the application is "production-ready", but that claim must NOT be accepted without verification.
+
+The objective is to determine whether this is actually a functioning ERP or only a collection of UI pages.
+
+========================================================
+1. FIRST: WAIT FOR NPM INSTALL
+========================================================
+
+If task-352 / npm install is still running:
+
+- wait for it to finish
+- verify node_modules
+- verify package-lock.json
+- do not start destructive dependency cleanup unless necessary
+
+Then run:
+
+npm install
+npm run lint
+npm run build
+
+If any command fails:
+
+FIX THE ERROR.
+
+Then rerun the command.
+
+Do not merely report the error.
+
+========================================================
+2. AUDIT THE ACTUAL APPLICATION
+========================================================
+
+Inspect the complete source tree.
+
+Determine for EVERY module whether it has:
+
+A. UI only
+B. UI + server action/API
+C. UI + database read
+D. UI + database write
+E. UI + database write + validation
+F. UI + database write + RLS authorization
+G. Complete end-to-end workflow
+
+Create an internal matrix.
+
+Modules:
+
+Farms
+Purchases
+Harvest
+Cutting
+Teams
+Workers
+Labour Payments
+Grouping
+Transport
+Godown/Stock
+Processing
+Buyers
+Sales
+Dispatch
+Bills
+Payments
+Receivables
+Payables
+Expenses
+Profit & Loss
+Cash Flow
+Reports
+Farm Follow-ups
+Notifications
+Audit Logs
+Settings
+
+DO NOT assume a module is complete merely because page.tsx exists.
+
+========================================================
+3. SEARCH FOR FAKE / STATIC DATA
+========================================================
+
+Search the entire project for:
+
+mock
+mockData
+dummy
+placeholder
+sample
+hardcoded
+TODO
+FIXME
+coming soon
+static
+const farms =
+const purchases =
+const buyers =
+const sales =
+const payments =
+
+Identify pages that display fabricated business data.
+
+Replace fake operational data with real database queries where the module is supposed to be functional.
+
+For dashboards with no database records:
+
+show 0 / empty state.
+
+Never display fake business numbers as if they were real.
+
+========================================================
+4. SEARCH FOR CLIENT-ONLY CRUD
+========================================================
+
+Search for patterns such as:
+
+useState([...])
+localStorage
+sessionStorage
+setTimeout pretending to save
+client-side arrays
+fake submit handlers
+console.log(formData)
+
+Determine whether forms actually persist data.
+
+Every business mutation must ultimately reach PostgreSQL through the approved Supabase architecture.
+
+========================================================
+5. DATABASE ↔ UI CONTRACT AUDIT
+========================================================
+
+For every form:
+
+Verify every submitted field exists in the database.
+
+Verify:
+
+- column names
+- data types
+- enum values
+- foreign keys
+- nullable/non-nullable fields
+- defaults
+- constraints
+
+For every database query:
+
+Verify the referenced table and columns actually exist.
+
+For every update:
+
+Verify the record is authorized.
+
+For every delete/archive:
+
+Verify the business rules.
+
+Fix mismatches.
+
+========================================================
+6. PURCHASE MODEL AUDIT
+========================================================
+
+This is critical.
+
+Verify:
+
+Farm = permanent master entity.
+
+Purchase = transaction.
+
+Correct:
+
+Farm
+ ├── Purchase 1
+ ├── Purchase 2
+ └── Purchase 3
+
+Incorrect:
+
+Farm = purchase lot
+
+The application must NEVER treat the Farm itself as something purchased.
+
+Verify Farm ID and Purchase ID are separate.
+
+========================================================
+7. HARVEST CYCLE AUDIT
+========================================================
+
+Verify that:
+
+expected_next_harvest_date
+
+is calculated from:
+
+ACTUAL HARVEST COMPLETION DATE + configurable number of days.
+
+Default:
+
+40 days.
+
+NOT:
+
+purchase creation date + 40 days.
+
+NOT:
+
+planned harvest date + 40 days.
+
+The 40-day cycle must begin only after actual harvest completion.
+
+Verify follow-up states:
+
+UPCOMING
+DUE
+OVERDUE
+CONTACTED
+NEGOTIATING
+PURCHASED
+POSTPONED
+SKIPPED
+
+Verify configuration:
+
+35
+38
+40
+42
+
+comes from business settings rather than duplicated hard-coded logic.
+
+========================================================
+8. QUANTITY INTEGRITY AUDIT
+========================================================
+
+This is one of the most important ERP checks.
+
+Never collapse all quantities into one field.
+
+Verify separate tracking for:
+
+expected
+actual harvested
+loaded
+received
+processing input
+processing output
+damaged
+rejected
+ready
+reserved
+dispatched
+delivered
+
+Check every transition.
+
+Example:
+
+Harvested
+→ Loaded
+→ Received
+→ Processing Input
+→ Returned
+→ Damaged
+→ Rejected
+→ Ready
+→ Reserved
+→ Dispatched
+→ Delivered
+
+Every quantity difference must be visible.
+
+Never silently discard quantity.
+
+========================================================
+9. GROUPING AUDIT
+========================================================
+
+Grouping is a distinct operational stage.
+
+Verify:
+
+Cutting
+→ Grouping
+→ Transport
+
+NOT:
+
+Cutting = Grouping.
+
+Verify grouping_batches exists and is actually used.
+
+Verify grouping quantities and labour amounts persist to PostgreSQL.
+
+========================================================
+10. TRANSPORT AUDIT
+========================================================
+
+Verify two separate transport types:
+
+FARM_TO_GODOWN
+
+GODOWN_TO_BUYER
+
+For every trip verify:
+
+loaded_quantity
+received_quantity
+difference
+difference_reason
+
+Difference:
+
+loaded - received
+
+If there is a difference:
+
+the system should expose/request an explanation.
+
+Verify transport cost is included correctly in financial calculations.
+
+========================================================
+11. STOCK AUDIT
+========================================================
+
+Verify stock is derived from actual stock movements rather than arbitrary manually entered totals.
+
+States:
+
+RECEIVED
+PROCESSING
+READY
+DAMAGED
+REJECTED
+RESERVED
+DISPATCHED
+
+Verify:
+
+sales cannot exceed READY stock.
+
+dispatch cannot exceed available/reserved quantity.
+
+stock cannot become negative through normal operations.
+
+Every movement has:
+
+purchase
+quantity
+from state
+to state
+reason
+timestamp
+user
+
+========================================================
+12. PROCESSING AUDIT
+========================================================
+
+Verify:
+
+quantity_given
+quantity_returned
+damaged
+rejected
+ready_quantity
+
+are separately stored.
+
+Verify reconciliation.
+
+Example:
+
+Input = Returned + Damaged + Rejected
+
+OR, if the business model intentionally uses another reconciliation formula, document that exact formula.
+
+Do not invent losses.
+
+If the schema does not enforce this sufficiently, improve it.
+
+========================================================
+13. SALES AUDIT
+========================================================
+
+Verify:
+
+Buyer
+→ Sales Order
+→ Stock Reservation
+→ Dispatch
+→ Delivery
+→ Invoice
+→ Payment
+
+Sales must not consume unavailable READY stock.
+
+Verify partial dispatch.
+
+Verify remaining quantity.
+
+Verify cancellation releases reservation where appropriate.
+
+========================================================
+14. BILLING AUDIT
+========================================================
+
+Verify all required bill types:
+
+PURCHASE_BILL
+LABOUR_BILL
+GROUPING_BILL
+TRANSPORT_BILL
+PROCESSING_BILL
+SALES_INVOICE
+EXPENSE_BILL
+
+For every bill:
+
+amount
+paid
+balance
+due_date
+status
+
+Verify:
+
+balance = amount - payments allocated
+
+Do not allow financial totals to drift because UI calculations differ from database values.
+
+========================================================
+15. PAYMENT AUDIT
+========================================================
+
+Payments must be append-only financial events.
+
+Never overwrite historical payment records.
+
+Support:
+
+ADVANCE
+PARTIAL
+FINAL
+REFUND
+RECEIPT
+
+Verify payments correctly affect:
+
+bills
+receivables
+payables
+cash flow
+
+without incorrectly changing profit.
+
+========================================================
+16. PROFIT VS CASH FLOW AUDIT
+========================================================
+
+This must be strictly separated.
+
+PROFIT:
+
+Revenue
+-
+Relevant Costs
+=
+Profit
+
+CASH FLOW:
+
+Money Received
+-
+Money Paid
+=
+Net Cash Flow
+
+Verify the implementation does NOT calculate profit using only cash received.
+
+Verify outstanding invoices affect accrual profit appropriately.
+
+Verify unpaid costs are treated according to the accounting model implemented.
+
+Document the exact model.
+
+========================================================
+17. RECEIVABLE / PAYABLE AUDIT
+========================================================
+
+Receivables:
+
+Buyer owes business.
+
+Payables:
+
+Business owes farm/labour/transport/vendor/etc.
+
+Verify balances are derived from bills/payments rather than independently editable numbers.
+
+========================================================
+18. RLS AUDIT
+========================================================
+
+Inspect EVERY table.
+
+Produce a list:
+
+TABLE
+RLS ENABLED?
+SELECT POLICY?
+INSERT POLICY?
+UPDATE POLICY?
+DELETE POLICY?
+ROLE RESTRICTION?
+
+No business table should accidentally be publicly readable/writable.
+
+Verify role enforcement at PostgreSQL level.
+
+Test:
+
+OWNER
+MANAGER
+ACCOUNTANT
+CUTTING_LEAD
+PEELING_LEAD
+DRIVER
+
+Pay particular attention to recursive profile/RLS policies.
+
+========================================================
+19. AUTH AUDIT
+========================================================
+
+Verify:
+
+auth.users
+    ↓
+profiles
+
+Verify profile creation trigger.
+
+Verify:
+
+login
+logout
+session refresh
+protected routes
+
+Verify unauthenticated users cannot access:
+
+/dashboard
+/farms
+/purchases
+/finance
+etc.
+
+Do not claim this works live unless tested against an actual Supabase instance.
+
+========================================================
+20. AUDIT LOG AUDIT
+========================================================
+
+Verify important mutations generate audit logs.
+
+Test conceptually:
+
+CREATE
+UPDATE
+STATUS_CHANGE
+PAYMENT
+CANCELLATION
+ARCHIVE
+CORRECTION
+
+Verify:
+
+user
+entity
+entity_id
+old_data
+new_data
+reason
+timestamp
+
+are preserved.
+
+========================================================
+21. ID GENERATION AUDIT
+========================================================
+
+Verify human-readable IDs:
+
+FARM-0001
+PUR-0001
+CUT-0001
+GRP-0001
+TRN-0001
+PRC-0001
+BUY-0001
+SO-0001
+DSP-0001
+BIL-0001
+PAY-0001
+EXP-0001
+
+Check concurrency safety.
+
+Do NOT use:
+
+SELECT MAX(id) + 1
+
+for ID generation.
+
+Use PostgreSQL sequences/functions/triggers or another concurrency-safe mechanism.
+
+========================================================
+22. MONEY TYPE AUDIT
+========================================================
+
+Search schema for:
+
+REAL
+FLOAT
+DOUBLE
+
+especially financial columns.
+
+Money must use:
+
+NUMERIC / DECIMAL
+
+Check:
+
+rate
+amount
+gross_amount
+paid
+balance
+cost
+profit
+expense
+invoice totals
+
+========================================================
+23. SECURITY AUDIT
+========================================================
+
+Search source for:
+
+SUPABASE_SERVICE_ROLE_KEY
+service_role
+API_KEY
+SECRET
+PASSWORD
+TOKEN
+
+Verify no secret is exposed in:
+
+client components
+NEXT_PUBLIC variables
+browser bundle
+logs
+
+Verify .env.local is gitignored.
+
+Check .gitignore.
+
+========================================================
+24. STORAGE AUDIT
+========================================================
+
+Verify attachment architecture.
+
+Bills/invoices/receipts/documents:
+
+Storage bucket
++
+metadata in PostgreSQL
+
+Verify private documents are not accidentally public.
+
+Verify storage policies.
+
+========================================================
+25. DATABASE MIGRATION AUDIT
+========================================================
+
+Inspect:
+
+supabase/migrations/
+
+Verify migration order.
+
+Verify a fresh Supabase database can execute migrations in sequence.
+
+Check:
+
+foreign keys
+indexes
+constraints
+functions
+triggers
+RLS
+storage policies
+
+Do not assume 0001_erp_schema.sql is correct merely because it exists.
+
+========================================================
+26. SCHEMA ↔ BUSINESS WORKFLOW AUDIT
+========================================================
+
+Trace this exact path:
+
+FARM-0001
+↓
+PUR-0001
+↓
+HARVEST
+↓
+CUT-0001
+↓
+GRP-0001
+↓
+TRN-0001
+↓
+GODOWN
+↓
+PRC-0001
+↓
+READY STOCK
+↓
+SO-0001
+↓
+DSP-0001
+↓
+BIL-0001
+↓
+PAY-0001
+
+Verify every relationship exists in the database.
+
+Verify a Purchase Detail page can reconstruct the lifecycle.
+
+========================================================
+27. ERROR HANDLING AUDIT
+========================================================
+
+Find every database mutation.
+
+Verify errors are handled.
+
+Bad input must produce a meaningful error.
+
+Database failure must not appear as "success".
+
+Show:
+
+loading
+success
+error
+empty
+
+states.
+
+========================================================
+28. FORM VALIDATION AUDIT
+========================================================
+
+Verify validation for:
+
+required fields
+numeric quantities
+money
+dates
+phone numbers
+foreign keys
+status transitions
+quantity limits
+payment limits
+
+Do not rely exclusively on browser validation.
+
+Database constraints should protect critical invariants.
+
+========================================================
+29. PERFORMANCE AUDIT
+========================================================
+
+Check for:
+
+N+1 queries
+entire-table fetches
+unnecessary client components
+unbounded lists
+duplicate queries
+
+Add indexes where genuinely required.
+
+Do not prematurely optimize irrelevant code.
+
+========================================================
+30. ROUTE AUDIT
+========================================================
+
+Verify every navigation item resolves.
+
+No dead links.
+
+No blank pages.
+
+No fake routes.
+
+No routes that silently show unrelated content.
+
+========================================================
+31. RESPONSIVE/UI AUDIT
+========================================================
+
+Check:
+
+desktop
+tablet
+mobile
+
+Check:
+
+sidebar
+tables
+forms
+dialogs
+cards
+financial dashboards
+
+Tables must remain usable on narrow screens.
+
+========================================================
+32. ACTUAL COMPLETENESS SCORECARD
+========================================================
+
+Create:
+
+ERP_AUDIT.md
+
+with a table:
+
+Module | UI | DB Read | DB Write | Validation | RLS | Business Logic | Status
+
+Use only:
+
+COMPLETE
+PARTIAL
+MISSING
+BLOCKED
+
+Do NOT use:
+
+"production-ready"
+
+unless objectively justified.
+
+========================================================
+33. FIX EVERYTHING YOU FIND
+========================================================
+
+This is not a reporting-only task.
+
+For every issue that can be fixed:
+
+FIX IT.
+
+Then rerun:
+
+npm run lint
+npm run build
+
+and tests.
+
+Do not stop after discovering problems.
+
+========================================================
+34. CRITICAL RULE
+========================================================
+
+Do NOT ask me for Supabase credentials yet.
+
+First make the codebase structurally correct.
+
+After the audit and fixes, tell me exactly:
+
+WHAT IS COMPLETE
+WHAT IS PARTIAL
+WHAT IS BLOCKED ONLY BECAUSE SUPABASE CREDENTIALS ARE MISSING
+
+========================================================
+35. FINAL REPORT
+========================================================
+
+At completion, provide:
+
+1. Overall implementation status
+2. Modules genuinely complete
+3. Modules partially implemented
+4. Database issues fixed
+5. RLS issues fixed
+6. Security issues fixed
+7. Business logic issues fixed
+8. Financial calculation verification
+9. Stock integrity verification
+10. Traceability verification
+11. Authentication verification
+12. Storage verification
+13. Migration verification
+14. npm install result
+15. lint result
+16. build result
+17. test result
+18. Remaining blockers
+19. Exact Supabase setup steps required
+20. Whether live credentials are now the ONLY remaining dependency
+
+IMPORTANT:
+
+Do not say "production-ready" simply because the UI exists.
+
+The application must be judged as an ERP system, not as a collection of Next.js pages.
+
+START THE AUDIT NOW.

@@ -1,0 +1,1220 @@
+RAKSHI COCO ERP — ANDROID APK FIRST ARCHITECTURE
+================================================
+
+IMPORTANT CHANGE OF PRIORITY:
+
+The primary deliverable for this project is NOT a desktop website.
+
+The PRIMARY PRODUCT is an ANDROID APPLICATION / APK.
+
+The existing Next.js + Supabase architecture should be preserved where practical, but the entire application must now be developed with an Android-first, mobile-first product strategy.
+
+Do NOT throw away the existing work.
+
+Do NOT rebuild the ERP from scratch unless technically necessary.
+
+The target architecture is:
+
+Android APK
+    ↓
+Capacitor Android wrapper
+    ↓
+Next.js App Router web application
+    ↓
+Supabase Auth
+    ↓
+PostgreSQL + RLS
+    ↓
+Supabase Storage
+
+The same application may remain usable in a browser, but Android APK is the primary target.
+
+============================================================
+1. FIRST — AUDIT CURRENT PROJECT
+============================================================
+
+Before implementing anything:
+
+Inspect:
+
+package.json
+next.config.*
+src/
+supabase/
+public/
+middleware.ts
+existing routes
+existing components
+existing Server Actions
+existing migrations
+existing Stitch design artifacts
+
+Determine whether the current Next.js architecture can safely run inside Capacitor.
+
+Do not make assumptions.
+
+============================================================
+2. CAPACITOR
+============================================================
+
+Add Capacitor to the project.
+
+Use the official Capacitor Android architecture.
+
+Required:
+
+@capacitor/core
+@capacitor/cli
+@capacitor/android
+
+Initialize the Android project.
+
+Target:
+
+Android APK
+
+The Android project should be generated inside the repository in a clean conventional location.
+
+Do NOT use an unrelated React Native rewrite.
+
+Do NOT convert the entire application to React Native.
+
+Reuse the existing Next.js UI and Supabase architecture.
+
+============================================================
+3. NEXT.JS + CAPACITOR COMPATIBILITY
+============================================================
+
+IMPORTANT:
+
+Verify whether the current Next.js App Router architecture requires:
+
+- server-side rendering
+- Server Actions
+- dynamic server execution
+- middleware
+- Supabase SSR cookies
+
+An Android WebView cannot simply be treated as a normal static website if the current application depends on server execution.
+
+Therefore:
+
+DO NOT blindly enable:
+
+output: "export"
+
+unless the architecture has been properly adapted.
+
+Determine the correct deployment model.
+
+The preferred architecture is:
+
+APK
+ ↓
+secure hosted Next.js application
+ ↓
+Supabase
+
+OR another technically correct Capacitor-compatible deployment model.
+
+Do NOT break authentication or Server Actions merely to make an APK build.
+
+Document the final architecture.
+
+============================================================
+4. MOBILE-FIRST UI
+============================================================
+
+The current UI was designed around desktop ERP navigation.
+
+Now redesign/refactor it for mobile.
+
+The mobile application must NOT simply be:
+
+"desktop sidebar squeezed onto a phone."
+
+Create a genuine mobile ERP interface.
+
+Primary navigation:
+
+BOTTOM NAVIGATION
+
+Dashboard
+Operations
+Sales
+Finance
+More
+
+OR another structure that provides equivalent access without excessive navigation depth.
+
+Use a mobile drawer/menu for secondary modules.
+
+============================================================
+5. MOBILE DASHBOARD
+============================================================
+
+Create a mobile dashboard optimized for a business owner.
+
+Top:
+
+Rakshi Coco
+Business status
+
+Primary cards:
+
+Today's Purchases
+Ready Stock
+Today's Sales
+Receivables
+Payables
+Cash Balance
+
+Quick actions:
+
++ Purchase
++ Farm
++ Sale
++ Payment
++ Expense
++ Transport
+
+Then:
+
+Upcoming Farm Follow-ups
+Recent Purchases
+Recent Sales
+Pending Payments
+
+Cards must be compact and touch-friendly.
+
+============================================================
+6. MOBILE FARM EXPERIENCE
+============================================================
+
+Farm list must support:
+
+Search
+Farm ID
+Owner
+Phone
+Village
+Next Harvest
+Follow-up Status
+
+Farm detail:
+
+Farm ID
+Owner
+Phone
+Location
+Last Harvest
+Expected Next Harvest
+
+Buttons:
+
+Call
+Follow-up
+New Purchase
+
+Then:
+
+Purchase history
+Harvest history
+Payment history
+Notes
+
+Use large touch targets.
+
+============================================================
+7. MOBILE PURCHASE FLOW
+============================================================
+
+Creating a purchase should be extremely simple.
+
+Example:
+
+NEW PURCHASE
+
+Farm
+↓
+Purchase Date
+↓
+Expected Quantity
+↓
+Rate
+↓
+Advance
+↓
+Notes
+↓
+SAVE PURCHASE
+
+After creation:
+
+show Purchase ID.
+
+Then present:
+
+START HARVEST
+ASSIGN CUTTING
+GROUP
+TRANSPORT
+
+as contextual actions.
+
+Do not force users to navigate through many screens.
+
+============================================================
+8. MOBILE OPERATIONS FLOW
+============================================================
+
+Create a guided workflow.
+
+Purchase detail should have:
+
+STATUS TIMELINE
+
+Purchase
+→ Harvest
+→ Cutting
+→ Grouping
+→ Transport
+→ Godown
+→ Processing
+→ Ready
+→ Sale
+→ Dispatch
+→ Payment
+
+Each stage should expose the next valid action.
+
+Example:
+
+PUR-0001
+
+[Purchase Complete]
+
+Next:
+
+[Record Harvest]
+
+After harvest:
+
+[Assign Cutting]
+
+After cutting:
+
+[Create Grouping]
+
+etc.
+
+============================================================
+9. MOBILE STOCK
+============================================================
+
+Stock must be highly visible.
+
+Dashboard card:
+
+READY STOCK
+
+Quantity
+
+Then:
+
+Received
+Processing
+Ready
+Reserved
+Dispatched
+Damaged
+Rejected
+
+Use clear status indicators.
+
+Do NOT permit arbitrary stock editing.
+
+Stock must continue to use the controlled stock movement architecture.
+
+============================================================
+10. MOBILE SALES
+============================================================
+
+Sales flow:
+
+Buyer
+↓
+Quantity
+↓
+Rate
+↓
+Check READY STOCK
+↓
+Reserve
+↓
+Create Sale
+↓
+Dispatch
+
+The user should immediately see:
+
+Available Ready Stock
+Requested Quantity
+Remaining Stock
+
+Never allow a sale above available stock.
+
+============================================================
+11. MOBILE DISPATCH
+============================================================
+
+Create a simplified dispatch workflow:
+
+Sales Order
+↓
+Vehicle
+↓
+Driver
+↓
+Loaded Quantity
+↓
+Dispatch
+↓
+In Transit
+↓
+Delivered Quantity
+↓
+Complete
+
+Provide camera/file attachment capability for:
+
+delivery proof
+invoice
+transport document
+receipt
+
+============================================================
+12. MOBILE PAYMENTS
+============================================================
+
+Payment entry should be fast.
+
+PAYMENT
+
+Type
+Reference
+Amount
+Date
+Payment Method
+Transaction Reference
+Notes
+
+Large numeric amount field.
+
+Display:
+
+Outstanding Before
+Payment
+Outstanding After
+
+Server-side calculations remain authoritative.
+
+============================================================
+13. MOBILE BILLING
+============================================================
+
+Bills must be viewable on mobile.
+
+Show:
+
+Bill Number
+Type
+Entity
+Amount
+Paid
+Balance
+Due Date
+Status
+
+Actions:
+
+View
+Print
+Attach
+Record Payment
+
+Create a mobile-friendly invoice/bill view.
+
+============================================================
+14. CAMERA + FILES
+============================================================
+
+Use Capacitor plugins where appropriate.
+
+Potential capabilities:
+
+Camera
+Filesystem
+Share
+Browser
+
+Use camera/file selection for:
+
+invoice
+receipt
+delivery proof
+bill attachment
+transport document
+
+Do not make camera functionality a requirement for basic ERP operation.
+
+If permission is denied:
+
+the application must continue functioning.
+
+============================================================
+15. ANDROID BACK BUTTON
+============================================================
+
+Implement proper Android back-button behavior.
+
+Expected:
+
+Detail page
+↓
+back
+↓
+List page
+
+Nested form
+↓
+back
+↓
+previous page
+
+Do not immediately close the application when navigation history exists.
+
+Handle the root page appropriately.
+
+============================================================
+16. SAFE AREA
+============================================================
+
+Support:
+
+Android status bar
+navigation bar
+display cutouts
+safe areas
+
+Do not allow buttons/forms to hide behind system navigation.
+
+============================================================
+17. MOBILE PERFORMANCE
+============================================================
+
+Optimize for normal Android devices.
+
+Avoid:
+
+huge JavaScript bundles
+unnecessary client components
+large images
+unbounded database queries
+unnecessary animations
+
+Use:
+
+lazy loading
+pagination
+server-side queries
+compressed assets
+
+where appropriate.
+
+============================================================
+18. OFFLINE-AWARE DESIGN
+============================================================
+
+Do NOT promise full offline ERP functionality unless actually implemented.
+
+However, design the application for unreliable mobile networks.
+
+When disconnected:
+
+show:
+
+OFFLINE / CONNECTION LOST
+
+Do not falsely display "Saved".
+
+For unsaved forms:
+
+warn the user before leaving.
+
+If practical, implement local draft persistence for forms.
+
+IMPORTANT:
+
+Never pretend a transaction succeeded while offline.
+
+============================================================
+19. AUTHENTICATION IN APK
+============================================================
+
+Verify Supabase Auth inside the Capacitor WebView.
+
+Authentication must support:
+
+Login
+Session persistence
+Logout
+Session refresh
+
+Do not store passwords manually.
+
+Do not implement custom authentication.
+
+Do not expose service-role keys.
+
+============================================================
+20. SUPABASE SECURITY
+============================================================
+
+Continue using:
+
+Supabase Auth
+PostgreSQL
+RLS
+
+Every operation must remain protected.
+
+The APK is NOT a trusted environment.
+
+Never assume:
+
+"Because it is our APK, the client is trusted."
+
+All authorization must remain server/database enforced.
+
+============================================================
+21. PUSH NOTIFICATIONS
+============================================================
+
+Prepare the architecture for Android notifications.
+
+Important future notifications:
+
+Farm follow-up due
+Farm overdue
+Buyer payment overdue
+Payable due
+Low ready stock
+Dispatch pending
+Transport mismatch
+
+Do not implement fake notifications.
+
+If push notifications require additional infrastructure, document it.
+
+============================================================
+22. APK BRANDING
+============================================================
+
+Application name:
+
+Rakshi Coco
+
+Use the Rakshi Coco visual identity.
+
+Primary:
+
+#0B4A28
+
+Accent:
+
+#D97706
+
+Create:
+
+application icon
+splash screen
+Android app label
+
+Do not use generic Capacitor branding.
+
+============================================================
+23. APP ICON
+============================================================
+
+Use the existing Rakshi Coco logo/design direction if available.
+
+Generate the required Android icon assets.
+
+Ensure adaptive icon support where appropriate.
+
+Do not invent a completely unrelated brand.
+
+============================================================
+24. SPLASH SCREEN
+============================================================
+
+Create a professional splash screen.
+
+Display:
+
+Rakshi Coco
+
+with the brand identity.
+
+Keep it fast.
+
+Do not create a long artificial loading animation.
+
+============================================================
+25. ANDROID PERMISSIONS
+============================================================
+
+Request ONLY permissions actually required.
+
+Potential:
+
+Camera
+Notifications
+Filesystem/media
+
+Do not request unnecessary permissions.
+
+============================================================
+26. BUILD CONFIGURATION
+============================================================
+
+Configure:
+
+Android application ID.
+
+Use a production-style identifier such as:
+
+com.rakshicoco.erp
+
+ONLY if it is available and appropriate.
+
+Do not use temporary identifiers like:
+
+com.example.app
+
+Set:
+
+app name
+version name
+version code
+
+Use a sensible initial version:
+
+1.0.0
+
+============================================================
+27. ENVIRONMENT / SECRETS
+============================================================
+
+Do NOT embed:
+
+Supabase service-role key
+private API keys
+database passwords
+
+inside the APK.
+
+Remember:
+
+Anything shipped in an APK can potentially be extracted.
+
+Only public client configuration belongs in the client.
+
+============================================================
+28. DATABASE / ERP LOGIC
+============================================================
+
+Do NOT weaken any existing ERP business rules to make mobile development easier.
+
+Preserve:
+
+Farm → Purchase relationship
+
+40-day harvest cycle
+
+Cutting
+
+Grouping
+
+Transport
+
+Godown
+
+Processing
+
+Stock states
+
+Sales reservation
+
+Dispatch
+
+Bills
+
+Payments
+
+Receivables
+
+Payables
+
+Profit
+
+Cash Flow
+
+Audit logs
+
+RLS
+
+============================================================
+29. TRANSACTION ENGINE
+============================================================
+
+The previous audit identified missing Server Actions.
+
+Continue implementing them.
+
+Required mutations include:
+
+createFarm
+updateFarm
+archiveFarm
+
+createPurchase
+updatePurchase
+completeHarvest
+changePurchaseStatus
+
+createTeam
+updateTeam
+
+createWorker
+updateWorker
+
+createCuttingBatch
+completeCuttingBatch
+
+createGroupingBatch
+completeGroupingBatch
+
+createTransportTrip
+receiveTransportTrip
+
+createProcessingBatch
+completeProcessingBatch
+
+createBuyer
+updateBuyer
+
+createSalesOrder
+confirmSalesOrder
+cancelSalesOrder
+
+createDispatch
+loadDispatch
+dispatchOrder
+markDelivered
+
+createBill
+issueBill
+cancelBill
+
+createPayment
+
+createExpense
+
+updateProfile
+updateBusinessSettings
+
+follow-up actions
+
+Every mutation:
+
+authenticate
+authorize
+validate
+mutate
+audit
+revalidate
+
+============================================================
+30. MOBILE FORMS
+============================================================
+
+Forms must be designed for thumb usage.
+
+Use:
+
+minimum ~44px touch targets
+large input fields
+numeric keyboards where appropriate
+date pickers
+select controls
+clear primary actions
+
+Avoid tiny desktop-style controls.
+
+============================================================
+31. GLOBAL QUICK ACTION
+============================================================
+
+Add a prominent mobile quick-action mechanism.
+
+Possible:
+
+"+" floating action button
+
+Actions:
+
+New Farm
+New Purchase
+Record Harvest
+New Sale
+New Payment
+New Expense
+New Transport
+
+Do not let it obstruct important UI.
+
+============================================================
+32. SEARCH
+============================================================
+
+Mobile global search should find:
+
+FARM-0001
+PUR-0001
+BUY-0001
+SO-0001
+DSP-0001
+BIL-0001
+PAY-0001
+
+Search results should identify entity type clearly.
+
+============================================================
+33. MOBILE REPORTS
+============================================================
+
+Reports must be mobile-readable.
+
+Prioritize:
+
+Daily Operations
+Purchases
+Stock
+Sales
+Receivables
+Payables
+Profit & Loss
+Cash Flow
+
+Use horizontal scrolling only where necessary.
+
+For complex reports provide:
+
+summary cards
+then detailed table.
+
+============================================================
+34. APK BUILD
+============================================================
+
+After implementation:
+
+Install dependencies.
+
+Initialize/update Capacitor.
+
+Sync:
+
+npx cap sync android
+
+Then build Android.
+
+Use Gradle/Android tooling appropriate to the generated project.
+
+Produce at least:
+
+DEBUG APK
+
+for testing.
+
+If Android SDK/Java/Gradle is missing:
+
+identify exactly what is missing.
+
+Do not fake an APK build.
+
+============================================================
+35. RELEASE APK
+============================================================
+
+Prepare the project for:
+
+debug APK
+release APK
+
+Do not invent or commit signing passwords/keystores.
+
+For release signing:
+
+document exactly how the owner/developer should create and configure the keystore securely.
+
+Never commit:
+
+*.jks
+*.keystore
+password files
+signing secrets
+
+============================================================
+36. WEB VERSION
+============================================================
+
+Keep the browser version functional.
+
+The architecture should support:
+
+Web
++
+Android APK
+
+using the same:
+
+Supabase
+PostgreSQL
+RLS
+business logic
+
+Do not create two separate ERP backends.
+
+============================================================
+37. TEST THE REAL USER JOURNEY
+============================================================
+
+Verify the intended mobile journey:
+
+LOGIN
+
+→ Dashboard
+
+→ New Farm
+
+→ New Purchase
+
+→ Record Harvest
+
+→ Cutting
+
+→ Grouping
+
+→ Farm → Godown Transport
+
+→ Godown
+
+→ Processing
+
+→ Ready Stock
+
+→ Buyer
+
+→ Sales Order
+
+→ Reserve Stock
+
+→ Dispatch
+
+→ Delivered
+
+→ Invoice
+
+→ Payment
+
+→ Receivable
+
+→ Payable
+
+→ Profit & Loss
+
+→ Cash Flow
+
+→ Farm Follow-up
+
+Every step must remain traceable through Purchase ID.
+
+============================================================
+38. DO NOT DECLARE COMPLETE TOO EARLY
+============================================================
+
+A page existing does NOT mean the module is complete.
+
+A form existing does NOT mean the mutation works.
+
+A mutation existing does NOT mean the workflow is complete.
+
+A successful build does NOT mean the ERP is production-ready.
+
+============================================================
+39. FINAL AUDIT
+============================================================
+
+Create/update:
+
+ANDROID_BUILD.md
+
+Include:
+
+- Android architecture
+- Capacitor configuration
+- package ID
+- build requirements
+- debug APK build command
+- release build command
+- signing procedure
+- environment configuration
+- permissions
+- notification architecture
+- known limitations
+
+Update:
+
+ERP_AUDIT.md
+
+Include:
+
+UI
+DB READ
+DB WRITE
+VALIDATION
+RLS
+BUSINESS LOGIC
+MOBILE UX
+APK STATUS
+
+============================================================
+40. FINAL VERIFICATION
+============================================================
+
+Run:
+
+npm install
+
+npm run lint
+
+npm run build
+
+Run existing tests.
+
+Then:
+
+npx cap sync android
+
+Build the Android project.
+
+If the Android build succeeds:
+
+report the exact APK output path.
+
+If it fails:
+
+FIX THE FAILURE and rebuild.
+
+Do not merely report an easily fixable error.
+
+============================================================
+41. FINAL REPORT
+============================================================
+
+Report:
+
+WEB APP:
+PASS / PARTIAL / FAIL
+
+ANDROID ARCHITECTURE:
+PASS / PARTIAL / FAIL
+
+CAPACITOR:
+PASS / PARTIAL / FAIL
+
+AUTH:
+PASS / PARTIAL / BLOCKED
+
+SUPABASE:
+PASS / PARTIAL / BLOCKED
+
+DATABASE:
+PASS / PARTIAL / FAIL
+
+RLS:
+PASS / PARTIAL / FAIL
+
+SERVER ACTIONS:
+number implemented / required
+
+FORMS:
+number implemented / required
+
+STOCK ENGINE:
+PASS / PARTIAL / FAIL
+
+FINANCE ENGINE:
+PASS / PARTIAL / FAIL
+
+AUDIT:
+PASS / PARTIAL / FAIL
+
+MOBILE UX:
+PASS / PARTIAL / FAIL
+
+ANDROID BUILD:
+PASS / FAIL / BLOCKED
+
+DEBUG APK:
+PATH OR BLOCKER
+
+RELEASE APK:
+READY / BLOCKED
+
+NPM INSTALL:
+PASS / FAIL
+
+LINT:
+PASS / FAIL
+
+NEXT BUILD:
+PASS / FAIL
+
+TESTS:
+PASS / FAIL
+
+MOST IMPORTANT:
+
+If the APK cannot currently be built, state the EXACT blocker and the EXACT action required to resolve it.
+
+Do not say "production ready" unless the evidence supports it.
+
+============================================================
+START NOW
+============================================================
+
+Continue from the existing Rakshi Coco ERP codebase.
+
+Do not restart the project.
+
+Do not discard existing ERP work.
+
+Make ANDROID APK the primary product target.
+
+Implement the missing transaction engine AND Android packaging.
+
+Proceed autonomously until the maximum technically achievable state is reached.

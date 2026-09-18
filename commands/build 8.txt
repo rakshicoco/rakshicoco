@@ -1,0 +1,383 @@
+APPROVED — PROCEED WITH IMPLEMENTATION.
+
+Use the Android APK as the PRIMARY PRODUCT.
+
+However, apply these corrections before continuing:
+
+1. DO NOT wait for a production URL.
+   Use an environment variable for the Capacitor hosted URL.
+
+   Example:
+   CAPACITOR_SERVER_URL=https://www.rakshicoco.feenixs.com 
+   Now host it in local host as First
+   Never hard-code a temporary production URL.
+
+2. DO NOT implement native Firebase Cloud Messaging yet.
+   Implement the existing in-app Notifications system and notification database architecture.
+   Defer native FCM until the core ERP and APK are stable.
+
+3. IMPORTANT:
+   Your proposed Server Actions list is incomplete.
+
+   Do NOT stop after:
+   farm.ts
+   purchase.ts
+   processing.ts
+   sales.ts
+
+   Implement ALL required mutation domains:
+
+   Farms
+   Purchases
+   Harvest
+   Teams
+   Workers
+   Cutting
+   Grouping
+   Labour Payments
+   Transport
+   Stock
+   Processing
+   Buyers
+   Sales
+   Dispatch
+   Bills
+   Payments
+   Receivables
+   Payables
+   Expenses
+   Settings
+   Farm Follow-ups
+   Notifications where mutations are required
+
+4. For every mutation use:
+
+   Form
+   ↓
+   Zod validation
+   ↓
+   Server Action
+   ↓
+   Authentication
+   ↓
+   Role authorization
+   ↓
+   Supabase/PostgreSQL
+   ↓
+   RLS
+   ↓
+   Audit log
+   ↓
+   revalidatePath
+
+5. For inventory-sensitive operations, use atomic PostgreSQL transactions/RPCs where required.
+
+   In particular:
+
+   Sales Order confirmation
+   Stock reservation
+   Processing completion
+   Transport receiving
+   Dispatch
+   Payment allocation
+
+   Prevent race conditions.
+
+6. DO NOT implement fake/local CRUD.
+
+   No:
+   localStorage
+   mock arrays
+   fake API responses
+   client-only persistence
+   setTimeout-based fake saves
+
+7. Preserve all existing ERP rules:
+
+   Farm = permanent master entity
+
+   Purchase = coconut procurement transaction
+
+   Farm → many Purchases
+
+   Actual Harvest Completion
+   →
+   + configurable 40-day expected next harvest
+
+   Cutting
+   →
+   Grouping
+   →
+   Farm-to-Godown Transport
+   →
+   Godown
+   →
+   Processing
+   →
+   READY Stock
+   →
+   Sale
+   →
+   Reservation
+   →
+   Godown-to-Buyer Transport
+   →
+   Dispatch
+   →
+   Delivery
+   →
+   Bill
+   →
+   Payment
+
+8. DO NOT weaken RLS to make the APK work.
+
+   The APK is an untrusted client.
+
+   Security must remain enforced through:
+   Authentication
+   Authorization
+   PostgreSQL RLS
+
+9. Android requirements:
+
+   Application:
+   Rakshi Coco
+
+   Package ID:
+   com.rakshicoco.erp
+
+   Version:
+   1.0.0
+
+   Primary target:
+   Android APK
+
+10. Build mobile-first UI, NOT a desktop UI inside a WebView.
+
+    Minimum touch target:
+    approximately 44px
+
+    Implement:
+
+    Bottom navigation
+    Mobile drawer
+    Mobile dashboard
+    Mobile forms
+    Mobile tables
+    Android back navigation
+    Safe areas
+    Loading states
+    Error states
+    Empty states
+    Offline-aware states
+
+11. Camera/file support:
+
+    Prepare Capacitor integration for:
+
+    Camera
+    Filesystem
+    Share
+
+    Use these for:
+
+    Bills
+    Receipts
+    Delivery proof
+    Transport documents
+
+    Do not make camera permissions mandatory for basic ERP functionality.
+
+12. Capacitor architecture:
+
+    DO NOT use:
+
+    output: "export"
+
+    unless you have first proven that the entire application can function without:
+
+    SSR
+    middleware
+    Server Actions
+    Supabase server functionality
+
+    The current application relies on server-side functionality.
+
+    Therefore preserve the hosted Next.js architecture unless you have a technically verified alternative.
+
+13. Do not claim the APK is complete merely because:
+
+    npx cap sync android
+
+    succeeds.
+
+    The final requirement is an actual:
+
+    DEBUG APK
+
+    generated successfully.
+
+14. Before APK build:
+
+    Verify:
+
+    npm install
+    npm run lint
+    npm run build
+
+15. Then:
+
+    npx cap sync android
+
+    Then build the Android project.
+
+16. If Android Studio/JDK/SDK/Gradle is missing:
+
+    DO NOT fake the result.
+
+    Report the exact missing dependency.
+
+17. Create:
+
+    ANDROID_BUILD.md
+
+    Include:
+
+    Android requirements
+    JDK version
+    Android SDK requirements
+    Capacitor setup
+    package ID
+    development build
+    debug APK build
+    release build
+    signing
+    environment variables
+    device installation
+    ADB commands
+    troubleshooting
+
+18. Update:
+
+    ERP_AUDIT.md
+
+    with:
+
+    Mobile UX
+    Server Actions
+    Database mutations
+    RLS
+    Stock engine
+    Finance engine
+    Capacitor
+    Android build
+
+19. Create a real end-to-end test path:
+
+    FARM
+    →
+    PURCHASE
+    →
+    HARVEST
+    →
+    CUTTING
+    →
+    GROUPING
+    →
+    FARM→GODOWN
+    →
+    GODOWN
+    →
+    PROCESSING
+    →
+    READY
+    →
+    BUYER
+    →
+    SALES ORDER
+    →
+    RESERVATION
+    →
+    DISPATCH
+    →
+    DELIVERY
+    →
+    BILL
+    →
+    PAYMENT
+    →
+    RECEIVABLE/PAYABLE
+    →
+    PROFIT
+    →
+    CASH FLOW
+    →
+    AUDIT
+
+20. Do not stop for approval between implementation stages.
+
+    Continue autonomously.
+
+21. Do NOT ask for Supabase credentials yet.
+
+    Complete as much as possible without them.
+
+22. At the end, report exactly:
+
+    WEB BUILD:
+    PASS/FAIL
+
+    LINT:
+    PASS/FAIL
+
+    SERVER ACTIONS:
+    implemented count
+
+    FORMS:
+    implemented count
+
+    DATABASE MUTATIONS:
+    implemented count
+
+    RLS:
+    PASS/PARTIAL/FAIL
+
+    STOCK ENGINE:
+    PASS/PARTIAL/FAIL
+
+    FINANCE:
+    PASS/PARTIAL/FAIL
+
+    MOBILE UX:
+    PASS/PARTIAL/FAIL
+
+    CAPACITOR:
+    PASS/PARTIAL/FAIL
+
+    ANDROID BUILD:
+    PASS/FAIL/BLOCKED
+
+    DEBUG APK:
+    exact output path if generated
+
+    RELEASE APK:
+    READY/BLOCKED
+
+    SUPABASE:
+    BLOCKED/CONNECTED
+
+    REMAINING ISSUES:
+    exact list
+
+IMPORTANT:
+
+Do not stop after creating UI pages.
+
+Do not stop after creating Capacitor.
+
+Do not stop after creating only four Server Action files.
+
+The objective is a FUNCTIONAL ANDROID ERP, not a UI prototype.
+
+CONTINUE IMPLEMENTATION NOW.

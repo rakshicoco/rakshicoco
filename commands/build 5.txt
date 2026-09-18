@@ -1,0 +1,2030 @@
+MASTER EXECUTION COMMAND — RAKSHI COCO ERP
+===========================================
+
+You are now authorized to completely build the Rakshi Coco ERP from the current codebase to a production-ready MVP.
+
+DO NOT STOP AFTER EACH PHASE.
+DO NOT ASK FOR APPROVAL BETWEEN PHASES.
+DO NOT WAIT FOR ME TO CLICK "PROCEED".
+DO NOT CREATE FAKE FEATURES.
+DO NOT SKIP BUSINESS LOGIC.
+DO NOT CHANGE the business model described below.
+
+You may make all required code, database, UI, RLS, migration, validation, and configuration changes autonomously.
+
+However:
+
+- Preserve working functionality.
+- Do not overwrite correct implementations unnecessarily.
+- Do not hard-code secrets.
+- Do not use Supabase service-role credentials in client code.
+- Do not silently delete business records.
+- Do not invent business workflows.
+- If a schema correction is required, implement it safely and document it.
+- If credentials are unavailable, build the complete application using environment placeholders and seed/demo data where appropriate.
+- The application must remain runnable without live Supabase credentials for UI development where technically possible.
+- Never claim a live database operation was tested if no live credentials exist.
+
+============================================================
+PRODUCT
+============================================================
+
+Product name:
+
+RAKSHI COCO ERP
+
+Purpose:
+
+A complete ERP for a coconut procurement, harvesting, processing, stock, sales, transport, labour, billing, payments and profitability business.
+
+The real business workflow is:
+
+FARM
+ ↓
+PURCHASE
+ ↓
+HARVEST / CUTTING
+ ↓
+GROUPING
+ ↓
+FARM → GODOWN TRANSPORT
+ ↓
+GODOWN
+ ↓
+PROCESSING / DEHUSKING
+ ↓
+READY STOCK
+ ↓
+BUYER SALE
+ ↓
+GODOWN → BUYER TRANSPORT
+ ↓
+DISPATCH
+ ↓
+DELIVERY
+ ↓
+BILL
+ ↓
+PAYMENT
+ ↓
+RECEIVABLE / PAYABLE
+ ↓
+PROFIT & LOSS
+ ↓
+CASH FLOW
+
+IMPORTANT:
+
+The business purchases COCONUTS FROM FARMS.
+
+The business does NOT purchase land, farms or agricultural lots.
+
+A Farm is a permanent master entity.
+
+A Purchase/Purchase Batch is a transaction.
+
+Example:
+
+FARM-0001
+  ├── PUR-0001
+  ├── PUR-0002
+  ├── PUR-0003
+  └── PUR-0004
+
+Never model a Farm as something purchased.
+
+============================================================
+TECH STACK
+============================================================
+
+Use the existing architecture unless there is a strong technical reason to change it.
+
+Frontend:
+
+- Next.js
+- App Router
+- React
+- TypeScript
+- Tailwind CSS
+- shadcn/ui
+
+Backend:
+
+- Supabase
+- PostgreSQL
+- Supabase Auth
+- Supabase Storage
+- PostgreSQL RLS
+
+Preferred architecture:
+
+- Server Components by default
+- Server Actions for mutations where appropriate
+- Client Components only where interactivity requires them
+- Use TanStack Query only where genuinely useful
+- Do NOT introduce FastAPI unless a concrete requirement makes it necessary
+
+Database:
+
+PostgreSQL
+
+Money:
+
+NUMERIC / DECIMAL
+
+Never use FLOAT / REAL / DOUBLE for money.
+
+============================================================
+DESIGN SYSTEM
+============================================================
+
+Use the existing Stitch-generated design direction.
+
+Brand:
+
+RAKSHI COCO
+
+Primary:
+
+Deep Green #0B4A28
+
+Accent:
+
+Amber #D97706
+
+Background:
+
+Slate / neutral
+
+Typography:
+
+Inter
+
+Design goals:
+
+- professional ERP
+- clean
+- dense but readable
+- desktop-first
+- responsive
+- mobile usable
+- strong information hierarchy
+- consistent cards
+- consistent forms
+- professional tables
+- meaningful status badges
+- clear financial information
+- accessible controls
+
+Do not overuse animations.
+
+Do not make the UI look like a generic SaaS template.
+
+Maintain visual consistency across every module.
+
+============================================================
+GLOBAL NAVIGATION
+============================================================
+
+Implement the authenticated application shell:
+
+DASHBOARD
+
+OPERATIONS
+- Farms
+- Purchases
+- Cutting
+- Grouping
+- Transport
+- Processing
+- Stock
+
+LABOUR
+- Teams
+- Workers
+- Labour Payments
+
+SALES
+- Buyers
+- Sales
+- Dispatch
+
+FINANCE
+- Bills
+- Payments
+- Receivables
+- Payables
+- Expenses
+- Profit & Loss
+- Cash Flow
+
+REPORTS
+
+Farm Follow-ups
+
+Notifications
+
+Settings
+
+All routes must have consistent:
+
+- breadcrumbs
+- page title
+- actions
+- filters
+- loading states
+- empty states
+- error states
+- responsive layout
+
+============================================================
+PHASE 1 — AUTHENTICATION & APPLICATION SHELL
+============================================================
+
+Ensure the existing Phase 1 implementation is correct.
+
+Authentication:
+
+- Supabase Auth
+- email/password
+- login
+- logout
+- protected routes
+- SSR session handling
+- middleware
+
+Profile:
+
+public.profiles → auth.users
+
+Roles:
+
+OWNER
+MANAGER
+ACCOUNTANT
+CUTTING_LEAD
+PEELING_LEAD
+DRIVER
+
+Use role directly on profiles.
+
+Do not create duplicate authentication systems.
+
+Create/update profile safely when a Supabase auth user is created.
+
+============================================================
+RLS
+============================================================
+
+RLS is mandatory.
+
+Unauthenticated users:
+
+NO access to business data.
+
+Authenticated users:
+
+Access based on role.
+
+OWNER:
+
+full access.
+
+MANAGER:
+
+operational access.
+
+ACCOUNTANT:
+
+finance access.
+
+CUTTING_LEAD:
+
+cutting/labour access.
+
+PEELING_LEAD:
+
+processing/labour access.
+
+DRIVER:
+
+assigned transport/dispatch access.
+
+RLS must enforce security at database level.
+
+UI hiding is NOT security.
+
+Avoid recursive RLS policies.
+
+Create reusable role helper functions if appropriate.
+
+============================================================
+PHASE 2 — FARMS & HARVEST CYCLES
+============================================================
+
+Implement complete Farm management.
+
+Route:
+
+/farms
+
+Farm is permanent.
+
+Required:
+
+Farm ID
+Owner Name
+Phone
+Alternate Phone
+Village
+Location
+Address
+Notes
+Active/Archived
+Created At
+Updated At
+
+Farm ID format:
+
+FARM-0001
+FARM-0002
+...
+
+Generate IDs safely.
+
+Do not reuse deleted IDs.
+
+Farm detail page:
+
+/farms/[id]
+
+Show:
+
+- permanent Farm ID
+- owner
+- phone
+- location
+- last harvest
+- next expected harvest
+- purchase history
+- harvest history
+- total purchased quantity
+- average purchase rate
+- total purchase value
+- paid amount
+- outstanding amount
+- notes
+- follow-up status
+
+============================================================
+HARVEST CYCLE
+============================================================
+
+The +40 day cycle begins from ACTUAL HARVEST COMPLETION.
+
+Never start the cycle merely because a Purchase was created.
+
+Store:
+
+actual_harvest_date
+
+expected_next_harvest_date
+
+Default:
+
+expected_next_harvest_date =
+actual_harvest_date + 40 days
+
+This is an EXPECTED date.
+
+It is not guaranteed.
+
+Farm follow-up states:
+
+UPCOMING
+DUE
+OVERDUE
+CONTACTED
+NEGOTIATING
+PURCHASED
+POSTPONED
+SKIPPED
+
+Reminder defaults:
+
+35 days = early reminder
+38 days = reminder
+40 days = due
+42+ = overdue
+
+Make these configurable in business settings.
+
+============================================================
+FARM FOLLOW-UP MODULE
+============================================================
+
+Implement:
+
+/farm-followups
+
+Dashboard/table showing:
+
+Farm ID
+Owner
+Last Harvest
+Expected Harvest
+Days Remaining
+Status
+Last Contact
+Next Follow-up
+Notes
+Action
+
+Actions:
+
+- Contacted
+- Negotiating
+- Purchased
+- Postponed
+- Skipped
+
+Never assume a farm will definitely harvest on day 40.
+
+============================================================
+PHASE 3 — PURCHASES
+============================================================
+
+Implement:
+
+/purchases
+
+A Purchase is a transaction from a Farm.
+
+Purchase ID:
+
+PUR-0001
+
+Required fields:
+
+Purchase ID
+Farm ID
+Purchase Date
+Harvest Date
+Expected Quantity
+Actual Harvested Quantity
+Rate
+Gross Amount
+Advance
+Balance
+Status
+Notes
+
+Purchase statuses:
+
+DRAFT
+CONFIRMED
+HARVESTING
+HARVESTED
+CANCELLED
+COMPLETED
+
+Purchase detail page:
+
+/purchases/[id]
+
+Create a lifecycle timeline:
+
+Farm
+→ Purchase
+→ Harvest
+→ Cutting
+→ Grouping
+→ Transport
+→ Godown
+→ Processing
+→ Ready Stock
+→ Sale
+→ Dispatch
+→ Bill
+→ Payment
+→ Profit
+
+Quantities must NEVER be collapsed into one field.
+
+Track independently:
+
+expected
+actual harvested
+loaded
+received
+processing input
+processing output
+damaged
+rejected
+ready
+reserved
+dispatched
+delivered
+
+============================================================
+CUTTING
+============================================================
+
+Implement:
+
+/cutting
+
+Cutting batches.
+
+Fields:
+
+Cutting Batch ID
+Purchase ID
+Team
+Team Lead
+Workers
+Expected Quantity
+Actual Quantity
+Rate
+Labour Formula
+Labour Amount
+Paid
+Balance
+Status
+Date
+
+Allow configurable labour calculation.
+
+Do not hard-code one labour rate.
+
+Support future formulas.
+
+============================================================
+TEAMS & WORKERS
+============================================================
+
+Implement:
+
+/teams
+/workers
+
+Teams:
+
+Team ID
+Team Name
+Leader
+Members
+Active
+Workload
+
+Workers:
+
+Worker ID
+Name
+Phone
+Role
+Team
+Active
+Payment history
+
+Team recommendation can be advisory only.
+
+Never make AI a dependency.
+
+============================================================
+LABOUR PAYMENTS
+============================================================
+
+Track:
+
+Worker/team
+reference batch
+amount
+paid
+balance
+payment date
+payment method
+notes
+
+Support:
+
+ADVANCE
+PARTIAL
+FINAL
+
+============================================================
+PHASE 4 — GROUPING
+============================================================
+
+Grouping is a distinct operational stage.
+
+Implement:
+
+/grouping
+
+Create grouping_batches table if not already present.
+
+Fields:
+
+Grouping Batch ID
+Purchase ID
+Cutting Batch ID
+Quantity Input
+Quantity Grouped
+Damaged
+Rejected
+Ready Quantity
+Team
+Rate
+Labour Amount
+Paid
+Balance
+Status
+Date
+
+Do not merge grouping with cutting.
+
+============================================================
+PHASE 5 — TRANSPORT & GODOWN
+============================================================
+
+Implement:
+
+/transport
+
+Two transport types:
+
+FARM_TO_GODOWN
+GODOWN_TO_BUYER
+
+Transport trip fields:
+
+Transport ID
+Type
+Purchase ID
+Sales Order ID where applicable
+Vehicle
+Driver
+Loading Date
+Loaded Quantity
+Received Quantity
+Difference
+Difference Reason
+Transport Cost
+Status
+Notes
+
+Always calculate:
+
+difference =
+loaded quantity - received quantity
+
+If difference exists:
+
+require/expose reason.
+
+Transport statuses:
+
+PLANNED
+LOADED
+IN_TRANSIT
+RECEIVED
+CANCELLED
+
+============================================================
+GODOWN / STOCK
+============================================================
+
+Implement:
+
+/stock
+
+Stock states:
+
+RECEIVED
+PROCESSING
+READY
+DAMAGED
+REJECTED
+RESERVED
+DISPATCHED
+
+Every stock movement must be traceable.
+
+Stock movement fields:
+
+Stock Movement ID
+Purchase ID
+Processing Batch
+Quantity
+From State
+To State
+Reason
+Timestamp
+User
+
+Prevent impossible inventory operations.
+
+Never allow sales quantity to exceed available READY stock.
+
+Show clear validation.
+
+============================================================
+PHASE 6 — PROCESSING / DEHUSKING
+============================================================
+
+Implement:
+
+/processing
+
+Processing/dehusking batches.
+
+Fields:
+
+Processing Batch ID
+Purchase ID
+Source Stock
+Team
+Quantity Given
+Rate
+Labour Amount
+Quantity Returned
+Damaged
+Rejected
+Ready Quantity
+Paid
+Balance
+Status
+Date
+
+Calculation:
+
+ready quantity must reconcile with processing quantities.
+
+Show discrepancies clearly.
+
+Do not silently modify quantities.
+
+============================================================
+PHASE 7 — BUYERS
+============================================================
+
+Implement:
+
+/buyers
+
+Buyer:
+
+Buyer ID
+Name
+Company
+Phone
+Alternate Phone
+State
+City
+Address
+GST
+Notes
+Active
+Created At
+
+Buyer detail:
+
+- purchase/sales history
+- quantities
+- rates
+- invoices
+- payments
+- receivables
+- dispatch history
+
+============================================================
+SALES
+============================================================
+
+Implement:
+
+/sales
+
+Sales Order:
+
+Sales Order ID
+Buyer
+Date
+Quantity
+Rate
+Total
+Reserved Quantity
+Dispatched Quantity
+Delivered Quantity
+Status
+Payment Status
+Notes
+
+Statuses:
+
+DRAFT
+CONFIRMED
+RESERVED
+PARTIALLY_DISPATCHED
+DISPATCHED
+DELIVERED
+CANCELLED
+
+Do not allow confirmed sale quantities to exceed READY stock.
+
+============================================================
+PHASE 8 — DISPATCH
+============================================================
+
+Implement:
+
+/dispatch
+
+Lifecycle:
+
+PREPARED
+LOADED
+DISPATCHED
+IN_TRANSIT
+DELIVERED
+PAYMENT_PENDING
+PAID
+
+Track:
+
+Dispatch ID
+Sales Order
+Buyer
+Vehicle
+Driver
+Loaded Quantity
+Delivered Quantity
+Difference
+Difference Reason
+Dispatch Date
+Delivery Date
+Status
+Notes
+
+============================================================
+PHASE 9 — BILLING
+============================================================
+
+Bills are a CORE module.
+
+Implement:
+
+/bills
+
+Bill types:
+
+PURCHASE_BILL
+LABOUR_BILL
+GROUPING_BILL
+TRANSPORT_BILL
+PROCESSING_BILL
+SALES_INVOICE
+EXPENSE_BILL
+
+Bill fields:
+
+Bill ID
+Bill Number
+Type
+Entity
+Reference ID
+Issue Date
+Due Date
+Amount
+Paid
+Balance
+Status
+Notes
+Attachment
+Created By
+Created At
+
+Statuses:
+
+DRAFT
+ISSUED
+PARTIALLY_PAID
+PAID
+OVERDUE
+CANCELLED
+
+Bills must link to their underlying transaction.
+
+Support:
+
+- print
+- PDF-ready layout
+- attachments
+
+Use Supabase Storage for attachments.
+
+============================================================
+PHASE 10 — PAYMENTS
+============================================================
+
+Implement:
+
+/payments
+
+Payment ledger supporting:
+
+Farm Owners
+Cutting Teams
+Workers
+Grouping Teams
+Processing Teams
+Transport Providers
+Buyers
+Other Expenses
+
+Payment types:
+
+ADVANCE
+PARTIAL
+FINAL
+REFUND
+RECEIPT
+
+Fields:
+
+Payment ID
+Reference Type
+Reference ID
+Bill ID if applicable
+Amount
+Payment Date
+Payment Method
+Transaction Reference
+Notes
+Created By
+
+Never overwrite previous payment records.
+
+Payments are append-only financial events.
+
+============================================================
+RECEIVABLES
+============================================================
+
+Implement:
+
+/receivables
+
+Show:
+
+Buyer
+Invoice
+Invoice Amount
+Received
+Balance
+Due Date
+Days Overdue
+Status
+
+============================================================
+PAYABLES
+============================================================
+
+Implement:
+
+/payables
+
+Show:
+
+Farm
+Labour
+Transport
+Processing
+Expense
+Bill
+Amount
+Paid
+Balance
+Due Date
+Status
+
+============================================================
+EXPENSES
+============================================================
+
+Implement:
+
+/expenses
+
+Categories:
+
+PURCHASE
+HARVESTING
+CUTTING
+GROUPING
+TRANSPORT
+PROCESSING
+HANDLING
+OPERATIONS
+OTHER
+
+Track:
+
+Expense ID
+Category
+Reference
+Amount
+Date
+Vendor
+Bill
+Paid
+Notes
+
+============================================================
+PROFIT & LOSS
+============================================================
+
+Implement:
+
+/profit-loss
+
+IMPORTANT:
+
+PROFIT IS NOT CASH FLOW.
+
+Profit:
+
+Revenue
+-
+Relevant Costs
+=
+Profit
+
+Show:
+
+Total Sales Revenue
+Purchase Cost
+Cutting Cost
+Grouping Cost
+Transport Cost
+Processing Cost
+Handling Cost
+Other Relevant Costs
+Gross/Net Profit as defined by the system
+Margin
+
+Allow filters:
+
+- date
+- farm
+- purchase
+- buyer
+- sales order
+
+Also implement purchase/lot-level profitability.
+
+Use Purchase ID as the traceability unit.
+
+============================================================
+CASH FLOW
+============================================================
+
+Implement:
+
+/cash-flow
+
+Cash flow:
+
+Money Received
+-
+Money Paid
+=
+Net Cash Flow
+
+Show separately:
+
+Receipts
+Payments
+Net Cash Flow
+Opening Balance
+Closing Balance
+
+Do not mix accounting profit with cash flow.
+
+============================================================
+PHASE 11 — DASHBOARD
+============================================================
+
+Replace placeholder dashboard data with real database calculations.
+
+Dashboard KPIs:
+
+Active Farms
+Purchases
+Today's Purchase Quantity
+Ready Stock
+Today's Sales
+Pending Receivables
+Pending Payables
+Today's Cash In
+Today's Cash Out
+Profit
+Upcoming Farm Follow-ups
+
+Charts/tables:
+
+- purchase trend
+- sales trend
+- ready stock
+- receivables aging
+- payables
+- upcoming harvests
+- recent transactions
+
+Never display fake numbers.
+
+If there is no data:
+
+show meaningful zero/empty states.
+
+============================================================
+PHASE 12 — REPORTS
+============================================================
+
+Implement:
+
+/reports
+
+Reports:
+
+Farm Report
+Purchase Report
+Harvest Report
+Cutting Report
+Grouping Report
+Labour Report
+Transport Report
+Processing Report
+Stock Report
+Buyer Report
+Sales Report
+Dispatch Report
+Bill Report
+Payment Report
+Receivable Report
+Payable Report
+Expense Report
+Profit/Loss Report
+Cash Flow Report
+Farm Follow-up Report
+
+Common filters:
+
+Date From
+Date To
+Farm
+Purchase
+Buyer
+Worker
+Team
+Status
+Payment Status
+Category
+
+Support:
+
+Search
+Sort
+Pagination
+CSV export where useful
+Print/PDF-ready views where useful
+
+============================================================
+PHASE 13 — NOTIFICATIONS & ALERTS
+============================================================
+
+Implement:
+
+/notifications
+
+Alerts:
+
+- upcoming farm harvest
+- farm follow-up due
+- overdue farm follow-up
+- buyer payment pending
+- farm payment pending
+- labour payment pending
+- transport loaded/received mismatch
+- prepared dispatch not sent
+- low ready stock
+- overdue bills
+- important record edits
+
+Notifications should link to the relevant record.
+
+Do not create meaningless notifications.
+
+============================================================
+PHASE 14 — AUDIT LOG
+============================================================
+
+Audit every important mutation.
+
+Audit fields:
+
+User
+Action
+Entity/Table
+Entity ID
+Old Data
+New Data
+Reason
+Timestamp
+
+Examples:
+
+CREATE
+UPDATE
+STATUS_CHANGE
+PAYMENT
+CANCELLATION
+ARCHIVE
+CORRECTION
+
+No silent deletion.
+
+Prefer:
+
+ACTIVE
+COMPLETED
+CANCELLED
+ARCHIVED
+
+instead of destructive deletes.
+
+For corrections:
+
+preserve original value
+store new value
+store reason
+store user
+store timestamp
+
+============================================================
+PHASE 15 — DATABASE INTEGRITY
+============================================================
+
+Review the entire PostgreSQL schema.
+
+Ensure proper relationships:
+
+Farm
+→ Purchases
+
+Purchase
+→ Cutting
+→ Grouping
+→ Transport
+→ Processing
+→ Stock
+
+Buyer
+→ Sales
+→ Dispatch
+→ Bills
+→ Payments
+
+Every major entity should have:
+
+id
+created_at
+updated_at
+
+Use foreign keys.
+
+Use indexes for common query paths.
+
+Use constraints where appropriate.
+
+Use NUMERIC for all monetary values.
+
+Use appropriate integer/numeric types for quantities.
+
+Do not use floating point for money.
+
+Prevent negative quantities unless explicitly required.
+
+Prevent invalid status transitions where practical.
+
+============================================================
+PHASE 16 — ID SYSTEM
+============================================================
+
+Implement human-readable IDs.
+
+Examples:
+
+FARM-0001
+PUR-0001
+CUT-0001
+GRP-0001
+TRN-0001
+PRC-0001
+STK-0001
+BUY-0001
+SO-0001
+DSP-0001
+BIL-0001
+PAY-0001
+EXP-0001
+
+Internal UUIDs may still be used as primary keys.
+
+Human-readable IDs are business identifiers.
+
+Ensure uniqueness.
+
+============================================================
+PHASE 17 — SEARCH & FILTERING
+============================================================
+
+Implement global-friendly search patterns.
+
+Users should be able to quickly locate:
+
+Farm ID
+Purchase ID
+Buyer ID
+Sales Order
+Bill Number
+Payment
+Transport ID
+Processing Batch
+
+Tables must support:
+
+- search
+- filtering
+- sorting
+- pagination
+- status badges
+- date filtering
+
+============================================================
+PHASE 18 — ATTACHMENTS
+============================================================
+
+Use Supabase Storage.
+
+Support attachments for relevant:
+
+Bills
+Invoices
+Receipts
+Transport documents
+Other business documents
+
+Store metadata in PostgreSQL.
+
+Do not expose private files publicly unless explicitly intended.
+
+Use appropriate storage access policies.
+
+============================================================
+PHASE 19 — SEED / DEMO DATA
+============================================================
+
+Create development seed data.
+
+Include realistic examples:
+
+At least 5 farms.
+
+Multiple purchases for the same farm.
+
+Example:
+
+FARM-0001
+PUR-0001
+PUR-0002
+PUR-0003
+
+Include:
+
+- harvest
+- cutting
+- grouping
+- transport
+- processing
+- ready stock
+- buyer
+- sale
+- dispatch
+- bills
+- payments
+- expenses
+
+Use realistic quantities and INR values.
+
+Clearly separate seed/demo data from production data.
+
+Never present demo data as real business data.
+
+============================================================
+PHASE 20 — SETTINGS
+============================================================
+
+Complete:
+
+/settings
+
+Account:
+
+Name
+Phone
+Role
+Avatar
+
+Business:
+
+Business Name
+Phone
+Address
+GST
+Currency
+
+Harvest Follow-up:
+
+Early Reminder Days = 35
+Second Reminder Days = 38
+Expected Harvest Days = 40
+Overdue After Days = 42
+
+Labour defaults:
+
+configurable
+
+Financial defaults:
+
+configurable where useful
+
+============================================================
+PHASE 21 — UI / UX POLISH
+============================================================
+
+Every implemented page must have:
+
+- loading state
+- empty state
+- error state
+- success feedback
+- validation
+- confirmation for destructive/status-changing actions
+- responsive design
+
+Forms:
+
+- proper labels
+- validation
+- field-level errors
+- disabled submit while saving
+- success/error feedback
+
+Tables:
+
+- readable columns
+- horizontal scrolling where needed
+- pagination
+- search/filter
+- status badges
+- action menus
+
+Detail pages:
+
+- summary
+- timeline
+- linked records
+- financial summary
+- audit/history where relevant
+
+============================================================
+PHASE 22 — SECURITY
+============================================================
+
+Perform a complete security audit.
+
+Search for:
+
+SUPABASE_SERVICE_ROLE_KEY
+service_role
+API keys
+passwords
+tokens
+hard-coded credentials
+private env variables in client code
+
+Verify:
+
+NEXT_PUBLIC_* contains only public-safe values.
+
+Verify:
+
+- RLS enabled on all business tables
+- policies exist
+- authenticated-only access
+- role enforcement
+- storage policies
+- server/client separation
+- no sensitive data leaks
+- no unsafe SQL construction
+- no arbitrary user-controlled redirects
+- no insecure ID authorization
+
+============================================================
+PHASE 23 — PERFORMANCE
+============================================================
+
+Avoid unnecessary client rendering.
+
+Prefer:
+
+Server Components
+Server-side data fetching
+Indexed queries
+Pagination
+Selective client components
+
+Do not fetch entire tables when only summary data is needed.
+
+Do not create N+1 database queries unnecessarily.
+
+Add indexes for:
+
+farm_id
+purchase_id
+buyer_id
+sales_order_id
+status
+created_at
+due_date
+harvest_date
+
+where appropriate.
+
+============================================================
+PHASE 24 — VALIDATION & BUSINESS RULES
+============================================================
+
+Enforce:
+
+Purchase expected quantity >= 0
+
+Harvested quantity >= 0
+
+Loaded quantity >= 0
+
+Received quantity >= 0
+
+Processing quantity >= 0
+
+Ready quantity >= 0
+
+Sale quantity >= 0
+
+Payment amount > 0
+
+Bill amount >= 0
+
+No sale beyond available READY stock.
+
+No dispatch beyond reserved/available quantity.
+
+No payment beyond outstanding amount unless explicitly configured as advance/overpayment.
+
+Transport differences must be visible.
+
+Processing differences must be visible.
+
+Financial balances must reconcile.
+
+============================================================
+PHASE 25 — DATA RECONCILIATION
+============================================================
+
+Where possible provide reconciliation summaries.
+
+Purchase:
+
+Expected
+→ Harvested
+
+Harvest:
+
+Harvested
+→ Loaded
+
+Transport:
+
+Loaded
+→ Received
+
+Processing:
+
+Input
+→ Returned
+→ Damaged
+→ Rejected
+→ Ready
+
+Sales:
+
+Ready
+→ Reserved
+→ Dispatched
+→ Delivered
+
+Finance:
+
+Bill
+→ Paid
+→ Balance
+
+Profit:
+
+Revenue
+→ Costs
+→ Profit
+
+Every discrepancy must be explainable.
+
+============================================================
+PHASE 26 — FINAL PRODUCTION CHECK
+============================================================
+
+Run:
+
+npm install
+
+npm run lint
+
+npm run build
+
+Also run TypeScript checking if configured.
+
+Run all existing tests.
+
+Fix every:
+
+TypeScript error
+ESLint error
+build error
+broken import
+route error
+schema error
+migration error
+RLS error
+obvious runtime issue
+
+Do not stop at reporting an error.
+
+Fix it and rerun verification.
+
+============================================================
+PHASE 27 — ROUTE AUDIT
+============================================================
+
+Verify all routes.
+
+Public:
+
+/login
+
+Protected:
+
+/dashboard
+/farms
+/farms/[id]
+/purchases
+/purchases/[id]
+/cutting
+/grouping
+/transport
+/stock
+/processing
+/teams
+/workers
+/labour-payments
+/buyers
+/buyers/[id]
+/sales
+/sales/[id]
+/dispatch
+/bills
+/payments
+/receivables
+/payables
+/expenses
+/profit-loss
+/cash-flow
+/reports
+/farm-followups
+/notifications
+/settings
+
+No dead navigation links.
+
+No placeholder route that appears fully implemented.
+
+============================================================
+PHASE 28 — FINAL USER FLOW TEST
+============================================================
+
+Test the complete conceptual business journey:
+
+1. Login
+2. Create Farm
+3. Create Purchase for Farm
+4. Record Harvest
+5. Assign Cutting Team
+6. Record Cutting
+7. Record Grouping
+8. Create Farm→Godown Transport
+9. Receive into Godown
+10. Create Processing Batch
+11. Record Processing
+12. Generate READY stock
+13. Create Buyer
+14. Create Sales Order
+15. Reserve stock
+16. Create Godown→Buyer transport
+17. Dispatch
+18. Deliver
+19. Generate Sales Invoice
+20. Record Buyer Payment
+21. Record purchase/labour/transport/processing expenses
+22. View Receivable
+23. View Payable
+24. View Profit & Loss
+25. View Cash Flow
+26. View Farm Follow-up
+27. View Audit History
+
+Every step must maintain traceability back to the Purchase ID.
+
+============================================================
+CRITICAL TRACEABILITY PRINCIPLE
+============================================================
+
+The entire business journey must be traceable.
+
+Example:
+
+FARM-0001
+ ↓
+PUR-0001
+ ↓
+CUT-0001
+ ↓
+GRP-0001
+ ↓
+TRN-0001
+ ↓
+Godown Stock
+ ↓
+PRC-0001
+ ↓
+Ready Stock
+ ↓
+SO-0001
+ ↓
+DSP-0001
+ ↓
+BIL-0001
+ ↓
+PAY-0001
+ ↓
+Profitability
+
+A user viewing PUR-0001 should be able to understand its entire lifecycle.
+
+============================================================
+IMPORTANT: EXISTING CODEBASE
+============================================================
+
+Before changing anything:
+
+1. Inspect the current repository.
+2. Inspect existing migrations.
+3. Inspect existing components.
+4. Inspect existing routes.
+5. Inspect existing Supabase setup.
+6. Inspect the Stitch design artifacts.
+7. Reuse correct existing code.
+8. Do not unnecessarily recreate working components.
+
+The existing Phase 1 implementation should be treated as the starting point, not discarded.
+
+============================================================
+DATABASE MIGRATION SAFETY
+============================================================
+
+Because this is currently greenfield:
+
+- update the migration architecture cleanly
+- keep migrations understandable
+- avoid destructive changes unless required
+- preserve existing correct tables
+- ensure a fresh database can be initialized successfully
+
+If multiple migrations are now preferable to modifying 0000 directly, use a clean migration strategy appropriate for the current repository.
+
+============================================================
+NO FAKE BACKEND
+============================================================
+
+Do not implement fake CRUD that only updates local React state.
+
+Business records must use the database architecture.
+
+If Supabase credentials are unavailable:
+
+- keep environment placeholders
+- make the UI build
+- make schema/migrations complete
+- make data-access architecture production-ready
+- clearly distinguish unavailable live integration from completed code
+
+============================================================
+NO AI DEPENDENCY
+============================================================
+
+Do NOT add AI simply because this is an ERP.
+
+AI may be added later for:
+
+- advisory farm follow-up prioritization
+- demand forecasting
+- buyer analysis
+- anomaly detection
+- profitability insights
+
+But the ERP must work completely without AI.
+
+============================================================
+FINAL DELIVERABLE
+============================================================
+
+When all implementation is complete, generate:
+
+walkthrough.md
+
+It must contain:
+
+1. Architecture
+2. Database schema
+3. Authentication
+4. RLS
+5. Roles
+6. All implemented modules
+7. Business workflow
+8. Traceability design
+9. Financial calculations
+10. Harvest reminder logic
+11. Storage/attachments
+12. Audit system
+13. Routes
+14. Environment variables
+15. Seed data
+16. Security review
+17. Performance review
+18. Testing results
+19. Known limitations
+20. Deployment instructions
+
+Also update:
+
+README.md
+
+with complete setup instructions.
+
+============================================================
+FINAL REPORT
+============================================================
+
+At the end, provide a concise implementation report containing:
+
+PHASE 1 — AUTH
+STATUS
+
+PHASE 2 — FARMS
+STATUS
+
+PHASE 3 — PURCHASE/CUTTING
+STATUS
+
+PHASE 4 — GROUPING
+STATUS
+
+PHASE 5 — TRANSPORT/GODOWN/STOCK
+STATUS
+
+PHASE 6 — PROCESSING
+STATUS
+
+PHASE 7 — BUYERS/SALES
+STATUS
+
+PHASE 8 — DISPATCH
+STATUS
+
+PHASE 9 — BILLING
+STATUS
+
+PHASE 10 — PAYMENTS
+STATUS
+
+PHASE 11 — DASHBOARD
+STATUS
+
+PHASE 12 — REPORTS
+STATUS
+
+PHASE 13 — NOTIFICATIONS
+STATUS
+
+PHASE 14 — AUDIT
+STATUS
+
+DATABASE
+STATUS
+
+RLS
+STATUS
+
+SECURITY
+STATUS
+
+BUILD
+STATUS
+
+LINT
+STATUS
+
+TESTS
+STATUS
+
+Then provide:
+
+- files created
+- files modified
+- migrations created/modified
+- routes created
+- unresolved issues
+- credentials/configuration still required
+- exact commands needed to run locally
+
+IMPORTANT:
+
+Do not declare the project "production ready" merely because npm build succeeds.
+
+Production readiness requires:
+
+- correct schema
+- correct business logic
+- RLS
+- authorization
+- data integrity
+- financial reconciliation
+- traceability
+- validation
+- error handling
+- build/lint/test verification
+
+============================================================
+EXECUTION RULE
+============================================================
+
+START NOW.
+
+Do not ask me for approval between phases.
+
+Work sequentially through the phases.
+
+After completing each phase internally:
+
+1. inspect the result
+2. run relevant checks
+3. fix problems
+4. continue to the next phase
+
+Only stop when the entire ERP MVP is implemented and verified.
+
+If live Supabase credentials are unavailable, continue building everything that does not require live credentials.
+
+Do not fabricate successful live database/authentication tests.
+
+DO NOT STOP AT A PLAN.
+
+IMPLEMENT THE APPLICATION.

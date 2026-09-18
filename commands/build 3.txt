@@ -1,0 +1,395 @@
+PHASE 0 VERIFICATION GATE — DO THIS BEFORE PHASE 1
+
+I have reviewed the Phase 0 report.
+
+Proceed, but do NOT start Phase 1 yet.
+
+First perform a Phase 0 technical verification and correct any issues you find.
+
+==================================================
+1. PROJECT STRUCTURE
+==================================================
+
+Verify:
+
+- Next.js App Router is correctly configured.
+- There is only one application root.
+- No duplicate nested Next.js project remains.
+- package.json is valid.
+- package-lock.json is valid.
+- tsconfig.json is valid.
+- next.config.* is valid.
+- Tailwind configuration is valid.
+- source directories are clean.
+- no accidental scaffold files remain.
+
+Run:
+
+npm install
+npm run build
+
+and resolve all build errors.
+
+==================================================
+2. SHADCN/UI
+==================================================
+
+The previous shadcn initialization was interrupted.
+
+Complete shadcn/ui configuration properly.
+
+Do NOT ask me to manually perform a CLI step if you can complete it programmatically.
+
+If an interactive CLI is unavoidable, explain exactly what configuration is required.
+
+Ensure:
+
+- components.json exists
+- shadcn components can be generated
+- Tailwind integration works
+- CSS variables work
+- the chosen style is consistent with the Stitch design system
+
+Do not replace the Stitch design system with generic shadcn defaults.
+
+==================================================
+3. STITCH DESIGN SYSTEM
+==================================================
+
+Preserve the existing Stitch design system.
+
+Verify that DESIGN.md exists and represents the intended system.
+
+Current visual direction:
+
+Primary:
+Deep Green #0B4A28
+
+Secondary:
+Amber #D97706
+
+Neutral:
+Slate/neutral surfaces
+
+Typography:
+Inter
+
+The application should use these consistently.
+
+Do not introduce random colors or unrelated component styles.
+
+==================================================
+4. SUPABASE CLIENT
+==================================================
+
+Inspect:
+
+src/lib/supabase/client.ts
+src/lib/supabase/server.ts
+src/lib/supabase/middleware.ts
+
+Verify that:
+
+- browser client is correct
+- server client is correct
+- middleware/session refresh is correct
+- cookies/session handling is correct
+- server-only credentials are never exposed to client code
+
+Standardize environment variable names.
+
+If the current project uses:
+
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+keep that consistently.
+
+If another variable is required, document it clearly.
+
+Do NOT have different parts of the application expecting different variable names.
+
+==================================================
+5. ENVIRONMENT SECURITY
+==================================================
+
+Verify:
+
+.env.local is ignored by Git.
+
+Verify:
+
+SUPABASE_SERVICE_ROLE_KEY
+
+is never imported into:
+
+- client components
+- browser bundles
+- public code
+- NEXT_PUBLIC_* variables
+
+Search the repository for accidental secret exposure.
+
+==================================================
+6. DATABASE MIGRATION
+==================================================
+
+Inspect:
+
+supabase/migrations/0000_initial_schema.sql
+
+Verify the schema against the approved business model.
+
+Critical:
+
+FARM is a permanent master entity.
+
+PURCHASE is the coconut procurement transaction.
+
+There is NO land purchase.
+
+There is NO farm ownership transaction.
+
+There is NO land lot.
+
+The previous PDF's "Lot" concept must be represented as Purchase/Purchase Batch terminology.
+
+==================================================
+7. AUTH USER MODEL
+==================================================
+
+Verify that authentication uses:
+
+Supabase auth.users
+
+and application profile data uses:
+
+profiles
+
+linked to auth.users.
+
+Do not maintain a duplicate independent authentication users table.
+
+Roles:
+
+OWNER
+MANAGER
+ACCOUNTANT
+CUTTING_LEAD
+PEELING_LEAD
+DRIVER
+
+==================================================
+8. FARM HARVEST CYCLE
+==================================================
+
+Verify the schema supports:
+
+Farm
+↓
+Completed Harvest
+↓
+Actual Harvest Date
+↓
++40 Days
+↓
+Expected Harvest Date
+↓
+Farm Reminder
+
+Do not calculate the cycle from purchase date unless the purchase is explicitly the completed harvest event.
+
+The 40-day interval must be represented as an expected cycle, not a guaranteed harvest date.
+
+Verify the schema supports reminder states:
+
+UPCOMING
+DUE
+OVERDUE
+CONTACTED
+NEGOTIATING
+PURCHASED
+POSTPONED
+SKIPPED
+
+==================================================
+9. BUSINESS ENTITY VERIFICATION
+==================================================
+
+Verify these entities exist appropriately:
+
+profiles
+farms
+purchases
+purchase_quality_details
+labour_groups
+workers
+cutting_batches
+grouping_batches
+transport_trips
+vehicles
+drivers
+godowns
+processing_batches
+stock_movements
+buyers
+sales_orders
+sale_items
+dispatches
+bills
+bill_items
+payments
+expenses
+receivables
+payables
+ledger_entries
+farm_harvest_cycles
+farm_reminders
+documents
+notifications
+audit_logs
+settings
+
+Do not create unnecessary duplicate entities.
+
+==================================================
+10. MONEY DATA TYPES
+==================================================
+
+Verify every monetary database field uses PostgreSQL NUMERIC/DECIMAL.
+
+No FLOAT/REAL/DOUBLE should be used for financial values.
+
+Search the SQL migration for this.
+
+==================================================
+11. QUANTITY INTEGRITY
+==================================================
+
+Verify the schema can separately represent:
+
+expected quantity
+actual harvested quantity
+loaded quantity
+received quantity
+processing input
+processing output
+damaged quantity
+rejected quantity
+ready quantity
+reserved quantity
+dispatched quantity
+delivered quantity
+
+Do not overwrite one operational quantity with another.
+
+==================================================
+12. STOCK INTEGRITY
+==================================================
+
+Verify stock movement architecture supports:
+
+RECEIVED
+PROCESSING
+READY
+DAMAGED
+REJECTED
+RESERVED
+DISPATCHED
+
+Ensure the future implementation can prevent negative READY stock.
+
+Do not implement stock as a single mutable number without movement history.
+
+==================================================
+13. BILL MANAGEMENT
+==================================================
+
+Verify bills can represent:
+
+Purchase Bill
+Labour Bill
+Grouping Bill
+Transport Bill
+Processing Bill
+Sales Invoice
+Expense Bill
+
+Bills must be linkable to the underlying transaction.
+
+==================================================
+14. AUDIT
+==================================================
+
+Verify audit_logs exists.
+
+Important financial/inventory records must not be silently deleted.
+
+Support:
+
+Active
+Completed
+Cancelled
+Archived
+
+Corrections should be auditable.
+
+==================================================
+15. BUILD & TYPE CHECK
+==================================================
+
+Run:
+
+npm run build
+
+and TypeScript validation.
+
+Fix all errors.
+
+Do not suppress TypeScript errors just to make the build pass.
+
+Do not use unnecessary `any`.
+
+==================================================
+16. LINT
+==================================================
+
+Run the project's lint command if configured.
+
+Fix meaningful lint errors.
+
+Do not blindly disable lint rules.
+
+==================================================
+17. DOCUMENTATION
+==================================================
+
+Update README.md with:
+
+- project purpose
+- architecture
+- local setup
+- environment variables
+- Supabase setup
+- migration instructions
+- development commands
+- current implementation phase
+
+==================================================
+18. FINAL REPORT
+==================================================
+
+Before starting Phase 1, report:
+
+A. Build status
+B. TypeScript status
+C. Lint status
+D. shadcn status
+E. Supabase integration status
+F. Migration status
+G. Security findings
+H. Any schema issues
+I. Any remaining Phase 0 issues
+
+Only after Phase 0 passes this verification gate should Phase 1 begin.
+
+DO NOT build Phase 1 authentication screens yet.

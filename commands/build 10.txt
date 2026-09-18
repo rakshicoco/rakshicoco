@@ -1,0 +1,416 @@
+FINAL UNBLOCK — FIX THE WINDOWS ENVIRONMENT, THEN BUILD THE ACTUAL APK
+
+Do NOT redesign the ERP and do NOT add new features.
+
+The remaining objective is to get from the current codebase to an ACTUAL Android DEBUG APK.
+
+CURRENT STATUS:
+- Server Actions: PASS
+- Database mutations: PASS
+- Stock engine: PASS
+- Finance engine: PASS
+- Harvest follow-up: PASS
+- Mobile UX: PASS
+- Forms: PARTIAL
+- Supabase RLS: PARTIAL
+- Web build: BLOCKED
+- Capacitor: BLOCKED
+- Android APK: NONE
+
+The repeated npm/pnpm installation hang is now the primary blocker.
+
+==================================================
+PHASE 1 — STOP RETRYING THE SAME INSTALL
+==================================================
+
+Do a real diagnosis of the Windows environment.
+
+Run and record:
+
+node --version
+npm --version
+pnpm --version
+java -version
+git --version
+where.exe node
+where.exe npm
+where.exe pnpm
+
+Inspect:
+- package.json
+- package-lock.json
+- pnpm-lock.yaml
+- node_modules
+- .next
+- android
+- capacitor.config.ts
+
+Determine exactly which package manager the project should use.
+
+Use ONE package manager only.
+
+Do not alternate npm/pnpm during troubleshooting.
+
+==================================================
+PHASE 2 — CHECK THE FILESYSTEM LOCATION
+==================================================
+
+Determine the absolute project path.
+
+Check whether the project is located inside:
+- OneDrive
+- Dropbox
+- Google Drive
+- Desktop/Documents folders managed by synchronization
+- antivirus-controlled folders
+- network/shared folders
+- another IDE workspace with aggressive file watching
+
+Also check whether another process is holding node_modules.
+
+Do NOT immediately recommend Administrator privileges or disabling security software.
+
+First identify the actual cause.
+
+If the project is in a problematic/synchronized directory, move/copy the project to a simple local path such as:
+
+C:\dev\RakshiCoco
+
+Preserve Git/source files.
+
+==================================================
+PHASE 3 — CLEAN DEPENDENCY STATE
+==================================================
+
+After determining the safe project location:
+
+Stop:
+- node
+- npm
+- pnpm
+- npx
+- Gradle
+- Java processes associated with this project
+- development servers
+
+Then remove only generated dependency/build directories:
+
+node_modules
+.next
+out
+
+Do NOT delete:
+- src
+- app
+- supabase
+- migrations
+- public
+- package.json
+- lockfiles
+- .env files
+- source code
+
+Do not destroy the database schema.
+
+==================================================
+PHASE 4 — REINSTALL ONCE
+==================================================
+
+Use the selected package manager and lockfile.
+
+If npm is selected:
+
+npm ci --legacy-peer-deps --no-audit --no-fund
+
+If there is no valid package-lock and npm install is required:
+
+npm install --legacy-peer-deps --no-audit --no-fund
+
+Do not keep retrying indefinitely.
+
+Set a reasonable timeout.
+
+The command must visibly complete successfully.
+
+Then verify:
+
+npm ls --depth=0
+
+and:
+
+npm run build
+
+==================================================
+PHASE 5 — IF WINDOWS STILL HANGS
+==================================================
+
+Do NOT repeatedly retry Windows npm.
+
+Use a clean Linux environment as the build environment.
+
+Preferred options:
+
+1. WSL2
+2. A clean Linux development environment
+3. A clean local Windows directory if filesystem locking was the cause
+
+Since this project already targets Android and Linux tooling is available, WSL2 is acceptable for dependency/build diagnosis.
+
+However, do not assume WSL can directly perform the final Android build until the Android SDK/JDK/Gradle environment is verified.
+
+The goal is to isolate:
+
+SOURCE CODE PROBLEM
+vs
+NODE PACKAGE ENVIRONMENT PROBLEM
+vs
+WINDOWS FILESYSTEM PROBLEM.
+
+==================================================
+PHASE 6 — COMPLETE THE REMAINING FORMS
+==================================================
+
+While the environment is being repaired, finish the existing UI bindings.
+
+Current report says:
+
+FORMS: PARTIAL
+
+Already bound:
+- Farm
+- Purchase
+- Buyer
+- Sales Order
+- Transport
+
+Still required:
+- Processing
+- Payments
+- Bills
+- Settings
+
+Also inspect whether these operational forms are genuinely usable:
+
+- Cutting/Harvest
+- Grouping
+- Godown receipt
+- Stock movement
+- Dispatch
+- Expense
+- Labour/payment-related workflows
+- Farm follow-up status
+
+Do not create fake forms.
+
+Every submit action must invoke the corresponding Server Action and persist to Supabase.
+
+==================================================
+PHASE 7 — VERIFY RLS PROPERLY
+==================================================
+
+Do not report:
+
+"RLS PASS because requireRole() exists."
+
+That is NOT sufficient.
+
+Separate:
+
+APPLICATION AUTHORIZATION
+requireRole()
+
+from:
+
+DATABASE AUTHORIZATION
+PostgreSQL/Supabase RLS policies.
+
+Inspect the actual migration files and policies.
+
+Verify that authenticated users cannot bypass application code and directly access unauthorized rows through the Supabase client.
+
+Report:
+
+RLS:
+PASS
+PARTIAL
+or
+FAIL
+
+based on actual PostgreSQL policies.
+
+If remote testing requires Supabase credentials that are not available, report:
+
+"RLS remote verification BLOCKED — credentials/access unavailable"
+
+Do not call it PASS.
+
+==================================================
+PHASE 8 — WEB BUILD
+==================================================
+
+Once dependencies are installed:
+
+Run:
+
+npm run lint
+
+then:
+
+npm run build
+
+Fix ALL compile/type/import errors.
+
+Do not hide errors with:
+- any
+- @ts-ignore
+- disabled lint rules
+- build-error suppression
+- fake configuration
+
+The production build must genuinely succeed.
+
+==================================================
+PHASE 9 — CAPACITOR
+==================================================
+
+Only after the web build succeeds:
+
+Install/use the already declared Capacitor packages.
+
+Verify:
+
+npx cap --version
+
+Then:
+
+npx cap add android
+
+If android/ already exists:
+
+npx cap sync android
+
+Do NOT use static export just to bypass the current Next.js architecture.
+
+Keep the hosted Next.js architecture.
+
+Use environment configuration:
+
+CAPACITOR_SERVER_URL=https://your-production-domain.com
+
+Do not hard-code the production URL.
+
+A production domain is NOT required to prove that the Capacitor project can be scaffolded.
+
+==================================================
+PHASE 10 — ANDROID TOOLCHAIN
+==================================================
+
+Verify:
+
+java -version
+adb version
+
+Check:
+- Android SDK
+- SDK platform
+- build-tools
+- platform-tools
+- Gradle compatibility
+- Android Gradle Plugin compatibility
+
+If Android Studio is available, use its installed SDK.
+
+If not, report exactly which Android SDK component is missing.
+
+==================================================
+PHASE 11 — BUILD ACTUAL APK
+==================================================
+
+Generate a DEBUG APK.
+
+Use the appropriate Gradle command for the generated Capacitor project, for example:
+
+cd android
+gradlew.bat assembleDebug
+
+Do not stop at:
+
+"android folder created."
+
+Do not stop at:
+
+"Capacitor configured."
+
+Do not stop at:
+
+"APK-ready."
+
+The final requirement is an actual .apk file.
+
+Locate it and report the EXACT absolute path.
+
+Expected location will normally resemble:
+
+android\app\build\outputs\apk\debug\app-debug.apk
+
+but VERIFY the actual path instead of assuming it.
+
+==================================================
+PHASE 12 — OPTIONAL DEVICE TEST
+==================================================
+
+If an Android device is connected:
+
+adb devices
+
+If authorized:
+
+adb install -r <actual-apk-path>
+
+Launch the application and verify:
+- app opens
+- login screen works
+- navigation works
+- no immediate WebView crash
+- Supabase authentication path is reachable
+
+Do not claim device testing if no device is connected.
+
+==================================================
+FINAL REPORT
+==================================================
+
+Return ONLY verified status.
+
+WEB BUILD: PASS/FAIL
+LINT: PASS/FAIL
+TYPESCRIPT: PASS/FAIL
+SERVER ACTIONS: PASS/PARTIAL/FAIL
+FORMS: PASS/PARTIAL/FAIL
+DATABASE MUTATIONS: PASS/PARTIAL/FAIL
+APPLICATION AUTHORIZATION: PASS/PARTIAL/FAIL
+SUPABASE RLS: PASS/PARTIAL/BLOCKED
+STOCK ENGINE: PASS/PARTIAL/FAIL
+FINANCE ENGINE: PASS/PARTIAL/FAIL
+HARVEST FOLLOW-UP: PASS/PARTIAL/FAIL
+MOBILE UX: PASS/PARTIAL/FAIL
+CAPACITOR: PASS/PARTIAL/FAIL
+ANDROID TOOLCHAIN: PASS/FAIL
+ANDROID DEBUG APK: PASS/FAIL
+APK EXACT PATH: <verified absolute path or NONE>
+
+ENVIRONMENT ROOT CAUSE:
+<actual cause discovered>
+
+If APK generation fails, report:
+1. exact command
+2. exact error
+3. exact file/component causing it
+4. concrete next action
+
+DO NOT generate another high-level implementation plan.
+
+DO NOT claim completion without the actual APK.
+
+PRIMARY TARGET:
+ACTUAL FUNCTIONAL RAKSHI COCO ERP DEBUG APK.

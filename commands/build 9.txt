@@ -1,0 +1,338 @@
+CONTINUE — UNBLOCK THE BUILD AND FINISH THE FUNCTIONAL APK
+
+The ERP implementation is now at the correct architecture stage. Do NOT add new business features, FCM, Camera, Filesystem, or other native plugins yet.
+
+PRIMARY GOAL:
+Produce a WORKING Android DEBUG APK from the existing Rakshi Coco ERP.
+
+PHASE 1 — FIX NODE PACKAGE MANAGER
+
+The machine is repeatedly hanging during npm/pnpm extraction/linking.
+
+Diagnose and repair the local dependency environment systematically.
+
+1. Stop any hanging npm/pnpm/cap processes.
+2. Inspect:
+   - node --version
+   - npm --version
+   - pnpm --version
+   - java -version
+   - git --version
+3. Inspect package.json and lockfiles.
+4. Determine whether the project is actually using npm or pnpm.
+5. Use ONE package manager consistently. Do not alternate between npm and pnpm.
+6. Clean only generated dependency/build state, not source code:
+   - node_modules
+   - .next
+   - out
+   - any incomplete Capacitor-generated state
+7. Clean the selected package manager cache/store if required.
+8. Reinstall dependencies using the project's lockfile/package manager.
+9. Do NOT use random dependency versions.
+10. Verify:
+   npm/pnpm install completes successfully
+   npm/pnpm run lint
+   npm/pnpm run build
+
+IMPORTANT:
+Do not claim the dependency problem is solved until install actually exits successfully and build/lint actually execute.
+
+If Windows file locking is the cause, identify the locking process and resolve it rather than repeatedly retrying the same command.
+
+PHASE 2 — VERIFY NEXT.JS BEFORE CAPACITOR
+
+After dependencies work:
+
+1. Run lint.
+2. Run production build.
+3. Fix TypeScript/import/runtime/build errors.
+4. Confirm existing SSR, middleware, Server Actions and Supabase architecture still work.
+5. DO NOT convert the application to static export merely to make Capacitor work.
+6. Preserve the hosted Next.js architecture.
+
+PHASE 3 — VERIFY SERVER ACTIONS
+
+Review every newly created Server Action:
+
+- farm.ts
+- purchase.ts
+- processing.ts
+- sales.ts
+- transport.ts
+- stock.ts
+- teams.ts
+- workers.ts
+- finance.ts
+- expenses.ts
+- notifications.ts
+- settings.ts
+- farm_followups.ts
+
+For EVERY mutation verify:
+
+1. Authentication is required.
+2. Role authorization is enforced.
+3. Input validation uses Zod.
+4. Business rules are validated server-side.
+5. Database writes use the authenticated Supabase server client.
+6. No service-role key is exposed to the browser.
+7. Errors are handled safely.
+8. Successful mutations invalidate/refresh the relevant UI state.
+9. Audit logging exists where required.
+10. No fake/localStorage/mock persistence exists.
+
+CRITICAL CORRECTION:
+Do NOT report "RLS PASS" merely because requireRole() exists.
+
+Verify actual Supabase RLS policies independently.
+
+Application authorization and PostgreSQL RLS are separate security layers.
+
+PHASE 4 — VERIFY CORE ERP TRANSACTION INTEGRITY
+
+Trace these workflows through the actual database:
+
+Farm
+→ Purchase
+→ Harvest/Cutting
+→ Grouping
+→ Farm→Godown Transport
+→ Godown Receipt
+→ Processing/Dehusking
+→ Ready Stock
+→ Buyer/Sales
+→ Godown→Buyer Transport
+→ Dispatch
+→ Delivery
+→ Bill
+→ Payment
+→ Receivable/Payable
+→ Profit/Loss
+→ Cash Flow
+
+Verify that quantities are NEVER silently conflated.
+
+Keep separate:
+- expected
+- actual harvested
+- loaded
+- received
+- processing input
+- processing output
+- damaged
+- rejected
+- ready
+- reserved
+- dispatched
+- delivered
+
+Verify:
+- Farm is a permanent master entity.
+- Purchase/Purchase Batch is the transaction.
+- One farm can have many purchases.
+- No farm/land/lots are accidentally modeled as purchases.
+- Grouping remains a distinct stage.
+- Transport has FARM_TO_GODOWN and GODOWN_TO_BUYER.
+- loaded/received/difference/reason are retained.
+- Stock states remain traceable.
+- Money uses NUMERIC/DECIMAL.
+- Profit and cash flow are separate calculations.
+- Receivables and payables are separate.
+- Advances, partial payments and final settlements work.
+- No destructive deletion of business records.
+
+PHASE 5 — HARVEST FOLLOW-UP
+
+Verify the actual implementation:
+
+actual harvest completion
+→ next expected harvest = actual completion + configurable cycle days
+
+Defaults:
+- 35 days early reminder
+- 38 days reminder
+- 40 days expected/due
+- 42+ days overdue
+
+These must come from business settings/configuration rather than scattered hard-coded values.
+
+States:
+UPCOMING
+DUE
+OVERDUE
+CONTACTED
+NEGOTIATING
+PURCHASED
+POSTPONED
+SKIPPED
+
+PHASE 6 — BIND THE FORMS
+
+The report says:
+
+FORMS: 0
+
+This means the application is not yet end-to-end usable.
+
+Now bind the existing pages to the Server Actions.
+
+Prioritize:
+
+1. Create Farm
+2. Create Purchase
+3. Record Cutting/Harvest
+4. Create Grouping
+5. Create Transport
+6. Receive Godown Stock
+7. Record Processing/Dehusking
+8. Create Buyer
+9. Create Sales Order/Sale
+10. Create Dispatch
+11. Create Bill
+12. Record Payment
+13. Record Expense
+14. Manage Teams/Workers
+15. Manage Settings
+16. Follow-up status/update
+
+Use proper mobile forms:
+- touch targets >= approximately 44px
+- numeric keyboard for quantities/money
+- date picker
+- select/dropdown controls
+- validation messages
+- loading state
+- success state
+- server error state
+- duplicate submission prevention
+- confirmation for consequential actions
+
+Do NOT create fake success messages.
+
+A successful submit must correspond to an actual database mutation.
+
+PHASE 7 — MOBILE APK
+
+Only after:
+
+- install PASS
+- lint PASS
+- build PASS
+- Server Actions verified
+- forms connected
+
+continue with Capacitor.
+
+Use:
+
+CAPACITOR_SERVER_URL=https://your-production-domain.com
+
+through environment configuration.
+
+Do NOT hard-code a production domain into source code.
+
+Do NOT require the production URL before continuing the architecture/build work.
+
+Use:
+package ID = com.rakshicoco.erp
+
+Keep browser/web functionality working.
+
+Create:
+capacitor.config.ts
+
+Then:
+
+npx cap add android
+npx cap sync android
+npx cap open android
+
+or the appropriate CLI/build commands supported by the installed Capacitor version.
+
+PHASE 8 — ANDROID BUILD
+
+Verify Android environment:
+
+- JDK 17+
+- Android SDK
+- Android platform
+- Android build-tools
+- platform-tools
+- adb
+- Gradle/Android Gradle Plugin compatibility
+
+Then generate:
+
+ANDROID DEBUG APK
+
+Do NOT stop after creating android/.
+
+Actually build the APK.
+
+Find the exact generated APK path.
+
+If possible also install it with:
+
+adb install -r <apk>
+
+and verify that the application launches.
+
+PHASE 9 — DO NOT DO YET
+
+Explicitly defer:
+
+- Firebase FCM
+- push notifications
+- Camera native plugin
+- Filesystem native plugin
+- Share plugin
+- production release signing
+- Play Store publishing
+- production credentials
+
+These are NOT blockers for the first functional debug APK.
+
+PHASE 10 — FINAL VERIFICATION
+
+Create/update:
+
+ERP_AUDIT.md
+ANDROID_BUILD.md
+
+Final report MUST contain exactly:
+
+WEB BUILD: PASS/FAIL
+LINT: PASS/FAIL
+TYPESCRIPT: PASS/FAIL
+SERVER ACTIONS: PASS/PARTIAL/FAIL
+FORMS: PASS/PARTIAL/FAIL
+DATABASE MUTATIONS: PASS/PARTIAL/FAIL
+SUPABASE RLS: PASS/PARTIAL/FAIL
+STOCK ENGINE: PASS/PARTIAL/FAIL
+FINANCE ENGINE: PASS/PARTIAL/FAIL
+HARVEST FOLLOW-UP: PASS/PARTIAL/FAIL
+MOBILE UX: PASS/PARTIAL/FAIL
+CAPACITOR: PASS/PARTIAL/FAIL
+ANDROID TOOLCHAIN: PASS/FAIL
+ANDROID DEBUG APK: PASS/FAIL
+APK EXACT PATH: <absolute path or NONE>
+
+For every FAIL/PARTIAL:
+- state the exact blocker
+- state the exact file/command involved
+- do not use vague statements
+
+MOST IMPORTANT:
+
+Do not return another architecture plan.
+
+Do not say "APK-ready" unless an actual APK file has been generated.
+
+The immediate objective is:
+
+FUNCTIONAL ERP
+→ SUCCESSFUL WEB BUILD
+→ CAPACITOR
+→ ACTUAL ANDROID DEBUG APK
+
+Stop only when the APK is generated, or when a concrete machine/environment blocker makes generation impossible.
