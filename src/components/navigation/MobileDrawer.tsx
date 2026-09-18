@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { LogOut, Settings, Users, Truck, Factory, Archive, UsersRound, UserSquare, CreditCard, Send, Activity, TrendingUp, CalendarClock, Bell, Landmark, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logout } from "@/app/login/actions";
@@ -26,9 +27,21 @@ export function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) {
       <div className="relative z-50 flex w-[85%] max-w-[320px] flex-col bg-white dark:bg-slate-900 shadow-2xl pt-safe pb-safe animate-in slide-in-from-left duration-200">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
-          <div>
-            <h2 className="text-lg font-bold text-primary dark:text-emerald-400">Rakshi Coco</h2>
-            <p className="text-xs text-slate-500">Navigation & Operations</p>
+          <div className="flex items-center gap-3">
+            <div className="relative w-10 h-10 rounded-xl bg-white p-1 shadow-xs border border-slate-100 dark:border-slate-800 flex items-center justify-center overflow-hidden">
+              <Image
+                src="/logo.png"
+                alt="Rakshi Coco"
+                width={36}
+                height={36}
+                className="object-contain"
+                priority
+              />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-tight">Rakshi Coco</h2>
+              <p className="text-[11px] text-slate-500">Navigation & Modules</p>
+            </div>
           </div>
           <button 
             onClick={() => onOpenChange(false)} 

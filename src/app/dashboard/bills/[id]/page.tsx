@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
+import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -71,8 +72,22 @@ export default async function BillDetailPage({ params }: { params: { id: string 
         {/* Header */}
         <div className="flex justify-between items-start border-b pb-8 mb-8">
           <div>
-            <h2 className="text-2xl font-bold text-slate-900">RAKSHI COCO</h2>
-            <p className="text-slate-500 text-sm mt-1">High Quality Coconuts & Produce</p>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="relative w-12 h-12 rounded-xl bg-white p-1 border border-slate-100 flex items-center justify-center overflow-hidden">
+                <Image
+                  src="/logo.png"
+                  alt="Rakshi Coco"
+                  width={44}
+                  height={44}
+                  className="object-contain"
+                  priority
+                />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900 tracking-tight">RAKSHI COCO</h2>
+                <p className="text-slate-500 text-xs">High Quality Coconuts & Produce</p>
+              </div>
+            </div>
             <div className="text-sm text-slate-600 mt-4 space-y-1">
               <p>123 Farm Road, Coconut District</p>
               <p>Tamil Nadu, India</p>

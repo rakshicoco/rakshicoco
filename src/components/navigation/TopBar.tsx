@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { ArrowLeft, Bell, Sparkles } from "lucide-react";
+import { ArrowLeft, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Route title mapping for intuitive header display
@@ -53,7 +54,7 @@ export function TopBar() {
       <div className="flex items-center justify-between h-14 px-4 max-w-lg md:max-w-4xl lg:max-w-6xl mx-auto">
         {/* Left: Back button or Brand Logo */}
         <div className="flex items-center gap-2.5">
-          {!isRootDashboard ? (
+          {!isRootDashboard && (
             <button
               onClick={() => router.back()}
               className="flex items-center justify-center w-9 h-9 -ml-1 rounded-full text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 transition-all"
@@ -61,11 +62,18 @@ export function TopBar() {
             >
               <ArrowLeft size={20} className="stroke-[2.5]" />
             </button>
-          ) : (
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-primary-foreground shadow-sm shadow-primary/20">
-              <Sparkles size={16} className="text-emerald-200" />
-            </div>
           )}
+
+          <div className="relative w-9 h-9 rounded-xl bg-white p-1 shadow-xs border border-slate-200/80 dark:border-slate-800 flex items-center justify-center overflow-hidden shrink-0">
+            <Image
+              src="/logo.png"
+              alt="Rakshi Coco"
+              width={32}
+              height={32}
+              className="object-contain"
+              priority
+            />
+          </div>
 
           <div className="flex flex-col">
             <span className="text-base font-bold tracking-tight text-slate-900 dark:text-slate-100 leading-tight">
