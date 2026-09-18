@@ -45,3 +45,11 @@ node_modules*
 rakshi-coco-erp/
 .idea/
 scratch_*.txt
+
+# android signing credentials & keys
+*.keystore
+*.jks
+*.key
+*.p12
+android/app/release/
+

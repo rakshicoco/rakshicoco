@@ -1,0 +1,60 @@
+FINAL APK VERIFICATION — DO NOT STOP AT GRADLE SUCCESS
+
+Wait for the current `assembleDebug` process to finish completely.
+
+If it succeeds:
+
+1. Locate the actual generated `.apk` under:
+
+C:\dev\RakshiCoco\android\app\build\outputs\apk\
+
+2. Verify the file exists and has a non-zero size.
+
+3. Report the exact absolute APK path.
+
+4. Check for an available Android emulator:
+
+adb devices
+
+5. If an emulator is available, install the APK:
+
+adb install -r "<EXACT_APK_PATH>"
+
+6. Launch the Rakshi Coco application.
+
+7. Verify that the application displays the REAL Rakshi Coco ERP through:
+
+http://10.0.2.2:3000
+
+Verify:
+- Rakshi Coco logo
+- Login page
+- Dashboard
+- Bottom navigation
+- Mobile UI
+- no blank WebView
+- no "App" placeholder
+- no immediate crash
+
+IMPORTANT:
+A successful Gradle build alone is NOT sufficient.
+
+Do not report APK success until:
+- APK physically exists
+- exact path is confirmed
+- APK is installable
+- application launches
+- actual Rakshi Coco ERP UI is visible
+
+FINAL OUTPUT:
+
+GRADLE BUILD: PASS/FAIL
+APK: GENERATED/NOT GENERATED
+APK PATH: <exact absolute path>
+APK SIZE: <size>
+ADB DEVICE: CONNECTED/NOT CONNECTED
+APK INSTALL: PASS/FAIL/NOT TESTED
+APP LAUNCH: PASS/FAIL/NOT TESTED
+REAL ERP UI: YES/NO
+BLANK/PLACEHOLDER SCREEN: YES/NO
+RUNTIME ERROR: <exact error or NONE>

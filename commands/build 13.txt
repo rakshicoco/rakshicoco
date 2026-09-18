@@ -1,0 +1,152 @@
+RAKSHI COCO — CONVERT DEBUG DEVELOPMENT APK TO PRODUCTION APK
+
+The debug APK has now been successfully built, installed, and verified on emulator-5554.
+
+Current development configuration:
+
+Android APK
+→ Capacitor
+→ http://10.0.2.2:3000
+→ Next.js development server
+
+This is suitable only for local emulator testing.
+
+Now prepare the application for a real production deployment.
+
+IMPORTANT:
+Do NOT remove or break the current working development configuration.
+Do NOT redesign the ERP.
+Do NOT add new ERP features.
+Do NOT add FCM yet.
+
+TASK 1 — PRODUCTION WEB DEPLOYMENT
+
+Prepare the Next.js application for deployment to the production hosting environment.
+
+Verify:
+- production build succeeds
+- environment variables are properly separated
+- Supabase URL/key configuration is production-safe
+- no service-role key reaches the client
+- no localhost dependency remains in production code
+- no 10.0.2.2 dependency remains in production code
+
+TASK 2 — CAPACITOR ENVIRONMENT SEPARATION
+
+Create a clean environment-based configuration.
+
+Development:
+
+CAPACITOR_SERVER_URL=http://10.0.2.2:3000
+
+Production:
+
+CAPACITOR_SERVER_URL=https://<PRODUCTION-DOMAIN>
+
+Do NOT hard-code the production domain if the domain has not yet been supplied.
+
+Do NOT use:
+http://10.0.2.2:3000
+
+for the production APK.
+
+TASK 3 — VERIFY PRODUCTION WEB APP
+
+After the production application is deployed, verify that:
+
+https://<PRODUCTION-DOMAIN>
+
+loads the real Rakshi Coco ERP.
+
+Verify:
+- login
+- authentication
+- dashboard
+- Supabase connection
+- navigation
+- forms
+- Server Actions
+- database operations
+
+TASK 4 — CAPACITOR PRODUCTION BUILD
+
+Configure Capacitor to use the production HTTPS URL.
+
+Run:
+
+npx cap sync android
+
+Then:
+
+cd android
+.\gradlew.bat assembleDebug
+
+Generate a new production-connected debug APK.
+
+TASK 5 — TEST PRODUCTION APK
+
+Install the new APK on emulator-5554.
+
+Verify:
+
+APK
+→ HTTPS production URL
+→ Next.js
+→ Supabase
+
+Confirm:
+- login works
+- dashboard works
+- real ERP UI loads
+- no localhost
+- no 10.0.2.2
+- no blank WebView
+- no placeholder
+- no crash
+
+TASK 6 — SECURITY
+
+Before generating the production APK:
+
+Verify:
+- HTTPS URL
+- no Supabase service-role key in client bundle
+- no passwords/secrets committed to Git
+- no debug-only credentials embedded
+- Android cleartext traffic is not required for production
+- development-only network configuration is separated from production
+
+TASK 7 — RELEASE PREPARATION
+
+Do NOT publish to Play Store yet.
+
+Prepare the project for release signing, but do not generate or commit signing secrets.
+
+Do NOT commit:
+- keystore
+- passwords
+- signing credentials
+- production secrets
+
+TASK 8 — FINAL REPORT
+
+Report:
+
+PRODUCTION WEB BUILD: PASS/FAIL
+PRODUCTION URL: <URL or NOT CONFIGURED>
+CAPACITOR PRODUCTION CONFIG: PASS/FAIL
+HTTPS: PASS/FAIL
+ANDROID DEBUG APK: PASS/FAIL
+APK PATH: <exact path>
+APK SIZE: <size>
+APK INSTALL: PASS/FAIL
+PRODUCTION APK LAUNCH: PASS/FAIL
+LOGIN: PASS/FAIL
+DASHBOARD: PASS/FAIL
+SUPABASE: PASS/FAIL
+10.0.2.2 PRESENT IN PRODUCTION: YES/NO
+LOCALHOST PRESENT IN PRODUCTION: YES/NO
+SERVICE ROLE KEY EXPOSED: YES/NO
+CLEARtext HTTP REQUIRED: YES/NO
+
+Do not call the APK production-ready until it actually connects to the production HTTPS application.

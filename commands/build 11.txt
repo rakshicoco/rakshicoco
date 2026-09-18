@@ -1,0 +1,151 @@
+RAKSHI COCO — FINAL ANDROID APK BUILD & RUN
+
+The Next.js ERP is currently running successfully at:
+
+http://localhost:3000
+
+The Android Capacitor project is located at:
+
+C:\dev\RakshiCoco\android
+
+I now want you to build and run the ACTUAL Rakshi Coco ERP Android application.
+
+IMPORTANT:
+Do not redesign or rewrite the application.
+Do not create placeholder HTML.
+Do not use the temporary `out/index.html` containing `<html><body>App</body></html>` as the application content.
+
+TASK 1 — INSPECT CAPACITOR
+
+Open:
+
+C:\dev\RakshiCoco\capacitor.config.ts
+
+Determine exactly how the Capacitor WebView is configured.
+
+Verify whether it uses:
+- hosted Next.js URL
+- local web assets
+- temporary `out` directory
+
+If it points to the placeholder `out` directory, STOP and report it before building.
+
+The APK must load the REAL Rakshi Coco ERP.
+
+TASK 2 — LOCAL DEVELOPMENT PREVIEW
+
+For Android Studio emulator testing, if the application is intended to load the Next.js development server:
+
+Use the Android emulator host address:
+
+http://10.0.2.2:3000
+
+Do NOT use `http://localhost:3000` inside the Android emulator, because localhost from the emulator refers to the emulator itself.
+
+If necessary, configure the development Capacitor environment so that:
+
+Android Emulator → 10.0.2.2:3000 → Next.js development server
+
+Do not permanently hard-code this as the production URL.
+
+TASK 3 — VERIFY ANDROID ENVIRONMENT
+
+Check:
+
+java -version
+adb version
+
+Verify:
+- Android SDK
+- platform-tools
+- build-tools
+- Gradle
+- Android Gradle Plugin compatibility
+
+Do not upgrade versions unnecessarily.
+
+TASK 4 — SYNC CAPACITOR
+
+From:
+
+C:\dev\RakshiCoco
+
+run the appropriate Capacitor synchronization command:
+
+npx cap sync android
+
+If Capacitor CLI is unavailable, report the exact dependency problem.
+
+TASK 5 — BUILD DEBUG APK
+
+From:
+
+C:\dev\RakshiCoco\android
+
+run:
+
+.\gradlew assembleDebug
+
+Wait for the build to actually finish.
+
+Do NOT claim success merely because Gradle starts.
+
+TASK 6 — LOCATE APK
+
+After a successful build, locate the actual generated APK.
+
+Normally it may be:
+
+C:\dev\RakshiCoco\android\app\build\outputs\apk\debug\app-debug.apk
+
+But VERIFY the path.
+
+TASK 7 — RUN THE APPLICATION
+
+If an emulator is available:
+
+adb devices
+
+Install:
+
+adb install -r "<ACTUAL_APK_PATH>"
+
+Launch the application.
+
+Verify that the first screen is the REAL Rakshi Coco ERP login/application UI.
+
+Check:
+- Rakshi Coco logo
+- Login
+- Dashboard
+- Bottom navigation
+- Mobile layout
+- no WebView blank screen
+- no "App" placeholder
+- no immediate crash
+
+TASK 8 — FINAL REPORT
+
+Return:
+
+ANDROID PROJECT: PASS/FAIL
+CAPACITOR SYNC: PASS/FAIL
+GRADLE BUILD: PASS/FAIL
+APK GENERATED: YES/NO
+APK EXACT PATH: <verified absolute path>
+APK INSTALLED: YES/NO
+APP LAUNCHED: YES/NO
+REAL ERP UI VISIBLE: YES/NO
+PLACEHOLDER UI PRESENT: YES/NO
+RUNTIME ERRORS: <exact errors or NONE>
+
+If anything fails, give the exact error and do NOT hide or bypass it.
+
+The success condition is:
+
+REAL RAKSHI COCO ERP
+→ Capacitor Android project
+→ successful Gradle build
+→ actual app-debug.apk
+→ APK launches
+→ actual ERP UI appears.
