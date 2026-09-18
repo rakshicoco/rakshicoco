@@ -20,11 +20,14 @@ export function BottomNav() {
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 z-50 w-full h-16 bg-white border-t border-slate-200 dark:bg-slate-900 dark:border-slate-800 pb-safe">
-        <div className="grid h-full max-w-lg grid-cols-5 mx-auto font-medium">
+      <nav 
+        className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 pb-safe transition-all"
+        role="navigation"
+        aria-label="Bottom Navigation"
+      >
+        <div className="grid h-16 max-w-lg md:max-w-xl grid-cols-5 mx-auto px-2">
           {navItems.map((item) => {
             const Icon = item.icon;
-            // Check if active. Dashboard is exact, others prefix
             const isActive =
               item.href === "/dashboard"
                 ? pathname === "/dashboard"
@@ -35,12 +38,25 @@ export function BottomNav() {
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  "inline-flex flex-col items-center justify-center px-5 hover:bg-slate-50 dark:hover:bg-slate-800 group",
-                  isActive ? "text-primary" : "text-slate-500 dark:text-slate-400"
+                  "inline-flex flex-col items-center justify-center py-1 transition-all active:scale-90 group relative",
+                  isActive ? "text-primary" : "text-slate-500 dark:text-slate-400 hover:text-slate-700"
                 )}
               >
-                <Icon size={24} className={cn("mb-1", isActive && "text-primary")} />
-                <span className="text-[10px] sm:text-xs">{item.name}</span>
+                {/* Active Indicator Pill */}
+                <div 
+                  className={cn(
+                    "flex items-center justify-center w-12 h-7 rounded-full mb-0.5 transition-colors",
+                    isActive ? "bg-primary/15 text-primary font-semibold dark:bg-primary/25" : "text-slate-500"
+                  )}
+                >
+                  <Icon size={20} className={cn("transition-transform", isActive && "scale-110 stroke-[2.3]")} />
+                </div>
+                <span className={cn(
+                  "text-[11px] tracking-tight leading-none",
+                  isActive ? "font-bold text-primary" : "font-medium"
+                )}>
+                  {item.name}
+                </span>
               </Link>
             );
           })}
@@ -48,13 +64,17 @@ export function BottomNav() {
           <button
             onClick={() => setDrawerOpen(true)}
             type="button"
-            className="inline-flex flex-col items-center justify-center px-5 hover:bg-slate-50 dark:hover:bg-slate-800 group text-slate-500 dark:text-slate-400"
+            className="inline-flex flex-col items-center justify-center py-1 transition-all active:scale-90 group text-slate-500 dark:text-slate-400 hover:text-slate-700"
+            aria-label="Open full menu"
           >
-            <Menu size={24} className="mb-1" />
-            <span className="text-[10px] sm:text-xs">More</span>
+            <div className="flex items-center justify-center w-12 h-7 rounded-full mb-0.5 group-hover:bg-slate-100 dark:group-hover:bg-slate-800 transition-colors">
+              <Menu size={20} />
+            </div>
+            <span className="text-[11px] font-medium tracking-tight leading-none">More</span>
           </button>
         </div>
-      </div>
+      </nav>
+
       <MobileDrawer open={drawerOpen} onOpenChange={setDrawerOpen} />
     </>
   );

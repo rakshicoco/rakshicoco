@@ -4,6 +4,7 @@ import Link from "next/link";
 import { LogOut, Settings, Users, Truck, Factory, Archive, UsersRound, UserSquare, CreditCard, Send, Activity, TrendingUp, CalendarClock, Bell, Landmark, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logout } from "@/app/login/actions";
+import { cn } from "@/lib/utils";
 
 interface MobileDrawerProps {
   open: boolean;
@@ -15,19 +16,34 @@ export function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex">
-      <div className="fixed inset-0 bg-black/80" onClick={() => onOpenChange(false)} />
-      <div className="relative z-50 flex w-[300px] flex-col overflow-y-auto bg-white dark:bg-slate-900 pb-20 p-6">
-        <div className="flex items-center justify-between">
+      {/* Backdrop */}
+      <div 
+        className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity animate-in fade-in" 
+        onClick={() => onOpenChange(false)} 
+      />
+
+      {/* Drawer Panel */}
+      <div className="relative z-50 flex w-[85%] max-w-[320px] flex-col bg-white dark:bg-slate-900 shadow-2xl pt-safe pb-safe animate-in slide-in-from-left duration-200">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
           <div>
-            <h2 className="text-lg font-semibold text-primary">Rakshi Coco</h2>
-            <p className="text-sm text-slate-500">More Modules & Settings</p>
+            <h2 className="text-lg font-bold text-primary dark:text-emerald-400">Rakshi Coco</h2>
+            <p className="text-xs text-slate-500">Navigation & Operations</p>
           </div>
-          <button onClick={() => onOpenChange(false)} className="p-2"><X size={20} /></button>
+          <button 
+            onClick={() => onOpenChange(false)} 
+            className="flex items-center justify-center w-8 h-8 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 transition-all"
+            aria-label="Close menu"
+          >
+            <X size={18} />
+          </button>
         </div>
         
-        <div className="py-4 space-y-6">
-          <div className="space-y-3">
-            <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Operations</h4>
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-6">
+          {/* Operations */}
+          <div className="space-y-2.5">
+            <h4 className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Operations</h4>
             <div className="grid grid-cols-2 gap-2">
               <DrawerLink href="/dashboard/cutting" icon={<Settings size={16} />} label="Cutting" onClick={() => onOpenChange(false)} />
               <DrawerLink href="/dashboard/grouping" icon={<Users size={16} />} label="Grouping" onClick={() => onOpenChange(false)} />
@@ -37,49 +53,60 @@ export function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) {
             </div>
           </div>
 
-          <div className="space-y-3">
-            <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Labour</h4>
+          {/* Labour */}
+          <div className="space-y-2.5">
+            <h4 className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Labour</h4>
             <div className="grid grid-cols-2 gap-2">
               <DrawerLink href="/dashboard/teams" icon={<UsersRound size={16} />} label="Teams" onClick={() => onOpenChange(false)} />
               <DrawerLink href="/dashboard/workers" icon={<UserSquare size={16} />} label="Workers" onClick={() => onOpenChange(false)} />
-              <DrawerLink href="/dashboard/labour-payments" icon={<CreditCard size={16} />} label="Payments" onClick={() => onOpenChange(false)} />
+              <DrawerLink href="/dashboard/labour-payments" icon={<CreditCard size={16} />} label="Wages" onClick={() => onOpenChange(false)} />
             </div>
           </div>
 
-          <div className="space-y-3">
-            <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Sales</h4>
+          {/* Sales & Dispatch */}
+          <div className="space-y-2.5">
+            <h4 className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Sales</h4>
             <div className="grid grid-cols-2 gap-2">
               <DrawerLink href="/dashboard/buyers" icon={<UserSquare size={16} />} label="Buyers" onClick={() => onOpenChange(false)} />
               <DrawerLink href="/dashboard/dispatch" icon={<Send size={16} />} label="Dispatch" onClick={() => onOpenChange(false)} />
             </div>
           </div>
           
-          <div className="space-y-3">
-            <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Finance</h4>
+          {/* Finance */}
+          <div className="space-y-2.5">
+            <h4 className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Finance</h4>
             <div className="grid grid-cols-2 gap-2">
               <DrawerLink href="/dashboard/receivables" icon={<Activity size={16} />} label="Receivables" onClick={() => onOpenChange(false)} />
               <DrawerLink href="/dashboard/payables" icon={<Landmark size={16} />} label="Payables" onClick={() => onOpenChange(false)} />
               <DrawerLink href="/dashboard/expenses" icon={<TrendingUp size={16} />} label="Expenses" onClick={() => onOpenChange(false)} />
+              <DrawerLink href="/dashboard/pnl" icon={<TrendingUp size={16} />} label="P & L" onClick={() => onOpenChange(false)} />
             </div>
           </div>
 
-          <div className="space-y-3">
-            <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Reports & Config</h4>
+          {/* Settings & System */}
+          <div className="space-y-2.5">
+            <h4 className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">System</h4>
             <div className="grid grid-cols-2 gap-2">
-              <DrawerLink href="/dashboard/farm-follow-ups" icon={<CalendarClock size={16} />} label="Follow-ups" onClick={() => onOpenChange(false)} />
-              <DrawerLink href="/dashboard/notifications" icon={<Bell size={16} />} label="Notifications" onClick={() => onOpenChange(false)} />
+              <DrawerLink href="/dashboard/farm-followups" icon={<CalendarClock size={16} />} label="Follow-ups" onClick={() => onOpenChange(false)} />
+              <DrawerLink href="/dashboard/notifications" icon={<Bell size={16} />} label="Alerts" onClick={() => onOpenChange(false)} />
+              <DrawerLink href="/dashboard/audit-log" icon={<Activity size={16} />} label="Audit Log" onClick={() => onOpenChange(false)} />
               <DrawerLink href="/dashboard/settings" icon={<Settings size={16} />} label="Settings" onClick={() => onOpenChange(false)} />
             </div>
           </div>
+        </div>
 
-          <div className="pt-4 border-t">
-            <form action={logout}>
-              <Button variant="outline" className="w-full justify-start text-slate-600" type="submit">
-                <LogOut size={16} className="mr-2" />
-                Logout
-              </Button>
-            </form>
-          </div>
+        {/* Footer */}
+        <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+          <form action={logout}>
+            <Button 
+              variant="outline" 
+              className="w-full justify-center text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700 dark:border-rose-900/50 dark:hover:bg-rose-950/30 active:scale-95 transition-all text-sm font-semibold h-11" 
+              type="submit"
+            >
+              <LogOut size={16} className="mr-2" />
+              Sign Out
+            </Button>
+          </form>
         </div>
       </div>
     </div>
@@ -91,10 +118,10 @@ function DrawerLink({ href, icon, label, onClick }: { href: string; icon: React.
     <Link 
       href={href} 
       onClick={onClick}
-      className="flex flex-col items-center justify-center p-3 text-sm font-medium rounded-xl border border-slate-100 bg-slate-50 text-slate-700 hover:text-primary hover:border-primary/20 hover:bg-primary/5 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:text-white transition-colors"
+      className="flex flex-col items-center justify-center p-3 text-xs font-semibold rounded-xl border border-slate-200/70 bg-slate-50/80 text-slate-700 hover:text-primary hover:border-primary/30 hover:bg-primary/5 active:scale-95 dark:bg-slate-800/80 dark:border-slate-700 dark:text-slate-200 dark:hover:text-white transition-all shadow-xs"
     >
-      <span className="mb-2 text-slate-500">{icon}</span>
-      {label}
+      <span className="mb-1.5 text-slate-500 dark:text-slate-400 group-hover:text-primary">{icon}</span>
+      <span className="truncate max-w-full">{label}</span>
     </Link>
   );
 }

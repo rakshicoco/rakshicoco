@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { TopBar } from '@/components/navigation/TopBar'
 import { BottomNav } from '@/components/navigation/BottomNav'
 import { QuickActionButton } from '@/components/ui/QuickActionButton'
 
@@ -16,19 +17,22 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-950 pb-16">
-      {/* Main Content Area */}
-      <div className="flex-1 overflow-auto">
-        <main className="min-h-full">
+    <div className="flex flex-col min-h-screen min-h-[100dvh] bg-slate-50 dark:bg-slate-950 antialiased selection:bg-primary/20">
+      {/* Android Mobile Native Top App Bar */}
+      <TopBar />
+
+      {/* Main Scrollable Content Area */}
+      <div className="flex-1 w-full overflow-y-auto overscroll-contain">
+        <main className="w-full max-w-lg md:max-w-4xl lg:max-w-6xl mx-auto px-4 py-4 pb-32 sm:px-6 sm:pb-24">
           {children}
         </main>
       </div>
 
+      {/* Floating Quick Action Button */}
       <QuickActionButton />
       
-      {/* Mobile Bottom Navigation */}
+      {/* Android Bottom Navigation */}
       <BottomNav />
     </div>
   )
 }
-

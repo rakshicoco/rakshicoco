@@ -58,7 +58,63 @@
   * {
     @apply border-border;
   }
+  
+  html {
+    /* Prevent rubber-banding on Android / iOS WebView */
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Prevent text selection on interactive UI elements */
+  button, 
+  nav, 
+  header, 
+  [role="button"], 
+  .no-select {
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+
+  /* Mobile responsive table wrapper */
+  .table-responsive,
+  .rounded-md.border:has(table) {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  @media (max-width: 640px) {
+    table {
+      min-width: 540px;
+    }
+    
+    /* Ensure form inputs are comfortably sized for mobile touch */
+    input, select, textarea {
+      font-size: 16px !important; /* Prevents auto-zoom on mobile inputs */
+    }
+  }
+
+  /* Safe Area Inset Helpers for Android APK */
+  .pt-safe {
+    padding-top: max(env(safe-area-inset-top, 0px), 0.5rem);
+  }
+  .pb-safe {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 0.5rem);
+  }
+  .h-nav-bottom {
+    height: calc(4rem + env(safe-area-inset-bottom, 0px));
+  }
+  .bottom-nav-offset {
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
   }
 }
+
