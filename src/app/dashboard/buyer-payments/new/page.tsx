@@ -35,6 +35,7 @@ export default function NewBuyerPaymentPage() {
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
     setError(null);
 

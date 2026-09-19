@@ -8,28 +8,40 @@ import { EmptyState } from '@/components/ui/EmptyState'
 export default async function StockPage() {
   const supabase = await createClient()
   
-  // Fetch stock movements
-  const { data: movements, error } = await supabase
-    .from('stock_movements')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(100)
-
-  const { data: dispatches } = await supabase
-    .from('dispatches')
-    .select('loaded_quantity')
+  // Concurrently fetch stock movements and exact aggregate inflows/outflows
+  const [
+    { data: movements, error },
+    { data: readyMovements },
+    { data: dispatches },
+    { data: wasteMovements }
+  ] = await Promise.all([
+    supabase
+      .from('stock_movements')
+      .select('id, godown_id, product_type, qty, from_state, to_state, reference_type, reference_id, notes, created_at')
+      .order('created_at', { ascending: false })
+      .limit(30),
+    supabase
+      .from('stock_movements')
+      .select('qty')
+      .eq('to_state', 'READY'),
+    supabase
+      .from('dispatches')
+      .select('loaded_quantity'),
+    supabase
+      .from('stock_movements')
+      .select('qty')
+      .in('to_state', ['DAMAGED', 'REJECTED', 'WASTAGE'])
+  ])
 
   const totalDispatched = dispatches?.reduce((acc: number, curr: { loaded_quantity?: number }) => acc + Number(curr.loaded_quantity || 0), 0) || 0
 
-  const readyInflow = movements
-    ?.filter((m: any) => m.to_state === 'READY')
-    .reduce((acc: number, curr: any) => acc + Number(curr.qty || curr.quantity || 0), 0) || 0
+  const readyInflow = readyMovements
+    ?.reduce((acc: number, curr: any) => acc + Number(curr.qty || 0), 0) || 0
 
   const readyStock = Math.max(0, readyInflow - totalDispatched)
 
-  const damagedLoss = movements
-    ?.filter((m: any) => m.to_state === 'DAMAGED' || m.to_state === 'REJECTED' || m.to_state === 'WASTAGE')
-    .reduce((acc: number, curr: any) => acc + Number(curr.qty || curr.quantity || 0), 0) || 0
+  const damagedLoss = wasteMovements
+    ?.reduce((acc: number, curr: any) => acc + Number(curr.qty || 0), 0) || 0
 
   const hasMovements = Boolean(!error && movements && movements.length > 0)
 

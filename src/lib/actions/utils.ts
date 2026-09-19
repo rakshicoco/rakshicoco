@@ -40,15 +40,16 @@ export async function logAudit(
   details: any
 ) {
   const adminClient = createAdminClient();
-  const { error } = await adminClient.from('audit_logs').insert({
+  // Fire audit log asynchronously to eliminate round-trip latency on user response
+  adminClient.from('audit_logs').insert({
     user_id: userId,
     action,
     entity_type: entityType,
     entity_id: entityId,
     details,
+  }).then(({ error }) => {
+    if (error) console.error('Failed to write audit log:', error);
+  }).catch((err) => {
+    console.error('Audit log write exception:', err);
   });
-
-  if (error) {
-    console.error('Failed to write audit log:', error);
-  }
 }

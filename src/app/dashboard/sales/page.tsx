@@ -9,14 +9,24 @@ import { EmptyState } from '@/components/ui/EmptyState'
 export default async function SalesPage() {
   const supabase = await createClient()
   
-  // Fetch sales orders
+  // Fetch sales orders (explicit columns + limit 30)
   const { data: sales, error } = await supabase
     .from('sales_orders')
     .select(`
-      *,
+      id,
+      buyer_id,
+      date,
+      product_type,
+      quantity,
+      rate,
+      total_amount,
+      status,
+      delivery_address,
+      created_at,
       buyers:buyer_id (name, contact_person)
     `)
     .order('created_at', { ascending: false })
+    .limit(30)
 
   const hasSales = Boolean(!error && sales && sales.length > 0)
 

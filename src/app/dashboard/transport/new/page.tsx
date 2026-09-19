@@ -21,27 +21,24 @@ export default function NewTransportPage() {
     async function loadEntities() {
       const supabase = await createClient();
       
-      if (sourceType === "FARM") {
-        const { data } = await supabase.from('farms').select('id, name');
-        setSources(data || []);
-      } else {
-        const { data } = await supabase.from('godowns').select('id, name');
-        setSources(data || []);
-      }
+      const sourceQuery = sourceType === "FARM"
+        ? supabase.from('farms').select('id, name')
+        : supabase.from('godowns').select('id, name');
 
-      if (destinationType === "GODOWN") {
-        const { data } = await supabase.from('godowns').select('id, name');
-        setDestinations(data || []);
-      } else {
-        const { data } = await supabase.from('buyers').select('id, name');
-        setDestinations(data || []);
-      }
+      const destQuery = destinationType === "GODOWN"
+        ? supabase.from('godowns').select('id, name')
+        : supabase.from('buyers').select('id, name');
+
+      const [{ data: srcData }, { data: dstData }] = await Promise.all([sourceQuery, destQuery]);
+      setSources(srcData || []);
+      setDestinations(dstData || []);
     }
     loadEntities();
   }, [sourceType, destinationType]);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
     setError(null);
     

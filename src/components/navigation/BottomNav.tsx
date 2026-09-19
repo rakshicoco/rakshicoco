@@ -37,8 +37,9 @@ export function BottomNav() {
               <Link
                 key={item.name}
                 href={item.href}
+                prefetch={true}
                 className={cn(
-                  "inline-flex flex-col items-center justify-center py-1 transition-all active:scale-90 group relative",
+                  "inline-flex flex-col items-center justify-center py-1 transition-transform duration-75 active:scale-95 group relative touch-manipulation",
                   isActive ? "text-primary" : "text-slate-500 dark:text-slate-400 hover:text-slate-700"
                 )}
               >
@@ -64,7 +65,7 @@ export function BottomNav() {
           <button
             onClick={() => setDrawerOpen(true)}
             type="button"
-            className="inline-flex flex-col items-center justify-center py-1 transition-all active:scale-90 group text-slate-500 dark:text-slate-400 hover:text-slate-700"
+            className="inline-flex flex-col items-center justify-center py-1 transition-transform duration-75 active:scale-95 group text-slate-500 dark:text-slate-400 hover:text-slate-700 touch-manipulation"
             aria-label="Open full menu"
           >
             <div className="flex items-center justify-center w-12 h-7 rounded-full mb-0.5 group-hover:bg-slate-100 dark:group-hover:bg-slate-800 transition-colors">

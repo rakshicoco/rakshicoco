@@ -9,14 +9,28 @@ import { EmptyState } from '@/components/ui/EmptyState'
 export default async function TransportPage() {
   const supabase = await createClient()
   
-  // Fetch transport trips
+  // Fetch transport trips (explicit columns + limit 30)
   const { data: trips, error } = await supabase
     .from('transport_trips')
     .select(`
-      *,
+      id,
+      source_type,
+      destination_type,
+      vehicle_number,
+      driver_name,
+      driver_phone,
+      expected_quantity,
+      received_quantity,
+      damaged_quantity,
+      freight_amount,
+      status,
+      date,
+      notes,
+      created_at,
       workers:driver_id (name)
     `)
     .order('created_at', { ascending: false })
+    .limit(30)
 
   const hasTrips = Boolean(!error && trips && trips.length > 0)
 

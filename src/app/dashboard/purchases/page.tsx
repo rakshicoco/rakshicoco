@@ -9,17 +9,26 @@ import { EmptyState } from '@/components/ui/EmptyState'
 export default async function PurchasesPage() {
   const supabase = await createClient()
   
-  // Fetch purchases joined with farms
+  // Fetch purchases joined with farms (explicit columns + limit 30)
   const { data: purchases, error } = await supabase
     .from('purchases')
     .select(`
-      *,
+      id,
+      farm_id,
+      expected_date,
+      expected_quantity,
+      actual_quantity,
+      rate,
+      balance,
+      status,
+      created_at,
       farms:farm_id (
         owner_name,
         village
       )
     `)
     .order('created_at', { ascending: false })
+    .limit(30)
 
   const hasPurchases = Boolean(!error && purchases && purchases.length > 0)
 

@@ -9,11 +9,12 @@ import { EmptyState } from '@/components/ui/EmptyState'
 export default async function FarmsPage() {
   const supabase = await createClient()
   
-  // Fetch farms
+  // Fetch farms with explicit column selection and page limit
   const { data: farms, error } = await supabase
     .from('farms')
-    .select('*')
+    .select('id, name, owner_name, village, phone, expected_next_harvest, active, created_at')
     .order('created_at', { ascending: false })
+    .limit(30)
 
   const hasFarms = Boolean(!error && farms && farms.length > 0)
 

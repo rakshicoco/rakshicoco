@@ -19,23 +19,30 @@ import {
 export default async function DashboardPage() {
   const supabase = await createClient()
   
-  // Dashboard Metrics
-  const { count: farmsCount } = await supabase.from('farms').select('*', { count: 'exact', head: true }).eq('active', true)
-  const { count: harvestCount } = await supabase.from('purchases').select('*', { count: 'exact', head: true }).eq('status', 'CONFIRMED')
-  const { count: pendingSalesCount } = await supabase.from('sales_orders').select('*', { count: 'exact', head: true }).eq('status', 'Draft')
-  
-  const { data: stockMovements } = await supabase.from('stock_movements').select('qty').eq('to_state', 'READY')
+  // Concurrently execute all independent dashboard KPI queries
+  const [
+    { count: farmsCount },
+    { count: harvestCount },
+    { count: pendingSalesCount },
+    { data: stockMovements },
+    { data: dispatches },
+    { data: bills },
+    { data: purchases }
+  ] = await Promise.all([
+    supabase.from('farms').select('id', { count: 'exact', head: true }).eq('active', true),
+    supabase.from('purchases').select('id', { count: 'exact', head: true }).eq('status', 'CONFIRMED'),
+    supabase.from('sales_orders').select('id', { count: 'exact', head: true }).eq('status', 'Draft'),
+    supabase.from('stock_movements').select('qty').eq('to_state', 'READY'),
+    supabase.from('dispatches').select('loaded_quantity'),
+    supabase.from('bills').select('balance_due').gt('balance_due', 0),
+    supabase.from('purchases').select('balance').gt('balance', 0)
+  ])
+
   const readyInflow = stockMovements?.reduce((acc: number, curr: { qty?: number }) => acc + Number(curr.qty || 0), 0) || 0
-
-  const { data: dispatches } = await supabase.from('dispatches').select('loaded_quantity')
   const dispatchedOutflow = dispatches?.reduce((acc: number, curr: { loaded_quantity?: number }) => acc + Number(curr.loaded_quantity || 0), 0) || 0
-
   const readyStock = Math.max(0, readyInflow - dispatchedOutflow)
 
-  const { data: bills } = await supabase.from('bills').select('balance_due').gt('balance_due', 0)
   const receivables = bills?.reduce((acc: number, curr: { balance_due?: number }) => acc + Number(curr.balance_due || 0), 0) || 0
-
-  const { data: purchases } = await supabase.from('purchases').select('balance').gt('balance', 0)
   const payables = purchases?.reduce((acc: number, curr: { balance?: number }) => acc + Number(curr.balance || 0), 0) || 0
 
   // Format today's date
@@ -68,7 +75,7 @@ export default async function DashboardPage() {
 
       {/* 2. Financial Working Capital Strip */}
       <div className="grid grid-cols-2 gap-2.5">
-        <Link href="/dashboard/bills" className="group">
+        <Link href="/dashboard/bills" prefetch={true} className="group">
           <Card className="rounded-2xl border-slate-200/80 dark:border-slate-800 bg-linear-to-br from-emerald-50/70 to-white dark:from-emerald-950/25 dark:to-slate-900 shadow-xs group-hover:border-emerald-300 transition-all active:scale-[0.98]">
             <CardContent className="p-3.5 flex flex-col justify-between h-full">
               <div className="flex items-center justify-between mb-2">
@@ -91,7 +98,7 @@ export default async function DashboardPage() {
           </Card>
         </Link>
 
-        <Link href="/dashboard/purchases" className="group">
+        <Link href="/dashboard/purchases" prefetch={true} className="group">
           <Card className="rounded-2xl border-slate-200/80 dark:border-slate-800 bg-linear-to-br from-amber-50/70 to-white dark:from-amber-950/25 dark:to-slate-900 shadow-xs group-hover:border-amber-300 transition-all active:scale-[0.98]">
             <CardContent className="p-3.5 flex flex-col justify-between h-full">
               <div className="flex items-center justify-between mb-2">
@@ -117,7 +124,7 @@ export default async function DashboardPage() {
 
       {/* 3. Physical Inventory & Farm Assets */}
       <div className="grid grid-cols-2 gap-2.5">
-        <Link href="/dashboard/stock" className="group">
+        <Link href="/dashboard/stock" prefetch={true} className="group">
           <Card className="rounded-2xl border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs group-hover:border-primary/40 transition-all active:scale-[0.98]">
             <CardContent className="p-3.5 flex flex-col justify-between h-full">
               <div className="flex items-center justify-between mb-2">
@@ -141,7 +148,7 @@ export default async function DashboardPage() {
           </Card>
         </Link>
 
-        <Link href="/dashboard/farms" className="group">
+        <Link href="/dashboard/farms" prefetch={true} className="group">
           <Card className="rounded-2xl border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs group-hover:border-primary/40 transition-all active:scale-[0.98]">
             <CardContent className="p-3.5 flex flex-col justify-between h-full">
               <div className="flex items-center justify-between mb-2">
@@ -174,6 +181,7 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-4 gap-2">
           <Link
             href="/dashboard/purchases/new"
+            prefetch={true}
             className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs hover:border-primary active:scale-95 transition-all text-center group"
           >
             <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center justify-center mb-1.5 group-hover:bg-emerald-100 transition-colors">
@@ -186,6 +194,7 @@ export default async function DashboardPage() {
 
           <Link
             href="/dashboard/sales/new"
+            prefetch={true}
             className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs hover:border-primary active:scale-95 transition-all text-center group"
           >
             <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 flex items-center justify-center mb-1.5 group-hover:bg-blue-100 transition-colors">
@@ -198,6 +207,7 @@ export default async function DashboardPage() {
 
           <Link
             href="/dashboard/buyer-payments/new"
+            prefetch={true}
             className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs hover:border-primary active:scale-95 transition-all text-center group"
           >
             <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 flex items-center justify-center mb-1.5 group-hover:bg-purple-100 transition-colors">
@@ -210,6 +220,7 @@ export default async function DashboardPage() {
 
           <Link
             href="/dashboard/farms/new"
+            prefetch={true}
             className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs hover:border-primary active:scale-95 transition-all text-center group"
           >
             <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 flex items-center justify-center mb-1.5 group-hover:bg-amber-100 transition-colors">
@@ -234,7 +245,7 @@ export default async function DashboardPage() {
         </div>
 
         <div className="space-y-2">
-          <Link href="/dashboard/purchases" className="block group">
+          <Link href="/dashboard/purchases" prefetch={true} className="block group">
             <Card className="rounded-2xl border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs group-hover:border-amber-400 active:scale-[0.98] transition-all">
               <CardContent className="p-3.5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -255,7 +266,7 @@ export default async function DashboardPage() {
             </Card>
           </Link>
 
-          <Link href="/dashboard/sales" className="block group">
+          <Link href="/dashboard/sales" prefetch={true} className="block group">
             <Card className="rounded-2xl border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs group-hover:border-blue-400 active:scale-[0.98] transition-all">
               <CardContent className="p-3.5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -291,6 +302,7 @@ export default async function DashboardPage() {
         </div>
         <Link 
           href="/dashboard/stock" 
+          prefetch={true}
           className="text-[11px] font-bold text-primary dark:text-emerald-400 hover:underline px-2 py-1"
         >
           View Stock

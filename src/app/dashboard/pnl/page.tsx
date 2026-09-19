@@ -8,41 +8,53 @@ export default async function PnlPage() {
   
   // Calculate P&L metrics based on accrued values (Sales vs COGS + Expenses)
   
+  // Concurrently execute all accounting queries via Promise.all
+  const [
+    { data: sales },
+    { data: purchases },
+    { data: cutting },
+    { data: trips },
+    { data: expenses }
+  ] = await Promise.all([
+    supabase
+      .from('sales_orders')
+      .select('total_amount, quantity, rate')
+      .neq('status', 'CANCELLED'),
+    supabase
+      .from('purchases')
+      .select('actual_quantity, expected_quantity, rate')
+      .in('status', ['CONFIRMED', 'COMPLETED'])
+      .not('actual_quantity', 'is', null),
+    supabase
+      .from('cutting_batches')
+      .select('actual_output_nuts, rate_per_nut')
+      .neq('status', 'CANCELLED'),
+    supabase
+      .from('transport_trips')
+      .select('freight_amount')
+      .neq('status', 'CANCELLED'),
+    supabase
+      .from('expenses')
+      .select('amount')
+  ])
+
   // 1. Revenue (From Sales Orders that are not cancelled)
-  const { data: sales } = await supabase
-    .from('sales_orders')
-    .select('total_amount, quantity, rate')
-    .neq('status', 'CANCELLED')
   const totalRevenue = (sales || []).reduce((acc, s: any) => acc + Number(s.total_amount || (s.quantity * s.rate) || 0), 0)
   
   // 2. Cost of Goods Sold (COGS) — Direct material procurement for units sold
   const totalDispatchedQty = (sales || []).reduce((acc, s: any) => acc + Number(s.quantity || 0), 0)
-  const { data: purchases } = await supabase
-    .from('purchases')
-    .select('actual_quantity, expected_quantity, rate')
-    .in('status', ['CONFIRMED', 'COMPLETED'])
-    .not('actual_quantity', 'is', null)
   const totalPurchasedNuts = (purchases || []).reduce((acc, p: any) => acc + Number(p.actual_quantity || 0), 0)
   const totalPurchaseSpend = (purchases || []).reduce((acc, p: any) => acc + Number((p.actual_quantity || 0) * (p.rate || 0)), 0)
   const avgPurchaseRate = totalPurchasedNuts > 0 ? (totalPurchaseSpend / totalPurchasedNuts) : 20
   const totalCogs = totalDispatchedQty * avgPurchaseRate
   
   // 3. Cutting & Processing Labour
-  const { data: cutting } = await supabase
-    .from('cutting_batches')
-    .select('actual_output_nuts, rate_per_nut')
-    .neq('status', 'CANCELLED')
   const totalLabour = (cutting || []).reduce((acc, c: any) => acc + Number((c.actual_output_nuts || 0) * (c.rate_per_nut || 0)), 0)
   
   // 4. Logistics & Transport Freight
-  const { data: trips } = await supabase
-    .from('transport_trips')
-    .select('freight_amount')
-    .neq('status', 'CANCELLED')
   const totalFreight = (trips || []).reduce((acc, t: any) => acc + Number(t.freight_amount || 0), 0)
   
   // 5. Operating Expenses
-  const { data: expenses } = await supabase.from('expenses').select('amount')
   const totalOpex = (expenses || []).reduce((acc, e: any) => acc + Number(e.amount || 0), 0)
 
   // Accounting Performance Calculations

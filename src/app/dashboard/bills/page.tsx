@@ -9,15 +9,20 @@ import { EmptyState } from '@/components/ui/EmptyState'
 export default async function BillsPage() {
   const supabase = await createClient()
   
-  // Fetch bills
-  const { data: rawBills, error } = await supabase
-    .from('bills')
-    .select('*')
-    .order('created_at', { ascending: false })
-
-  const { data: buyers } = await supabase
-    .from('buyers')
-    .select('id, name, contact_person')
+  // Concurrently fetch bills and buyers with explicit columns and limit 30
+  const [
+    { data: rawBills, error },
+    { data: buyers }
+  ] = await Promise.all([
+    supabase
+      .from('bills')
+      .select('id, entity_type, entity_id, amount, date, due_date, description, status, balance_due, created_at')
+      .order('created_at', { ascending: false })
+      .limit(30),
+    supabase
+      .from('buyers')
+      .select('id, name, contact_person')
+  ])
 
   const buyerMap = new Map((buyers || []).map((b: any) => [b.id, b]))
 

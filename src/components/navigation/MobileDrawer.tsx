@@ -130,8 +130,9 @@ function DrawerLink({ href, icon, label, onClick }: { href: string; icon: React.
   return (
     <Link 
       href={href} 
+      prefetch={true}
       onClick={onClick}
-      className="flex flex-col items-center justify-center p-3 text-xs font-semibold rounded-xl border border-slate-200/70 bg-slate-50/80 text-slate-700 hover:text-primary hover:border-primary/30 hover:bg-primary/5 active:scale-95 dark:bg-slate-800/80 dark:border-slate-700 dark:text-slate-200 dark:hover:text-white transition-all shadow-xs"
+      className="flex flex-col items-center justify-center p-3 text-xs font-semibold rounded-xl border border-slate-200/70 bg-slate-50/80 text-slate-700 hover:text-primary hover:border-primary/30 hover:bg-primary/5 active:scale-95 duration-75 touch-manipulation dark:bg-slate-800/80 dark:border-slate-700 dark:text-slate-200 dark:hover:text-white transition-all shadow-xs"
     >
       <span className="mb-1.5 text-slate-500 dark:text-slate-400 group-hover:text-primary">{icon}</span>
       <span className="truncate max-w-full">{label}</span>
