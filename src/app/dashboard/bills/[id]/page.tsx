@@ -10,26 +10,32 @@ export default async function BillDetailPage({ params }: { params: { id: string 
   const supabase = await createClient()
   
   // Fetch bill
-  const { data: bill, error } = await supabase
+  const { data: rawBill, error } = await supabase
     .from('bills')
-    .select(`
-      *,
-      buyers:buyer_id (
-        id,
-        name,
-        company,
-        phone,
-        address,
-        city,
-        state,
-        gstin
-      )
-    `)
+    .select('*')
     .eq('id', params.id)
     .single()
 
-  if (error || !bill) {
+  if (error || !rawBill) {
     notFound()
+  }
+
+  let buyer = null
+  if (rawBill.entity_id || rawBill.buyer_id) {
+    const { data: buyerData } = await supabase
+      .from('buyers')
+      .select('id, name, contact_person, phone, address, gstin')
+      .eq('id', rawBill.entity_id || rawBill.buyer_id)
+      .single()
+    buyer = buyerData
+  }
+
+  const bill = {
+    ...rawBill,
+    total_amount: rawBill.total_amount ?? rawBill.amount ?? 0,
+    bill_date: rawBill.bill_date ?? rawBill.date ?? rawBill.created_at,
+    due_date: rawBill.due_date ?? rawBill.date ?? rawBill.created_at,
+    buyers: buyer
   }
 
   return (

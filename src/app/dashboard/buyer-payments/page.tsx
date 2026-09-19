@@ -9,13 +9,25 @@ export default async function BuyerPaymentsPage() {
   const supabase = await createClient()
   
   // Fetch payments
-  const { data: payments, error } = await supabase
-    .from('buyer_payments')
-    .select(`
-      *,
-      buyers:buyer_id (name, company)
-    `)
-    .order('payment_date', { ascending: false })
+  const { data: rawPayments, error } = await supabase
+    .from('payments')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  const { data: buyers } = await supabase
+    .from('buyers')
+    .select('id, name, contact_person')
+
+  const buyerMap = new Map((buyers || []).map((b: any) => [b.id, b]))
+
+  const payments = (rawPayments || [])
+    .filter((p: any) => p.type === 'IN' || p.type === 'INWARD' || p.entity_type === 'BUYER')
+    .map((p: any) => ({
+      ...p,
+      payment_date: p.payment_date ?? p.date ?? p.created_at,
+      status: p.status ?? 'COMPLETED',
+      buyers: buyerMap.get(p.entity_id || p.buyer_id)
+    }))
 
   const hasPayments = Boolean(!error && payments && payments.length > 0)
 

@@ -10,13 +10,23 @@ export default async function BillsPage() {
   const supabase = await createClient()
   
   // Fetch bills
-  const { data: bills, error } = await supabase
+  const { data: rawBills, error } = await supabase
     .from('bills')
-    .select(`
-      *,
-      buyers:buyer_id (name, company)
-    `)
+    .select('*')
     .order('created_at', { ascending: false })
+
+  const { data: buyers } = await supabase
+    .from('buyers')
+    .select('id, name, contact_person')
+
+  const buyerMap = new Map((buyers || []).map((b: any) => [b.id, b]))
+
+  const bills = (rawBills || []).map((b: any) => ({
+    ...b,
+    total_amount: b.total_amount ?? b.amount ?? 0,
+    bill_date: b.bill_date ?? b.date ?? b.created_at,
+    buyers: buyerMap.get(b.entity_id || b.buyer_id)
+  }))
 
   const hasBills = Boolean(!error && bills && bills.length > 0)
 

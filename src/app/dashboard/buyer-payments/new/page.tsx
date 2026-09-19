@@ -11,7 +11,7 @@ import Link from "next/link";
 interface Buyer {
   id: string;
   name: string;
-  company?: string;
+  contact_person?: string;
 }
 
 export default function NewBuyerPaymentPage() {
@@ -27,7 +27,7 @@ export default function NewBuyerPaymentPage() {
   useEffect(() => {
     async function loadBuyers() {
       const supabase = createClient();
-      const { data } = await supabase.from("buyers").select("id, name, company").order("name");
+      const { data } = await supabase.from("buyers").select("id, name, contact_person").order("name");
       if (data) setBuyers(data);
     }
     loadBuyers();
@@ -121,7 +121,7 @@ export default function NewBuyerPaymentPage() {
                 <option value="">Select Buyer...</option>
                 {buyers.map((b) => (
                   <option key={b.id} value={b.id}>
-                    {b.company ? `${b.company} (${b.name})` : b.name}
+                    {b.contact_person ? `${b.name} (${b.contact_person})` : b.name}
                   </option>
                 ))}
               </select>

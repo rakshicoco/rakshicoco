@@ -14,7 +14,7 @@ export default async function SalesPage() {
     .from('sales_orders')
     .select(`
       *,
-      buyers:buyer_id (name, company)
+      buyers:buyer_id (name, contact_person)
     `)
     .order('created_at', { ascending: false })
 
@@ -72,8 +72,8 @@ export default async function SalesPage() {
                     <p className="text-sm font-medium text-slate-900 dark:text-slate-100 mt-0.5">
                       {order.buyers?.name || 'Direct Buyer'}
                     </p>
-                    {order.buyers?.company && (
-                      <p className="text-xs text-slate-500">{order.buyers.company}</p>
+                    {order.buyers?.contact_person && (
+                      <p className="text-xs text-slate-500">{order.buyers.contact_person}</p>
                     )}
                   </div>
                   <span className={`px-2.5 py-1 text-xs rounded-full font-medium ${
@@ -154,7 +154,7 @@ export default async function SalesPage() {
                           </td>
                           <td className="px-4 py-3">
                             <div className="font-medium">{order.buyers?.name}</div>
-                            <div className="text-xs text-slate-500">{order.buyers?.company || '-'}</div>
+                            <div className="text-xs text-slate-500">{order.buyers?.contact_person || '-'}</div>
                           </td>
                           <td className="px-4 py-3">{order.date ? new Date(order.date).toLocaleDateString() : '-'}</td>
                           <td className="px-4 py-3 text-right">
