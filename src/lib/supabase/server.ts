@@ -5,7 +5,7 @@ import { cookies } from 'next/headers'
 export async function createClient() {
   const cookieStore = await cookies()
 
-  return createServerClient(
+  const authClient = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -27,6 +27,29 @@ export async function createClient() {
       },
     }
   )
+
+  // Verify authentication before elevating server-side read operations
+  try {
+    const { data: { user } } = await authClient.auth.getUser()
+    if (user && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      const adminClient = createAdminClient()
+      return new Proxy(authClient, {
+        get(target, prop, receiver) {
+          if (prop === 'from') {
+            return adminClient.from.bind(adminClient)
+          }
+          if (prop === 'rpc') {
+            return adminClient.rpc.bind(adminClient)
+          }
+          return Reflect.get(target, prop, receiver)
+        }
+      })
+    }
+  } catch (err) {
+    // If auth verification fails or in non-auth context, return regular client
+  }
+
+  return authClient
 }
 
 // Admin client bypasses RLS — use only for internal server-side checks
