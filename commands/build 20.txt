@@ -1,0 +1,209 @@
+FINAL BUILD 19 — READY STOCK + FARM KPI RECONCILIATION
+
+The invoice/payment and P&L discrepancies are now reconciled.
+
+DO NOT modify those values again unless the live database proves they
+are incorrect.
+
+There is one remaining evidence inconsistency that must be resolved
+before final production sign-off.
+
+============================================================
+1. READY STOCK RECONCILIATION
+============================================================
+
+The quantity audit establishes:
+
+Processing output:
+900 nuts
+
+Dispatched:
+100 nuts
+
+Expected remaining TEST E2E READY stock:
+800 nuts
+
+However, the Four-Layer Consistency table reports:
+
+Dashboard Ready Stock:
+1,800 nuts
+
+Investigate the complete READY inventory directly in Supabase.
+
+Do NOT simply change the dashboard from 1,800 to 800.
+
+Query every stock movement / inventory record contributing to READY
+stock.
+
+Produce:
+
+Source / Batch | Quantity | READY contribution | Status
+
+Identify exactly where the additional 1,000 nuts come from.
+
+Determine whether the 1,000 nuts are:
+
+A. legitimate pre-existing business inventory
+B. another valid purchase
+C. previous test data
+D. duplicate stock
+E. incorrect stock movement
+
+If legitimate:
+- keep the 1,000
+- document why Dashboard READY = 1,800
+- verify 800 belongs to the current E2E test
+
+If duplicate/incorrect:
+- identify the exact records
+- correct them through the application's supported workflow
+- rerun stock reconciliation
+
+Do NOT delete legitimate business inventory.
+
+============================================================
+2. FARM NETWORK RECONCILIATION
+============================================================
+
+The E2E test created:
+
+TEST FARM — RAKSHI E2E
+
+Dashboard reports:
+
+Farm Network = 2
+
+Identify both farms.
+
+Return:
+
+Farm ID | Farm Name | Status | Why Included
+
+Determine whether the second farm is:
+- legitimate existing business data
+- previous test data
+- duplicate test data
+- inactive but incorrectly counted
+
+Verify the dashboard's Farm Network query.
+
+If 2 active farms legitimately exist, keep the KPI at 2.
+
+If only the E2E test farm should exist in the clean test environment,
+determine the source of the second farm.
+
+Do NOT blindly change the KPI.
+
+============================================================
+3. DASHBOARD KPI MATHEMATICAL PROOF
+============================================================
+
+Produce the exact calculation for:
+
+Farm Network
+Ready Stock
+Receivables
+Payables
+Pending Harvests
+Pending Deliveries
+
+Each dashboard number must have a traceable database source.
+
+============================================================
+4. E2E TEST DATA ISOLATION
+============================================================
+
+Identify all records associated with:
+
+TEST FARM — RAKSHI E2E
+TEST BUYER — RAKSHI E2E
+
+Ensure the current E2E records are not being counted twice.
+
+Verify relationships:
+
+Farm
+→ Purchase
+→ Cutting
+→ Grouping
+→ Transport
+→ Processing
+→ Stock
+
+and:
+
+Buyer
+→ Sales Order
+→ Dispatch
+→ Invoice
+→ Payment
+→ Receivable
+
+============================================================
+5. STOCK LEDGER INTEGRITY
+
+Verify:
+
+Opening READY stock
++
+Valid READY stock additions
+-
+Valid READY stock deductions
+=
+Current READY stock
+
+Show the exact mathematical equation.
+
+For the E2E batch:
+
+900 processed
+-100 dispatched
+=800 remaining
+
+Confirm this 800 is correctly represented in the overall inventory.
+
+============================================================
+6. FINAL FOUR-LAYER CHECK
+
+DATABASE
+UI
+DASHBOARD
+P&L
+
+All must agree.
+
+Important:
+
+The Dashboard may legitimately show 1,800 while the E2E batch has
+800 if another valid 1,000 READY inventory exists.
+
+If so, explicitly document:
+
+Total READY inventory = 1,800
+E2E batch READY = 800
+Other legitimate READY inventory = 1,000
+
+============================================================
+7. FINAL REPORT
+
+Add a new section:
+
+"READY STOCK & FARM KPI RECONCILIATION"
+
+Include:
+
+- all READY stock sources
+- all active farms
+- mathematical proof
+- explanation of the 1,800 KPI
+- explanation of the 2-farm KPI
+
+Only after this is verified may the final verdict remain:
+
+PRODUCTION TEST PASSED
+
+If an unexplained discrepancy remains:
+
+PRODUCTION TEST FAILED — [specific discrepancy]
+
+Do not hide or normalize unexplained values.
