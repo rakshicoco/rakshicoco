@@ -1,0 +1,252 @@
+FINAL BUILD 18 — EVIDENCE RECONCILIATION REQUIRED
+
+Do NOT make a new UI redesign.
+
+The Build 16/18 report contains two conflicting database/accounting
+values. Resolve these directly against the LIVE Supabase database before
+accepting the final production verdict.
+
+============================================================
+1. INVOICE / PAYMENT RECONCILIATION
+============================================================
+
+Inspect the actual live records:
+
+Invoice:
+f613efd9-2e8a-4a50-85f1-35ec45cc132e
+
+Payment:
+27a5ee19-0f25-4f58-9b85-d4d4120c3b3d
+
+Sales Order:
+24c6ed1b-0b9f-4437-994f-7a1b4a0cc20e
+
+Verify:
+
+Invoice total
+Payment amount
+Payment-to-invoice relationship
+Outstanding balance
+Payment status
+
+Expected mathematical relationship:
+
+Invoice Total = ₹3,500
+Payment = ₹1,500
+Outstanding = ₹2,000
+
+Therefore, IF the ₹1,500 payment is correctly linked to this invoice,
+the invoice must report:
+
+Total:       ₹3,500
+Paid:        ₹1,500
+Outstanding: ₹2,000
+Status:      PARTIAL
+
+The previous report says the invoice database row has:
+
+Balance due: ₹3,500
+
+while the receivables calculation says ₹2,000.
+
+Determine the actual source of this discrepancy.
+
+DO NOT simply change the displayed number.
+
+Trace the calculation from the database.
+
+If the payment is not linked to the invoice:
+- identify why
+- fix the relationship/calculation
+- rerun the payment workflow
+- verify again
+
+If the payment IS linked:
+- fix the invoice outstanding calculation
+- verify receivables
+- verify payment status
+- verify dashboard receivables
+
+============================================================
+2. TRANSPORT FREIGHT RECONCILIATION
+============================================================
+
+Inspect the actual transport record:
+
+Trip:
+9b3270c5-aca9-4140-a289-36396bc538ef
+
+The previous reports contain conflicting values:
+
+Earlier E2E report:
+Freight = ₹1,200
+
+Latest database verification:
+Freight = ₹1,500
+
+Determine the ACTUAL value stored in Supabase.
+
+Do not assume either value is correct.
+
+Use the database as the authoritative source.
+
+Then verify that the same actual value propagates consistently into:
+
+Transport
+→ Expenses
+→ P&L
+→ Cash Flow if applicable
+→ Payables if applicable
+
+============================================================
+3. P&L RECONCILIATION
+============================================================
+
+After determining the actual freight amount, recalculate:
+
+Revenue
+COGS
+Gross Profit
+Cutting Labour
+Transport Freight
+Other Operating Expenses
+Total OPEX
+Net Operating Result
+
+Verify that the P&L UI and database-derived calculation agree.
+
+For example, if actual freight is ₹1,500:
+
+Revenue                 ₹3,500
+COGS                    ₹2,000
+Gross Profit            ₹1,500
+Cutting Labour          ₹2,250
+Transport Freight       ₹1,500
+Total OPEX              ₹3,750
+Net Operating Result   -₹2,250
+
+If the actual database freight is ₹1,200, use ₹1,200 instead.
+
+Do not force either result.
+
+============================================================
+4. DATABASE CONSISTENCY CHECK
+============================================================
+
+Verify the following complete chain:
+
+PURCHASE
+→ CUTTING
+→ GROUPING
+→ FARM→GODOWN TRANSPORT
+→ PROCESSING
+→ READY STOCK
+→ SALES ORDER
+→ DISPATCH
+→ INVOICE
+→ PAYMENT
+→ RECEIVABLE
+→ P&L
+
+Verify that every downstream calculation references the same
+authoritative records.
+
+============================================================
+5. QUANTITY RECONCILIATION
+============================================================
+
+Confirm:
+
+Harvested = 950
+Farm→Godown Loaded = 950
+Farm→Godown Received = 940
+Transit Difference = 10
+Processing Input = 940
+Ready Output = 900
+Processing Rejection = 40
+
+Mathematical balance:
+
+950
+- 10 transit loss
+= 940 received
+
+940
+- 40 processing loss
+= 900 ready
+
+900
+- 100 dispatched
+= 800 ready remaining
+
+Confirm no double-counting.
+
+============================================================
+6. PAYMENT / RECEIVABLE RECONCILIATION
+============================================================
+
+Verify:
+
+Sales Invoice       ₹3,500
+Payment             -₹1,500
+Outstanding          ₹2,000
+
+The following must all agree:
+
+Invoice UI
+Payment UI
+Receivables UI
+Dashboard Receivables
+Database calculation
+
+============================================================
+7. FINAL REPORT
+============================================================
+
+Update the Build 18 report.
+
+Explicitly show:
+
+Actual Invoice Total:
+Actual Paid:
+Actual Outstanding:
+Actual Payment Status:
+
+Actual Transport Freight:
+
+Actual Revenue:
+Actual COGS:
+Actual Gross Profit:
+Actual Labour:
+Actual Transport:
+Actual OPEX:
+Actual Net Operating Result:
+
+Then state whether all four layers agree:
+
+DATABASE
+UI
+DASHBOARD
+P&L
+
+============================================================
+8. FINAL VERDICT
+============================================================
+
+Do NOT report:
+
+PRODUCTION TEST PASSED
+
+until all contradictory values have been reconciled.
+
+If everything agrees after verification:
+
+PRODUCTION TEST PASSED
+
+Otherwise:
+
+PRODUCTION TEST FAILED — [exact remaining discrepancy]
+
+Do not hide discrepancies by changing the report.
+
+Use the LIVE SUPABASE DATA as the authoritative source.
