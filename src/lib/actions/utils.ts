@@ -13,9 +13,9 @@ export async function requireAuth() {
 }
 
 export async function requireRole(allowedRoles: string[]) {
-  const { supabase, user } = await requireAuth();
+  const { user } = await requireAuth();
 
-  // Use admin client to bypass RLS when reading the profile
+  // Use admin client to bypass RLS for server-side authorized operations
   const adminClient = createAdminClient();
   const { data: profile, error } = await adminClient
     .from('profiles')
@@ -28,18 +28,19 @@ export async function requireRole(allowedRoles: string[]) {
     throw new Error('Unauthorized');
   }
 
-  return { supabase, user, role: profile.role };
+  return { supabase: adminClient, user, role: profile.role };
 }
 
 export async function logAudit(
-  supabase: any,
+  _supabase: any,
   userId: string,
   action: string,
   entityType: string,
   entityId: string,
   details: any
 ) {
-  const { error } = await supabase.from('audit_logs').insert({
+  const adminClient = createAdminClient();
+  const { error } = await adminClient.from('audit_logs').insert({
     user_id: userId,
     action,
     entity_type: entityType,
