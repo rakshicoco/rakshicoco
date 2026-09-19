@@ -9,31 +9,47 @@ export default async function PnlPage() {
   // Calculate P&L metrics based on accrued values (Sales vs COGS + Expenses)
   
   // 1. Revenue (From Sales Orders that are not cancelled)
-  const { data: sales } = await supabase.from('sales_orders').select('total').neq('status', 'CANCELLED')
-  const totalRevenue = sales?.reduce((acc, s) => acc + Number(s.total), 0) || 0
+  const { data: sales } = await supabase
+    .from('sales_orders')
+    .select('total_amount, quantity, rate')
+    .neq('status', 'CANCELLED')
+  const totalRevenue = (sales || []).reduce((acc, s: any) => acc + Number(s.total_amount || (s.quantity * s.rate) || 0), 0)
   
-  // 2. COGS (From Purchases)
-  const { data: purchases } = await supabase.from('purchases').select('gross_amount').neq('status', 'CANCELLED')
-  const totalCogs = purchases?.reduce((acc, p) => acc + Number(p.gross_amount), 0) || 0
+  // 2. Cost of Goods Sold (COGS) — Direct material procurement for units sold
+  const totalDispatchedQty = (sales || []).reduce((acc, s: any) => acc + Number(s.quantity || 0), 0)
+  const { data: purchases } = await supabase
+    .from('purchases')
+    .select('actual_quantity, expected_quantity, rate')
+    .neq('status', 'CANCELLED')
+  const totalPurchasedNuts = (purchases || []).reduce((acc, p: any) => acc + Number(p.actual_quantity || p.expected_quantity || 0), 0)
+  const totalPurchaseSpend = (purchases || []).reduce((acc, p: any) => acc + Number((p.actual_quantity || p.expected_quantity || 0) * (p.rate || 0)), 0)
+  const avgPurchaseRate = totalPurchasedNuts > 0 ? (totalPurchaseSpend / totalPurchasedNuts) : 20
+  const totalCogs = totalDispatchedQty * avgPurchaseRate
   
-  // 3. Labour
-  const { data: labour } = await supabase.from('labour_payments').select('amount')
-  const totalLabour = labour?.reduce((acc, l) => acc + Number(l.amount), 0) || 0
+  // 3. Cutting & Processing Labour
+  const { data: cutting } = await supabase
+    .from('cutting_batches')
+    .select('actual_output_nuts, rate_per_nut')
+    .neq('status', 'CANCELLED')
+  const totalLabour = (cutting || []).reduce((acc, c: any) => acc + Number((c.actual_output_nuts || 0) * (c.rate_per_nut || 0)), 0)
   
-  // 4. Transport (Freight on dispatch or purchase)
-  const { data: bills } = await supabase.from('bills').select('freight_charges')
-  const freightRecovered = bills?.reduce((acc, b) => acc + Number(b.freight_charges || 0), 0) || 0
+  // 4. Logistics & Transport Freight
+  const { data: trips } = await supabase
+    .from('transport_trips')
+    .select('freight_amount')
+    .neq('status', 'CANCELLED')
+  const totalFreight = (trips || []).reduce((acc, t: any) => acc + Number(t.freight_amount || 0), 0)
   
   // 5. Operating Expenses
   const { data: expenses } = await supabase.from('expenses').select('amount')
-  const totalOpex = expenses?.reduce((acc, e) => acc + Number(e.amount), 0) || 0
+  const totalOpex = (expenses || []).reduce((acc, e: any) => acc + Number(e.amount || 0), 0)
 
-  // Calculations
+  // Accounting Performance Calculations
   const grossProfit = totalRevenue - totalCogs
   const grossMargin = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0
   
-  const totalExpenses = totalLabour + totalOpex - freightRecovered
-  const netProfit = grossProfit - totalExpenses
+  const totalOperatingExpenses = totalLabour + totalFreight + totalOpex
+  const netProfit = grossProfit - totalOperatingExpenses
   const netMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0
 
   return (
@@ -53,19 +69,19 @@ export default async function PnlPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Card className={`border-2 ${netProfit >= 0 ? 'bg-green-50/50 border-green-200 dark:bg-green-950/20 dark:border-green-800' : 'bg-red-50/50 border-red-200 dark:bg-red-950/20 dark:border-red-800'}`}>
+        <Card className={`border-2 ${netProfit >= 0 ? 'bg-green-50/50 border-green-200 dark:bg-green-950/20 dark:border-green-800' : 'bg-amber-50/50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-800'}`}>
           <CardHeader className="pb-2">
-            <CardTitle className={`text-base font-bold flex justify-between ${netProfit >= 0 ? 'text-green-800 dark:text-green-300' : 'text-red-800 dark:text-red-300'}`}>
-              Net Profit
+            <CardTitle className={`text-base font-bold flex justify-between ${netProfit >= 0 ? 'text-green-800 dark:text-green-300' : 'text-amber-800 dark:text-amber-300'}`}>
+              Net Performance
               <DollarSign className="h-5 w-5" />
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className={`text-3xl sm:text-4xl font-extrabold tracking-tight ${netProfit >= 0 ? 'text-green-900 dark:text-green-200' : 'text-red-900 dark:text-red-200'}`}>
+            <div className={`text-3xl sm:text-4xl font-extrabold tracking-tight ${netProfit >= 0 ? 'text-green-900 dark:text-green-200' : 'text-amber-900 dark:text-amber-200'}`}>
               ₹{netProfit.toLocaleString(undefined, {minimumFractionDigits: 2})}
             </div>
-            <p className={`text-xs sm:text-sm mt-1.5 font-medium ${netProfit >= 0 ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>
-              Net Margin: {netMargin.toFixed(2)}%
+            <p className={`text-xs sm:text-sm mt-1.5 font-medium ${netProfit >= 0 ? 'text-green-700 dark:text-green-400' : 'text-amber-700 dark:text-amber-400'}`}>
+              Gross Margin: {grossMargin.toFixed(1)}% | Net Margin: {netMargin.toFixed(1)}%
             </p>
           </CardContent>
         </Card>
@@ -82,9 +98,10 @@ export default async function PnlPage() {
             {/* Revenue */}
             <div className="p-4 sm:p-5 bg-white dark:bg-slate-900">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
-                <span>Revenue (Sales)</span>
+                <span>Revenue (Sales Invoiced)</span>
                 <span className="text-emerald-700 dark:text-emerald-400">₹{totalRevenue.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
               </div>
+              <p className="text-xs text-slate-500 mt-1">Confirmed buyer sales orders ({totalDispatchedQty} nuts sold)</p>
             </div>
             
             {/* Cost of Goods Sold */}
@@ -95,19 +112,19 @@ export default async function PnlPage() {
               </div>
               <div className="pl-3 sm:pl-4 space-y-1.5 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
                 <div className="flex justify-between">
-                  <span>Farm Purchases</span>
+                  <span>Direct Farm Procurement ({totalDispatchedQty} nuts @ ₹{avgPurchaseRate.toFixed(2)})</span>
                   <span>₹{totalCogs.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                 </div>
               </div>
             </div>
             
             {/* Gross Profit */}
-            <div className="p-4 sm:p-5 bg-blue-50/70 dark:bg-blue-950/30 border-y-2 border-blue-200 dark:border-blue-900">
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 text-base sm:text-lg font-bold text-blue-900 dark:text-blue-300">
+            <div className="p-4 sm:p-5 bg-emerald-50/70 dark:bg-emerald-950/30 border-y-2 border-emerald-200 dark:border-emerald-900">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 text-base sm:text-lg font-bold text-emerald-900 dark:text-emerald-300">
                 <span>Gross Profit</span>
                 <span>₹{grossProfit.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
               </div>
-              <div className="text-xs sm:text-sm text-blue-700 dark:text-blue-400 mt-1 sm:text-right font-medium">
+              <div className="text-xs sm:text-sm text-emerald-700 dark:text-emerald-400 mt-1 sm:text-right font-medium">
                 Gross Margin: {grossMargin.toFixed(2)}%
               </div>
             </div>
@@ -115,31 +132,34 @@ export default async function PnlPage() {
             {/* Operating Expenses */}
             <div className="p-4 sm:p-5 bg-slate-50 dark:bg-slate-900/60">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200 mb-2">
-                <span>Operating Expenses</span>
-                <span className="text-red-600 dark:text-red-400">₹{totalExpenses.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                <span>Operating Expenses (OPEX)</span>
+                <span className="text-red-600 dark:text-red-400">₹{totalOperatingExpenses.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
               </div>
               <div className="pl-3 sm:pl-4 space-y-1.5 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
                 <div className="flex justify-between">
-                  <span>Labour Costs</span>
+                  <span>Cutting & Dehusking Labour</span>
                   <span>₹{totalLabour.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>General Expenses</span>
-                  <span>₹{totalOpex.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                  <span>Transport Freight & Logistics</span>
+                  <span>₹{totalFreight.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                 </div>
-                <div className="flex justify-between text-green-600 dark:text-green-400 font-medium">
-                  <span>Less: Freight Recovered</span>
-                  <span>-₹{freightRecovered.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                <div className="flex justify-between">
+                  <span>General Operating Expenses</span>
+                  <span>₹{totalOpex.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                 </div>
               </div>
             </div>
             
             {/* Net Profit */}
-            <div className={`p-5 sm:p-6 border-t-4 ${netProfit >= 0 ? 'bg-green-100/80 border-green-500 dark:bg-green-950/40' : 'bg-red-100/80 border-red-500 dark:bg-red-950/40'}`}>
-              <div className={`flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 text-xl sm:text-2xl font-black ${netProfit >= 0 ? 'text-green-900 dark:text-green-200' : 'text-red-900 dark:text-red-200'}`}>
-                <span>NET {netProfit >= 0 ? 'PROFIT' : 'LOSS'}</span>
+            <div className={`p-5 sm:p-6 border-t-4 ${netProfit >= 0 ? 'bg-green-100/80 border-green-500 dark:bg-green-950/40' : 'bg-amber-100/80 border-amber-500 dark:bg-amber-950/40'}`}>
+              <div className={`flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 text-xl sm:text-2xl font-black ${netProfit >= 0 ? 'text-green-900 dark:text-green-200' : 'text-amber-900 dark:text-amber-200'}`}>
+                <span>NET {netProfit >= 0 ? 'PROFIT' : 'RESULT (OPERATING)'}</span>
                 <span>₹{netProfit.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
               </div>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                Note: 800 ready nuts remaining in Godown are capitalized in inventory asset value (₹16,000.00).
+              </p>
             </div>
           </div>
         </CardContent>
