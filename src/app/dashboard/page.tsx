@@ -24,8 +24,8 @@ export default async function DashboardPage() {
   const { count: harvestCount } = await supabase.from('purchases').select('*', { count: 'exact', head: true }).eq('status', 'CONFIRMED')
   const { count: pendingSalesCount } = await supabase.from('sales_orders').select('*', { count: 'exact', head: true }).eq('status', 'Draft')
   
-  const { data: stockMovements } = await supabase.from('stock_movements').select('quantity, qty').eq('to_state', 'READY')
-  const readyInflow = stockMovements?.reduce((acc: number, curr: { quantity?: number; qty?: number }) => acc + Number(curr.quantity || curr.qty || 0), 0) || 0
+  const { data: stockMovements } = await supabase.from('stock_movements').select('qty').eq('to_state', 'READY')
+  const readyInflow = stockMovements?.reduce((acc: number, curr: { qty?: number }) => acc + Number(curr.qty || 0), 0) || 0
 
   const { data: dispatches } = await supabase.from('dispatches').select('loaded_quantity')
   const dispatchedOutflow = dispatches?.reduce((acc: number, curr: { loaded_quantity?: number }) => acc + Number(curr.loaded_quantity || 0), 0) || 0
