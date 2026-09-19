@@ -1,0 +1,272 @@
+# ============================================================
+# RAKSHI COCO ERP — BUILD 24 RELEASE BLOCKER RESOLUTION
+# ============================================================
+
+DO NOT add new features.
+
+DO NOT change business logic.
+
+DO NOT create new migrations.
+
+Resolve ONLY the following release blockers:
+
+1. SERVICE-ROLE CREDENTIAL EXPOSURE
+2. UNCOMMITTED SEARCH VERIFICATION CHANGE
+3. FINAL PRODUCTION/ANDROID RE-VERIFICATION
+
+============================================================
+1. SERVICE-ROLE KEY INCIDENT
+============================================================
+
+A verification command contained a literal Supabase service-role
+JWT.
+
+Treat that credential as COMPROMISED.
+
+DO NOT print the credential.
+
+DO NOT copy it into any report.
+
+DO NOT paste it into chat.
+
+DO NOT expose the replacement credential.
+
+ACTION:
+
+Rotate the Supabase service-role key in the Supabase project.
+
+Update the local environment securely.
+
+Update Vercel production environment securely.
+
+Never place the new key in source code.
+
+Never place it in:
+
+scripts
+commands
+markdown
+reports
+tests
+client code
+Capacitor configuration
+Git history
+
+Use only environment variables.
+
+============================================================
+2. GIT HISTORY AUDIT
+============================================================
+
+Search Git history for service-role credentials.
+
+Check:
+
+git log -S"service_role" --all --oneline
+git log -S"SUPABASE_SERVICE_ROLE_KEY" --all --oneline
+
+Search tracked files for:
+
+service_role
+SUPABASE_SERVICE_ROLE_KEY
+eyJhbGciOiJIUzI1Ni
+
+DO NOT print actual secret values.
+
+Report only:
+
+file/path
+commit hash
+credential type
+
+If the old service-role credential exists in Git history:
+
+flag ROTATION COMPLETE
+and document that the exposed credential was revoked.
+
+Do not rewrite Git history unless explicitly required.
+
+============================================================
+3. SEARCH.TS GIT STATE
+============================================================
+
+The Build 24 verification modified:
+
+src/lib/actions/search.ts
+
+to add stock_movements search.
+
+Check:
+
+git status
+git diff -- src/lib/actions/search.ts
+git log -1 --oneline
+git ls-remote origin refs/heads/main
+
+If the search change is not committed:
+
+commit it:
+
+git add src/lib/actions/search.ts BUILD_24_SEARCH_VERIFICATION.md BUILD_24_FINAL_REPORT.md
+git commit -m "fix(search): include stock movement discovery"
+git push origin main
+
+Do NOT create another duplicate commit if it is already included.
+
+============================================================
+4. VERIFY PRODUCTION COMMIT
+============================================================
+
+Confirm:
+
+local HEAD
+origin/main
+Vercel deployment commit
+
+all correspond to the final Build 24 source.
+
+Do not declare production verified if local source differs
+from deployed source.
+
+============================================================
+5. BUILD
+============================================================
+
+Run:
+
+npx tsc --noEmit
+npm run lint
+npm run build
+
+All must pass.
+
+============================================================
+6. FINAL PRODUCTION BUSINESS CHECK
+============================================================
+
+Verify:
+
+Ready Stock = 800
+Active Farms = 2
+Receivables = ₹2,000
+Payables = ₹14,000
+Revenue = ₹3,500
+COGS = ₹2,000
+Gross Profit = ₹1,500
+OPEX = ₹3,750
+Net Result = -₹2,250
+
+Any difference = RELEASE BLOCKER.
+
+============================================================
+7. FINAL SEARCH CHECK
+============================================================
+
+Verify global search still includes:
+
+farms
+purchases
+cutting
+grouping
+transport
+processing
+stock
+labour
+teams
+workers
+buyers
+sales orders
+dispatch
+bills/invoices
+payments
+expenses
+
+Remember:
+
+Processing is combined in current schema.
+Labour is combined in current schema.
+Invoices are bills where entity_type = BUYER.
+
+Do not create duplicate entities.
+
+============================================================
+8. FINAL ANDROID CHECK
+============================================================
+
+Build the final debug APK from the final commit.
+
+Install on:
+
+emulator-5554
+
+Verify:
+
+login
+dashboard
+More
+New Farm
+New Purchase
+Farm selector
+New Sales
+Buyer selector
+Search
+Recycle Bin
+Restore
+Profile/avatar
+AI FAB
+AI read query
+AI mutation confirmation
+Back navigation
+
+Verify production HTTPS URL.
+
+No:
+
+localhost
+10.0.2.2
+cleartext production URL
+placeholder HTML
+
+============================================================
+9. FINAL AI SECURITY CHECK
+============================================================
+
+Verify:
+
+OPENROUTER_API_KEY server-only
+SUPABASE_SERVICE_ROLE_KEY server-only
+no arbitrary SQL
+mutation requires PendingAction confirmation
+authenticated user required
+audit log generated
+
+Do not print credentials.
+
+============================================================
+10. FINAL REPORT
+============================================================
+
+Update BUILD_24_FINAL_REPORT.md.
+
+Use:
+
+FULLY VERIFIED
+
+ONLY if:
+
+- credential exposure has been remediated
+- final source is committed
+- final source is pushed
+- deployed production matches final source
+- build passes
+- business metrics match
+- Android final build passes
+- requested workflows pass
+
+Otherwise use:
+
+IMPLEMENTATION COMPLETE — RELEASE BLOCKED
+
+Do not claim FULLY VERIFIED while a service-role credential
+remains active after exposure or while production source differs
+from the verified local source.
