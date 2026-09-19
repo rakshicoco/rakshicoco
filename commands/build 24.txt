@@ -1,0 +1,337 @@
+BUILD 22 — DEEP LATENCY PROFILING
+DO NOT CHANGE INFRASTRUCTURE YET
+
+Build 21 successfully fixed tap responsiveness and route transitions,
+but several data-heavy pages remain slower than target.
+
+Current authoritative measurements:
+
+Dashboard       2680 ms
+P&L             2015 ms
+Farm List       1459 ms
+Purchases List  1468 ms
+Transport List  1643 ms
+Sales List      1268 ms
+Bills           1292 ms
+Stock           1518 ms
+
+Route transition:
+66–90 ms
+
+Tap response:
+2–4 ms
+
+Business correctness:
+PASS
+
+Do NOT make speculative UI changes.
+
+============================================================
+PHASE 1 — DECOMPOSE LATENCY
+============================================================
+
+For each slow route measure separately:
+
+A. Browser -> Vercel request latency
+B. Vercel server execution time
+C. Supabase request latency
+D. PostgreSQL query execution time
+E. Next.js rendering time
+F. Response transfer time
+G. WebView rendering time
+
+Create:
+
+PERFORMANCE_DEEP_PROFILE.md
+
+Use:
+
+| Route | Total | Server | Supabase | DB | Render | Transfer |
+|---|---:|---:|---:|---:|---:|---:|
+
+Do not estimate missing values.
+
+============================================================
+PHASE 2 — PROFILE EVERY SUPABASE QUERY
+============================================================
+
+For:
+
+/dashboard
+/dashboard/pnl
+/dashboard/farms
+/dashboard/purchases
+/dashboard/transport
+/dashboard/sales
+/dashboard/bills
+/dashboard/stock
+
+Record:
+
+- query name
+- table
+- columns
+- filters
+- joins
+- response row count
+- request latency
+- whether query is sequential or parallel
+
+Identify the slowest individual query.
+
+============================================================
+PHASE 3 — CHECK DATABASE INDEXES
+============================================================
+
+Inspect existing Supabase/PostgreSQL indexes.
+
+Map indexes against actual filters:
+
+farms.active
+
+purchases.status
+
+purchases.balance
+
+purchases.farm_id
+
+sales_orders.status
+
+bills.balance_due
+
+stock_movements.to_state
+
+dispatches status/relationship fields
+
+transport status/date fields
+
+Do NOT create indexes blindly.
+
+Only add an index when query/filter analysis demonstrates that it
+is appropriate.
+
+Create a migration for any new indexes.
+
+============================================================
+PHASE 4 — INVESTIGATE DASHBOARD
+============================================================
+
+The dashboard currently takes ~2680 ms.
+
+Determine whether:
+
+7 parallel queries are still individually expensive,
+
+OR
+
+one particular query dominates,
+
+OR
+
+Supabase network RTT dominates,
+
+OR
+
+Next.js server rendering dominates.
+
+Do NOT simply add more Promise.all.
+
+Promise.all already exists.
+
+We need the next bottleneck.
+
+============================================================
+PHASE 5 — INVESTIGATE P&L
+============================================================
+
+P&L = ~2015 ms.
+
+Determine whether its 5 queries are:
+
+- slow database queries
+- excessive rows
+- network-bound
+- expensive server computation
+
+If P&L is reading entire transaction tables merely to calculate totals,
+investigate database aggregation.
+
+For example, determine whether SUM/COUNT queries or a database view
+would be more efficient than transferring rows to Next.js.
+
+IMPORTANT:
+
+Do not change accounting formulas.
+
+The authoritative formulas remain unchanged.
+
+============================================================
+PHASE 6 — INVESTIGATE LIST PAGES
+============================================================
+
+Farm, Purchase, Transport, Sales, Bills and Stock lists.
+
+The surprising result is that some became slower after optimization.
+
+Determine why.
+
+For every slow list:
+
+1. Number of rows fetched
+2. Number of columns
+3. Number of related records
+4. Number of Supabase requests
+5. Server render time
+6. Client render time
+
+If a list only displays 20–30 records but still takes >1 second,
+find the actual bottleneck.
+
+============================================================
+PHASE 7 — MASTER DATA CACHING
+============================================================
+
+Identify read-heavy, low-volatility master data:
+
+- farms
+- buyers
+- workers
+- teams
+- godowns
+- business settings
+
+Determine which can safely use short-lived caching/revalidation.
+
+DO NOT cache authoritative:
+
+- stock
+- payments
+- receivables
+- payables
+- invoices
+- financial balances
+
+in a way that can display stale transaction state.
+
+============================================================
+PHASE 8 — INVESTIGATE SUPABASE REGION
+============================================================
+
+Determine:
+
+Vercel deployment region:
+ACTUAL VALUE
+
+Supabase project region:
+ACTUAL VALUE
+
+Approximate network RTT:
+ACTUAL MEASURED VALUE
+
+Do NOT assume that the database is overseas.
+
+Do NOT recommend moving infrastructure until this is measured.
+
+If the latency is genuinely dominated by WAN RTT,
+document that as the root cause.
+
+============================================================
+PHASE 9 — CONSIDER DATABASE RPC / AGGREGATION
+============================================================
+
+Only if profiling proves that multiple queries/row transfers are the
+bottleneck:
+
+Consider a secure Supabase RPC or SQL view for:
+
+Dashboard KPI aggregation
+P&L aggregation
+
+The RPC must:
+
+- respect business rules
+- preserve RLS/security appropriately
+- use server-side aggregation
+- return only required numbers
+- not expose service-role credentials
+
+Do NOT implement RPC merely because it sounds faster.
+
+Measure first.
+
+============================================================
+PHASE 10 — DO NOT BREAK THE ERP
+============================================================
+
+Absolutely preserve:
+
+Ready Stock = 800
+
+Active Farms = 2
+
+Receivables = ₹2,000
+
+Payables = ₹14,000
+
+Revenue = ₹3,500
+
+COGS = ₹2,000
+
+Gross Profit = ₹1,500
+
+OPEX = ₹3,750
+
+Net Result = -₹2,250
+
+Authentication
+RLS
+Audit logging
+Financial validation
+Inventory validation
+
+============================================================
+PHASE 11 — PERFORMANCE TARGETS
+============================================================
+
+Keep these targets:
+
+Tap response <=100 ms
+Route transition <=500 ms
+Content render <=1500 ms
+Dashboard <=1500 ms
+P&L <=1200 ms
+Normal list <=1000 ms
+
+But do NOT fake PASS status.
+
+If a target is not achieved:
+
+IMPROVED — TARGET NOT MET
+
+============================================================
+PHASE 12 — FINAL REPORT
+============================================================
+
+Create:
+
+BUILD_22_DEEP_PERFORMANCE_REPORT.md
+
+Include:
+
+1. Exact root cause
+2. Latency breakdown
+3. Slowest queries
+4. Database indexes
+5. Network RTT
+6. Vercel region
+7. Supabase region
+8. Changes made
+9. Before/after measurements
+10. Business regression test
+11. Android emulator verification
+12. Remaining bottlenecks
+
+DO NOT modify infrastructure or database architecture until
+the profiling evidence proves that the change is necessary.
+
+Final verdict must be evidence-based.

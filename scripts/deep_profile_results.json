@@ -1,0 +1,201 @@
+{
+  "timestamp": "2026-09-19T09:34:13.482Z",
+  "queryProfiles": {
+    "/dashboard": {
+      "individual": [
+        {
+          "name": "Dashboard: Active Farms Count",
+          "path": "farms?active=eq.true&select=id",
+          "status": 206,
+          "durationMs": 757,
+          "rowCount": 1,
+          "payloadBytes": 47
+        },
+        {
+          "name": "Dashboard: Confirmed Harvest Count",
+          "path": "purchases?status=eq.CONFIRMED&select=id",
+          "status": 200,
+          "durationMs": 240,
+          "rowCount": 1,
+          "payloadBytes": 47
+        },
+        {
+          "name": "Dashboard: Pending Sales Count",
+          "path": "sales_orders?status=eq.Draft&select=id",
+          "status": 200,
+          "durationMs": 461,
+          "rowCount": 0,
+          "payloadBytes": 2
+        },
+        {
+          "name": "Dashboard: Ready Stock Inflows",
+          "path": "stock_movements?to_state=eq.READY&select=qty",
+          "status": 200,
+          "durationMs": 178,
+          "rowCount": 1,
+          "payloadBytes": 13
+        },
+        {
+          "name": "Dashboard: Dispatched Outflows",
+          "path": "dispatches?select=loaded_quantity",
+          "status": 200,
+          "durationMs": 466,
+          "rowCount": 1,
+          "payloadBytes": 25
+        },
+        {
+          "name": "Dashboard: Receivables Balance",
+          "path": "bills?balance_due=gt.0&select=balance_due",
+          "status": 200,
+          "durationMs": 177,
+          "rowCount": 1,
+          "payloadBytes": 22
+        },
+        {
+          "name": "Dashboard: Payables Balance",
+          "path": "purchases?balance=gt.0&select=balance",
+          "status": 200,
+          "durationMs": 176,
+          "rowCount": 1,
+          "payloadBytes": 19
+        }
+      ],
+      "sequentialTotalMs": 2455,
+      "concurrentBatchMs": 535
+    },
+    "/dashboard/pnl": {
+      "individual": [
+        {
+          "name": "P&L: Sales Orders",
+          "path": "sales_orders?status=neq.CANCELLED&select=total_amount,quantity,rate",
+          "status": 200,
+          "durationMs": 184,
+          "rowCount": 1,
+          "payloadBytes": 48
+        },
+        {
+          "name": "P&L: Confirmed Purchases",
+          "path": "purchases?status=in.(CONFIRMED,COMPLETED)&actual_quantity=not.is.null&select=actual_quantity,expected_quantity,rate",
+          "status": 200,
+          "durationMs": 186,
+          "rowCount": 1,
+          "payloadBytes": 60
+        },
+        {
+          "name": "P&L: Cutting Batches",
+          "path": "cutting_batches?status=neq.CANCELLED&select=actual_output_nuts,rate_per_nut",
+          "status": 200,
+          "durationMs": 190,
+          "rowCount": 1,
+          "payloadBytes": 47
+        },
+        {
+          "name": "P&L: Transport Freight",
+          "path": "transport_trips?status=neq.CANCELLED&select=freight_amount",
+          "status": 200,
+          "durationMs": 189,
+          "rowCount": 1,
+          "payloadBytes": 25
+        },
+        {
+          "name": "P&L: Expenses",
+          "path": "expenses?select=amount",
+          "status": 200,
+          "durationMs": 167,
+          "rowCount": 0,
+          "payloadBytes": 2
+        }
+      ],
+      "sequentialTotalMs": 916,
+      "concurrentBatchMs": 197
+    },
+    "/dashboard/farms": {
+      "name": "Farms List",
+      "path": "farms?select=id,name,owner_name,village,active,last_harvest_date,expected_yield&order=name.asc&limit=30",
+      "status": 200,
+      "durationMs": 184,
+      "rowCount": 3,
+      "payloadBytes": 571
+    },
+    "/dashboard/purchases": {
+      "name": "Purchases List (with Farm Join)",
+      "path": "purchases?select=id,farm_id,expected_date,expected_quantity,actual_quantity,rate,advance_amount,status,created_at,farms:farm_id(id,name,village)&order=created_at.desc&limit=30",
+      "status": 200,
+      "durationMs": 185,
+      "rowCount": 2,
+      "payloadBytes": 764
+    },
+    "/dashboard/transport": {
+      "name": "Transport List",
+      "path": "transport_trips?select=id,date,vehicle_number,driver_name,source_type,source_id,destination_type,destination_id,expected_quantity,actual_quantity,freight_amount,status,created_at&order=created_at.desc&limit=30",
+      "status": 400,
+      "durationMs": 193,
+      "rowCount": 1,
+      "payloadBytes": 109
+    },
+    "/dashboard/sales": {
+      "name": "Sales List (with Buyer Join)",
+      "path": "sales_orders?select=id,buyer_id,order_date,product_type,quantity,rate,total_amount,status,delivery_address,buyers:buyer_id(name)&order=order_date.desc&limit=30",
+      "status": 400,
+      "durationMs": 177,
+      "rowCount": 1,
+      "payloadBytes": 101
+    },
+    "/dashboard/bills": {
+      "billsQ1": {
+        "name": "Bills: List",
+        "path": "bills?select=id,buyer_id,bill_number,bill_date,total_amount,balance_due,status,created_at&order=created_at.desc&limit=30",
+        "status": 400,
+        "durationMs": 170,
+        "rowCount": 1,
+        "payloadBytes": 92
+      },
+      "billsQ2": {
+        "name": "Bills: Buyers Lookup",
+        "path": "buyers?select=id,name&limit=30",
+        "status": 200,
+        "durationMs": 176,
+        "rowCount": 1,
+        "payloadBytes": 80
+      },
+      "concurrentMs": 191
+    },
+    "/dashboard/stock": {
+      "individual": [
+        {
+          "name": "Stock Movements (30)",
+          "path": "stock_movements?select=id,godown_id,product_type,qty,from_state,to_state,reference_type,reference_id,notes,created_at&order=created_at.desc&limit=30",
+          "status": 200,
+          "durationMs": 182,
+          "rowCount": 1,
+          "payloadBytes": 361
+        },
+        {
+          "name": "Stock Ready Inflows",
+          "path": "stock_movements?to_state=eq.READY&select=qty",
+          "status": 200,
+          "durationMs": 183,
+          "rowCount": 1,
+          "payloadBytes": 13
+        },
+        {
+          "name": "Stock Dispatches",
+          "path": "dispatches?select=loaded_quantity",
+          "status": 200,
+          "durationMs": 176,
+          "rowCount": 1,
+          "payloadBytes": 25
+        },
+        {
+          "name": "Stock Waste",
+          "path": "stock_movements?to_state=in.(DAMAGED,REJECTED,WASTAGE)&select=qty",
+          "status": 200,
+          "durationMs": 189,
+          "rowCount": 0,
+          "payloadBytes": 2
+        }
+      ],
+      "concurrentBatchMs": 494
+    }
+  }
+}

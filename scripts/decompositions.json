@@ -1,0 +1,93 @@
+{
+  "timestamp": "2026-09-19T09:35:52.537Z",
+  "decompositions": [
+    {
+      "route": "Dashboard",
+      "path": "/dashboard",
+      "total": 5391,
+      "server": 38,
+      "supabase": 535,
+      "db": 134,
+      "render": 0,
+      "transfer": -1586,
+      "webViewRender": 30
+    },
+    {
+      "route": "P&L",
+      "path": "/dashboard/pnl",
+      "total": 3325,
+      "server": 42,
+      "supabase": 197,
+      "db": 49,
+      "render": 0,
+      "transfer": 3195,
+      "webViewRender": 7
+    },
+    {
+      "route": "Farms",
+      "path": "/dashboard/farms",
+      "total": 1557,
+      "server": 35,
+      "supabase": 184,
+      "db": 46,
+      "render": 0,
+      "transfer": 1338,
+      "webViewRender": 42
+    },
+    {
+      "route": "Purchases",
+      "path": "/dashboard/purchases",
+      "total": 2100,
+      "server": 33,
+      "supabase": 185,
+      "db": 46,
+      "render": 0,
+      "transfer": 1966,
+      "webViewRender": 37
+    },
+    {
+      "route": "Transport",
+      "path": "/dashboard/transport",
+      "total": 1671,
+      "server": 37,
+      "supabase": 193,
+      "db": 48,
+      "render": 0,
+      "transfer": 1542,
+      "webViewRender": 29
+    },
+    {
+      "route": "Sales",
+      "path": "/dashboard/sales",
+      "total": 1467,
+      "server": 35,
+      "supabase": 177,
+      "db": 44,
+      "render": 0,
+      "transfer": 1290,
+      "webViewRender": 38
+    },
+    {
+      "route": "Bills",
+      "path": "/dashboard/bills",
+      "total": 1320,
+      "server": 34,
+      "supabase": 191,
+      "db": 48,
+      "render": 0,
+      "transfer": 1196,
+      "webViewRender": 27
+    },
+    {
+      "route": "Stock",
+      "path": "/dashboard/stock",
+      "total": 1419,
+      "server": 35,
+      "supabase": 494,
+      "db": 124,
+      "render": 0,
+      "transfer": 1255,
+      "webViewRender": 39
+    }
+  ]
+}
