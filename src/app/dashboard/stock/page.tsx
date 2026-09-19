@@ -15,6 +15,22 @@ export default async function StockPage() {
     .order('created_at', { ascending: false })
     .limit(100)
 
+  const { data: dispatches } = await supabase
+    .from('dispatches')
+    .select('loaded_quantity')
+
+  const totalDispatched = dispatches?.reduce((acc: number, curr: { loaded_quantity?: number }) => acc + Number(curr.loaded_quantity || 0), 0) || 0
+
+  const readyInflow = movements
+    ?.filter((m: any) => m.to_state === 'READY')
+    .reduce((acc: number, curr: any) => acc + Number(curr.qty || curr.quantity || 0), 0) || 0
+
+  const readyStock = Math.max(0, readyInflow - totalDispatched)
+
+  const damagedLoss = movements
+    ?.filter((m: any) => m.to_state === 'DAMAGED' || m.to_state === 'REJECTED' || m.to_state === 'WASTAGE')
+    .reduce((acc: number, curr: any) => acc + Number(curr.qty || curr.quantity || 0), 0) || 0
+
   const hasMovements = Boolean(!error && movements && movements.length > 0)
 
   return (
@@ -54,7 +70,9 @@ export default async function StockPage() {
             <CardTitle className="text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Ready Stock</CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <div className="text-2xl sm:text-3xl font-bold text-emerald-900 dark:text-emerald-300">0</div>
+            <div className="text-2xl sm:text-3xl font-bold text-emerald-900 dark:text-emerald-300">
+              {readyStock.toLocaleString('en-IN')}
+            </div>
             <p className="text-[11px] text-emerald-700 dark:text-emerald-400 mt-1">Ready for dispatch</p>
           </CardContent>
         </Card>
@@ -64,7 +82,9 @@ export default async function StockPage() {
             <CardTitle className="text-xs font-medium text-red-700 dark:text-red-400 uppercase tracking-wider">Damaged/Loss</CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <div className="text-2xl sm:text-3xl font-bold text-red-900 dark:text-red-300">0</div>
+            <div className="text-2xl sm:text-3xl font-bold text-red-900 dark:text-red-300">
+              {damagedLoss.toLocaleString('en-IN')}
+            </div>
             <p className="text-[11px] text-red-700 dark:text-red-400 mt-1">Rejected coconuts</p>
           </CardContent>
         </Card>
