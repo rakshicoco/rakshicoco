@@ -1,0 +1,155 @@
+RAKSHI COCO — BUILD THE FINAL PRODUCTION APK
+
+The Rakshi Coco Next.js application is now deployed to a live HTTPS production URL:
+
+<LIVE_URL>
+
+Use this URL as the production Capacitor WebView target.
+
+IMPORTANT:
+Do NOT use:
+- http://localhost:3000
+- http://10.0.2.2:3000
+
+Do NOT modify the ERP architecture.
+
+STEP 1 — VERIFY LIVE APPLICATION
+
+Open/test:
+
+<LIVE_URL>
+
+Verify:
+- Login loads
+- Dashboard loads
+- Supabase authentication works
+- Database reads work
+- Database mutations work
+- No server errors
+- No missing environment variables
+
+STEP 2 — CONFIGURE CAPACITOR
+
+From:
+
+C:\dev\RakshiCoco
+
+set:
+
+CAPACITOR_SERVER_URL=<LIVE_URL>
+
+Run:
+
+npx cap sync android
+
+Verify:
+
+android\app\src\main\assets\capacitor.config.json
+
+The server URL must equal:
+
+<LIVE_URL>
+
+Verify cleartext is disabled for HTTPS.
+
+STEP 3 — SECURITY CHECK
+
+Search production configuration/source for:
+
+10.0.2.2
+localhost
+SUPABASE_SERVICE_ROLE_KEY
+
+Expected:
+
+10.0.2.2 → development only
+localhost → development only
+SUPABASE_SERVICE_ROLE_KEY → server-side only
+
+Do not expose any secret in client-side JavaScript.
+
+STEP 4 — BUILD
+
+Run:
+
+cd C:\dev\RakshiCoco\android
+
+.\gradlew.bat assembleDebug
+
+Wait for the complete build.
+
+STEP 5 — LOCATE APK
+
+Find the actual generated APK.
+
+Report its exact absolute path and size.
+
+STEP 6 — INSTALL
+
+Verify:
+
+adb devices
+
+Then install:
+
+adb install -r "<EXACT_APK_PATH>"
+
+STEP 7 — LAUNCH AND TEST
+
+Launch the APK on emulator-5554.
+
+Verify:
+
+APK
+↓
+HTTPS production URL
+↓
+Next.js production app
+↓
+Supabase
+
+Test:
+
+- Login
+- Dashboard
+- Navigation
+- Farms
+- Purchases
+- Sales
+- Stock
+- Finance
+- At least one database read
+- At least one database mutation
+
+IMPORTANT:
+
+The APK must work WITHOUT:
+- npm run dev
+- localhost:3000
+- 10.0.2.2:3000
+- the development computer's Next.js server
+
+If the application still depends on the local development server, DO NOT mark production testing as successful.
+
+FINAL REPORT:
+
+LIVE URL: <actual URL>
+HTTPS: PASS/FAIL
+PRODUCTION WEB APP: PASS/FAIL
+SUPABASE: PASS/FAIL
+CAPACITOR PRODUCTION URL: <actual URL>
+CLEARtext HTTP: ENABLED/DISABLED
+PRODUCTION APK BUILD: PASS/FAIL
+APK EXACT PATH: <absolute path>
+APK SIZE: <size>
+APK INSTALL: PASS/FAIL
+APK LAUNCH: PASS/FAIL
+LOGIN: PASS/FAIL
+DASHBOARD: PASS/FAIL
+DATABASE READ: PASS/FAIL
+DATABASE MUTATION: PASS/FAIL
+LOCALHOST DEPENDENCY: YES/NO
+10.0.2.2 DEPENDENCY: YES/NO
+SERVICE ROLE KEY EXPOSED: YES/NO
+
+Do not claim production APK success until the APK has actually been installed and tested against the live HTTPS application.

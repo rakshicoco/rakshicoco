@@ -1,0 +1,186 @@
+RAKSHI COCO — DEPLOY THE REAL PRODUCTION WEB APP AND BUILD PRODUCTION APK
+
+The codebase now has:
+- successful Next.js production build
+- production-safe Capacitor environment separation
+- no localhost/10.0.2.2 references in src/
+- service-role key isolated server-side
+- working development APK
+
+The remaining blocker is:
+
+PRODUCTION URL: NOT CONFIGURED
+
+I want to complete the real production deployment.
+
+STEP 1 — VERIFY DOMAIN
+
+Check:
+
+https://www.rakshicoco.feenixs.com
+
+and:
+
+https://rakshicoco.feenixs.com
+
+Determine whether either URL currently serves the Rakshi Coco Next.js application.
+
+Do not assume the domain is configured.
+
+STEP 2 — IF THE DOMAIN IS NOT DEPLOYED
+
+Inspect the existing deployment configuration and repository.
+
+Determine whether the project is ready for Vercel deployment.
+
+Do NOT modify DNS blindly.
+
+Do NOT purchase another domain.
+
+Do NOT expose Supabase secrets.
+
+If deployment credentials/access are required and unavailable, stop and tell me exactly what access is required.
+
+STEP 3 — PRODUCTION ENVIRONMENT
+
+Ensure the production deployment has the required environment variables:
+
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+and any required server-side Supabase configuration.
+
+Never expose:
+
+SUPABASE_SERVICE_ROLE_KEY
+
+to client-side code.
+
+STEP 4 — VERIFY LIVE WEB APPLICATION
+
+Once deployed, test:
+
+https://www.rakshicoco.feenixs.com
+
+Verify:
+
+- Login page
+- Supabase authentication
+- Dashboard
+- Farms
+- Purchases
+- Transport
+- Stock
+- Processing
+- Buyers
+- Sales
+- Dispatch
+- Bills
+- Payments
+- Finance
+- Settings
+
+Do not call the deployment successful merely because the domain returns HTTP 200.
+
+The actual Rakshi Coco application must render.
+
+STEP 5 — PRODUCTION CAPACITOR
+
+Set:
+
+CAPACITOR_SERVER_URL=https://www.rakshicoco.feenixs.com
+
+Then run:
+
+npx cap sync android
+
+Verify:
+
+android/app/src/main/assets/capacitor.config.json
+
+contains the production HTTPS URL.
+
+Verify:
+
+cleartext = false
+
+and ensure the production APK does NOT use:
+
+http://10.0.2.2:3000
+
+or:
+
+localhost
+
+STEP 6 — BUILD PRODUCTION-CONNECTED DEBUG APK
+
+Run:
+
+cd C:\dev\RakshiCoco\android
+.\gradlew.bat assembleDebug
+
+Locate the actual APK.
+
+STEP 7 — TEST PRODUCTION APK
+
+Install it on emulator-5554.
+
+Launch it.
+
+Verify:
+
+APK
+→ HTTPS production domain
+→ Next.js production application
+→ Supabase
+
+Test:
+
+- Login
+- Dashboard
+- Navigation
+- At least one read operation
+- At least one authenticated database operation
+
+Confirm there is no dependency on the local development server.
+
+STEP 8 — SECURITY CHECK
+
+Before finalizing:
+
+Search the production source/build configuration for:
+
+10.0.2.2
+localhost
+SUPABASE_SERVICE_ROLE_KEY
+
+Expected:
+
+10.0.2.2: development-only configuration, not production
+localhost: development-only configuration, not production
+SERVICE_ROLE_KEY: server-side only
+
+STEP 9 — FINAL REPORT
+
+Return:
+
+DOMAIN:
+LIVE WEB APP:
+HTTPS:
+SUPABASE:
+PRODUCTION CAPACITOR URL:
+CLEARtext HTTP:
+PRODUCTION APK:
+APK EXACT PATH:
+APK SIZE:
+APK INSTALL:
+APK LAUNCH:
+LOGIN:
+DASHBOARD:
+DATABASE READ:
+DATABASE MUTATION:
+10.0.2.2 IN PRODUCTION:
+LOCALHOST IN PRODUCTION:
+SERVICE ROLE KEY EXPOSED:
+
+Do not claim production readiness until the live HTTPS application and production-connected APK have both been tested successfully.
