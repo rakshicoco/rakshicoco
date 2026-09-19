@@ -2,23 +2,34 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Plus, Search, FileSignature, ArrowRight, Calendar } from 'lucide-react'
-import { Input } from '@/components/ui/input'
+import { Plus, FileSignature, ArrowRight, Calendar } from 'lucide-react'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { ListSearchInput } from '@/components/ui/ListSearchInput'
 
-export default async function BillsPage() {
+export default async function BillsPage({
+  searchParams,
+}: {
+  searchParams?: { q?: string }
+}) {
   const supabase = await createClient()
+  const q = searchParams?.q?.trim()
   
+  let billsQuery = supabase
+    .from('bills')
+    .select('id, entity_type, entity_id, amount, date, due_date, description, status, balance_due, created_at')
+    .order('created_at', { ascending: false })
+    .limit(30)
+
+  if (q) {
+    billsQuery = billsQuery.or(`id.ilike.%${q}%,description.ilike.%${q}%,status.ilike.%${q}%`)
+  }
+
   // Concurrently fetch bills and buyers with explicit columns and limit 30
   const [
     { data: rawBills, error },
     { data: buyers }
   ] = await Promise.all([
-    supabase
-      .from('bills')
-      .select('id, entity_type, entity_id, amount, date, due_date, description, status, balance_due, created_at')
-      .order('created_at', { ascending: false })
-      .limit(30),
+    billsQuery,
     supabase
       .from('buyers')
       .select('id, name, contact_person')
@@ -52,14 +63,7 @@ export default async function BillsPage() {
       </div>
 
       <div className="flex items-center space-x-2">
-        <div className="relative w-full sm:max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <Input 
-            type="search" 
-            placeholder="Search by Bill No, Buyer, or Sales Order..." 
-            className="w-full pl-9 h-11 text-base sm:text-sm rounded-lg border-slate-200 dark:border-slate-800" 
-          />
-        </div>
+        <ListSearchInput placeholder="Search by Bill No, status, or description..." />
       </div>
 
       {!hasBills ? (

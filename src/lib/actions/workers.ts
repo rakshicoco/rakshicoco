@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 
 const WorkerSchema = z.object({
   name: z.string().min(2),
-  team_id: z.string().uuid().optional(),
+  team_id: z.string().min(1).optional(),
   phone: z.string().optional(),
   role: z.string().optional(),
   daily_wage: z.number().positive().optional(),

@@ -1,144 +1,84 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
+import Link from "next/link";
+import { Card, CardContent } from "@/components/ui/card";
+import { UserCheck, Building2, Trash2, Shield, Bell, Activity, ArrowRight, Lock } from "lucide-react";
 
 export default function SettingsPage() {
+  const sections = [
+    {
+      title: "Account & Profile",
+      description: "Personal identity, profile avatar photo (private storage), contact phone",
+      href: "/dashboard/settings/account",
+      icon: UserCheck,
+      color: "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40",
+    },
+    {
+      title: "Business Configuration",
+      description: "Company legal name, GSTIN, official contacts, harvest cycle defaults",
+      href: "/dashboard/settings/business",
+      icon: Building2,
+      color: "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40",
+    },
+    {
+      title: "Recycle Bin",
+      description: "90-day retention for Master, Operational, and Financial records with dependency checks",
+      href: "/dashboard/recycle-bin",
+      icon: Trash2,
+      color: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40",
+    },
+    {
+      title: "Notifications & Alerts",
+      description: "System alerts, harvest follow-up reminders, and overdue payment notifications",
+      href: "/dashboard/notifications",
+      icon: Bell,
+      color: "text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40",
+    },
+    {
+      title: "Audit Trails",
+      description: "Immutable security logging for system mutations, deletions, and restorations",
+      href: "/dashboard/audit-log",
+      icon: Activity,
+      color: "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/40",
+    },
+  ];
+
   return (
     <div className="space-y-6 max-w-4xl">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Settings</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-2">
-          Manage your account settings and business preferences.
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+          System Settings
+        </h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          Manage identity, company details, retention policies, and security trails.
         </p>
       </div>
 
-      <Tabs defaultValue="account" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="account">Account</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="business">Business Settings</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="account" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Profile Information</CardTitle>
-              <CardDescription>
-                Update your account details here.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
-                  <Input id="fullName" defaultValue="Admin User" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" defaultValue="admin@rakshicoco.com" disabled />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input id="phone" type="tel" defaultValue="+91 9876543210" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
-                  <Input id="role" defaultValue="OWNER" disabled />
-                </div>
-              </div>
-              <Button>Save Changes</Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="security" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Security</CardTitle>
-              <CardDescription>
-                Manage your password and account security.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="currentPassword">Current Password</Label>
-                <Input id="currentPassword" type="password" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="newPassword">New Password</Label>
-                <Input id="newPassword" type="password" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                <Input id="confirmPassword" type="password" />
-              </div>
-              <Button>Update Password</Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="business" className="mt-6">
-          <div className="grid gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>General Business Settings</CardTitle>
-                <CardDescription>
-                  Configure core business details and defaults.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="businessName">Business Name</Label>
-                    <Input id="businessName" defaultValue="Rakshi Coco" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {sections.map((sec) => {
+          const Icon = sec.icon;
+          return (
+            <Link key={sec.href} href={sec.href} prefetch={true} className="group">
+              <Card className="h-full border-slate-200 dark:border-slate-800 hover:border-primary/40 dark:hover:border-primary/40 transition-all hover:shadow-md">
+                <CardContent className="p-5 flex items-start gap-4">
+                  <div className={`p-3 rounded-2xl shrink-0 ${sec.color}`}>
+                    <Icon size={22} />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="gstNumber">GST Number</Label>
-                    <Input id="gstNumber" placeholder="Enter GST Number" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 group-hover:text-primary transition-colors">
+                        {sec.title}
+                      </h3>
+                      <ArrowRight size={16} className="text-slate-400 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
+                      {sec.description}
+                    </p>
                   </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="businessAddress">Business Address</Label>
-                    <Input id="businessAddress" placeholder="123 Business Street" />
-                  </div>
-                </div>
-                <Button>Save Business Details</Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Farm Follow-up Configuration</CardTitle>
-                <CardDescription>
-                  Set the default thresholds for farm harvest cycles.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="earlyReminder">Early Reminder (Days)</Label>
-                    <Input id="earlyReminder" type="number" defaultValue="35" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="secondReminder">Second Reminder (Days)</Label>
-                    <Input id="secondReminder" type="number" defaultValue="38" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="expectedHarvest">Expected Harvest (Days)</Label>
-                    <Input id="expectedHarvest" type="number" defaultValue="40" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="overdueAfter">Overdue After (Days)</Label>
-                    <Input id="overdueAfter" type="number" defaultValue="42" />
-                  </div>
-                </div>
-                <Button>Save Follow-up Configuration</Button>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
+                </CardContent>
+              </Card>
+            </Link>
+          );
+        })}
+      </div>
     </div>
-  )
+  );
 }

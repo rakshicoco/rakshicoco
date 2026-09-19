@@ -1,0 +1,588 @@
+BUILD 24 — PRE-IMPLEMENTATION CORRECTIONS
+
+The Build 24 implementation plan is approved conceptually, but
+the following corrections are mandatory before implementation.
+
+============================================================
+1. EXISTING REPOSITORY IS THE ROUTE AUTHORITY
+============================================================
+
+Do NOT blindly create every route listed in the plan.
+
+First inspect:
+
+src/app/
+src/components/navigation/
+src/lib/actions/
+supabase/migrations/
+
+Build an actual route registry:
+
+ROUTE
+CURRENT HREFS
+EXISTING PAGE
+EXISTING SERVER ACTION
+DATABASE TABLE
+STATUS
+
+Classify every broken navigation target as:
+
+MISSING_ROUTE
+WRONG_HREF
+MISSING_PAGE
+MISSING_ACTION
+DATABASE_ERROR
+AUTH_ERROR
+
+Fix the actual cause.
+
+Do not create duplicate business workflows.
+
+In particular inspect whether these already exist under
+finance/sales/operations:
+
+farm payments
+labour payments
+sales orders
+sales detail
+dispatch
+bills
+invoices
+
+Only create a new route when there is no existing equivalent.
+
+============================================================
+2. RECYCLE BIN — DEPENDENCY SAFE
+============================================================
+
+Do NOT treat every entity as freely deletable.
+
+Classify entities:
+
+MASTER:
+farms
+buyers
+teams
+workers
+
+OPERATIONAL:
+purchases
+cutting_batches
+grouping_batches
+transport_trips
+processing_batches
+dispatches
+stock-related records
+
+FINANCIAL:
+bills
+payments
+expenses
+sales orders with financial references
+
+Rules:
+
+MASTER records:
+soft delete allowed.
+
+OPERATIONAL records:
+soft delete only if no downstream dependency exists.
+
+FINANCIAL records:
+never physically delete if they have financial,
+payment, invoice, accounting, or audit dependencies.
+
+Use:
+
+TRASH
+ARCHIVED
+VOIDED
+CANCELLED
+
+appropriately.
+
+Never destroy historical business traceability.
+
+============================================================
+3. 90-DAY DELETE
+============================================================
+
+After 90 days:
+
+IF record has zero dependencies:
+    permanent deletion may occur.
+
+IF record has dependencies:
+    retain record
+    convert to ARCHIVED/VOIDED where appropriate
+    retain audit history.
+
+Never cascade-delete business history merely to satisfy
+the 90-day cleanup.
+
+Before every permanent deletion perform dependency checks.
+
+============================================================
+4. CLEANUP ENDPOINT SECURITY
+============================================================
+
+Do not create a publicly callable cleanup endpoint.
+
+If using:
+
+/api/cron/cleanup-trash
+
+require a strong server-side cron authorization mechanism.
+
+Never accept:
+
+entity_id
+user_id
+delete confirmation
+
+from an unauthenticated request.
+
+Prefer the platform's scheduled-job mechanism.
+
+Cleanup must execute only server-side.
+
+============================================================
+5. AVATAR STORAGE
+============================================================
+
+Do NOT make the avatars bucket public by default.
+
+Prefer:
+
+private bucket:
+avatars
+
+Store:
+
+avatar_path
+
+in profiles.
+
+Generate signed URLs when displaying avatars.
+
+Users may upload/update their own avatar only.
+
+Do not permit role modification through profile editing.
+
+============================================================
+6. AI CONFIRMATION — SERVER ENFORCED
+============================================================
+
+AI must NOT execute a destructive/material mutation simply
+because the LLM says that the user confirmed it.
+
+Architecture:
+
+USER REQUEST
+    ↓
+AI ANALYSIS
+    ↓
+PROPOSED ACTION
+    ↓
+SERVER CREATES PENDING ACTION
+    ↓
+UI SHOWS CONFIRMATION
+    ↓
+USER CLICKS CONFIRM
+    ↓
+SERVER VALIDATES AUTHENTICATED USER
+    ↓
+SERVER VALIDATES PENDING ACTION
+    ↓
+SERVER EXECUTES TOOL
+    ↓
+AUDIT LOG
+
+The confirmation must be application state,
+not prompt text.
+
+Never trust:
+
+"the user said yes"
+
+inside an LLM response.
+
+============================================================
+7. AI TOOL SECURITY
+============================================================
+
+AI may NEVER execute arbitrary SQL.
+
+AI may NEVER receive:
+
+SUPABASE_SERVICE_ROLE_KEY
+OPENROUTER_API_KEY
+
+AI tools must use predefined server-side functions.
+
+Every mutation must:
+
+authenticate
+authorize
+validate with Zod
+execute business logic
+write audit event
+return result
+
+AI tools must reuse existing server actions/business services
+where practical rather than duplicating business logic.
+
+============================================================
+8. AI READ ACCESS
+============================================================
+
+"Entire DB access" means:
+
+broad authorized ERP information access through tools.
+
+It does NOT mean unrestricted PostgreSQL credentials.
+
+Implement tools such as:
+
+get_dashboard_summary
+search_farms
+get_farm
+search_purchases
+get_purchase
+search_buyers
+get_buyer
+search_sales_orders
+get_sales_order
+get_stock
+get_transport
+get_processing
+get_labour
+get_receivables
+get_payables
+get_expenses
+get_pnl
+search_bills
+get_bill
+get_followups
+get_alerts
+search_audit_logs
+
+All tools must enforce the current user's authorization.
+
+============================================================
+9. SEARCH ENTITY COUNT
+============================================================
+
+The implementation plan lists 17 entities, not 16.
+
+Before implementing search, inspect the actual schema.
+
+Do not create duplicate concepts.
+
+Determine whether:
+
+Bills
+Invoices
+
+are separate entities or different UI terminology for the same
+underlying entity.
+
+Search must reflect the actual data model.
+
+============================================================
+10. SEARCH ARCHITECTURE
+============================================================
+
+Global search:
+
+server-side only.
+
+Do not download entire tables.
+
+Use:
+
+debounce ~300ms
+server query
+explicit columns
+limit
+pagination
+indexed searchable columns where appropriate
+
+List-page search should use URL searchParams where appropriate.
+
+Search result click must resolve to a verified existing route.
+
+============================================================
+11. PROFILE
+============================================================
+
+Profile avatar:
+
+private Storage bucket
+avatar_path in profiles
+signed display URL
+
+TopBar:
+
+Back
+Logo
+Title
+Search
+Notifications
+Avatar
+Menu
+
+Avatar menu:
+
+Account
+Settings
+Logout
+
+Never expose privileged profile fields for client editing.
+
+============================================================
+12. NAVIGATION
+============================================================
+
+Remove the old bottom-right QuickActionButton.
+
+Bottom navigation:
+
+Dashboard
+Operations
+Sales
+Finance
+More
+
+Top navigation:
+
+Back
+Logo/Title
+Search
+Notifications
+Avatar
+Menu
+
+Bottom-right floating action:
+
+Rakshi AI
+
+Ensure the AI FAB does not overlap bottom navigation.
+
+============================================================
+13. BUSINESS DATA MUST NOT CHANGE
+============================================================
+
+Before implementation record:
+
+Ready Stock = 800
+Active Farms = 2
+Receivables = ₹2,000
+Payables = ₹14,000
+Revenue = ₹3,500
+COGS = ₹2,000
+Gross Profit = ₹1,500
+OPEX = ₹3,750
+Net Result = -₹2,250
+
+After every database migration verify the same values.
+
+Do not create test business records in production unless they
+are explicitly isolated and removed/archived safely afterward.
+
+============================================================
+14. PROCESSING TABLE
+============================================================
+
+Do not automatically create processing_batches.
+
+First inspect whether processing_batches already exists.
+
+If it exists:
+    use existing schema.
+
+If missing:
+    design the minimum required schema based on existing
+    processing actions and foreign keys.
+
+Never create duplicate tables.
+
+============================================================
+15. MIGRATION
+============================================================
+
+Use:
+
+0005_build24_recycle_ai_profile_search.sql
+
+ONLY if 0004 is the latest existing migration.
+
+First verify migration ordering.
+
+Migration must be:
+
+idempotent where practical
+foreign-key safe
+RLS-safe
+rollback-conscious
+
+Do not modify production schema outside migration files.
+
+============================================================
+16. TEST DATA
+============================================================
+
+Do not pollute production with test farms/buyers/orders.
+
+For testing:
+
+prefer an existing test record that can safely be archived,
+or use an isolated test environment.
+
+Never use real financial records to test permanent deletion.
+
+============================================================
+17. BUILD ORDER
+============================================================
+
+Implement in this order:
+
+PHASE A
+Route audit + 404 fixes
+
+PHASE B
+Form relationship fixes:
+Farm selector
+Buyer selector
+
+PHASE C
+Search
+
+PHASE D
+Recycle Bin
+
+PHASE E
+Profile
+
+PHASE F
+Navigation
+
+PHASE G
+AI tool architecture
+
+PHASE H
+AI UI
+
+PHASE I
+Android verification
+
+Do not implement everything simultaneously.
+
+After each phase:
+
+lint
+typecheck/build where practical
+runtime test
+verify business metrics.
+
+============================================================
+18. FINAL ACCEPTANCE
+============================================================
+
+PASS requires runtime evidence.
+
+No:
+
+"implemented"
+"compiled"
+"route exists"
+
+claims alone are sufficient.
+
+For each feature record:
+
+EXPECTED
+ACTUAL
+EVIDENCE
+STATUS
+
+Statuses:
+
+PASS
+PARTIAL
+FAIL
+BLOCKED
+
+Create:
+
+BUILD_24_ROUTE_AND_FEATURE_AUDIT.md
+BUILD_24_FINAL_REPORT.md
+docs/RECYCLE_BIN.md
+
+Do not declare Build 24 complete until:
+
+[ ] no intended navigation target returns 404
+[ ] New Purchase selects Farm
+[ ] New Sales Order selects Buyer
+[ ] global search works
+[ ] list searches work
+[ ] recycle bin works
+[ ] restore works
+[ ] dependency-safe permanent deletion works
+[ ] profile avatar works
+[ ] top menu works
+[ ] AI FAB works
+[ ] AI read tools work
+[ ] AI mutation confirmation is server-enforced
+[ ] AI mutations create audit logs
+[ ] no arbitrary SQL
+[ ] no service-role exposure
+[ ] RLS remains intact
+[ ] business metrics unchanged
+[ ] production build passes
+[ ] Android APK works
+
+
+
+
+
+Cutting Operations
+       │
+       └── New Batch
+              ↓
+       /dashboard/cutting/new
+              ↓
+       Select Purchase
+              ↓
+       Select/assign Team
+              ↓
+       Expected quantity
+              ↓
+       Actual harvested quantity
+              ↓
+       Rejected/damaged
+              ↓
+       Labour rate
+              ↓
+       Save
+              ↓
+       Cutting Batch detail
+
+
+
+
+
+
+Farm
+  ↓
+Purchase
+  ↓
+Cutting Batch
+  ↓
+Grouping
+  ↓
+Farm → Godown Transport
+  ↓
+Processing
+  ↓
+Ready Stock

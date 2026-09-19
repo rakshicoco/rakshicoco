@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 
 const PaymentSchema = z.object({
   entity_type: z.enum(["BUYER", "FARM", "TEAM", "WORKER", "VENDOR"]),
-  entity_id: z.string().uuid(),
+  entity_id: z.string().min(1),
   amount: z.number().positive(),
   date: z.string(),
   payment_method: z.enum(["CASH", "BANK_TRANSFER", "UPI", "CHEQUE"]),
@@ -89,7 +89,7 @@ export async function createPayment(data: z.infer<typeof PaymentSchema>) {
 
 const BillSchema = z.object({
   entity_type: z.enum(["BUYER", "FARM", "TEAM", "VENDOR"]),
-  entity_id: z.string().uuid(),
+  entity_id: z.string().min(1),
   amount: z.number().positive(),
   date: z.string(),
   due_date: z.string().optional(),

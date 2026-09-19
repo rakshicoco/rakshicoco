@@ -2,19 +2,30 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Map, Plus, Search, Phone, Calendar, ArrowRight } from 'lucide-react'
-import { Input } from '@/components/ui/input'
+import { Map, Plus, Phone, Calendar, ArrowRight } from 'lucide-react'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { ListSearchInput } from '@/components/ui/ListSearchInput'
 
-export default async function FarmsPage() {
+export default async function FarmsPage({
+  searchParams,
+}: {
+  searchParams?: { q?: string }
+}) {
   const supabase = await createClient()
+  const q = searchParams?.q?.trim()
   
   // Fetch farms with explicit column selection and page limit
-  const { data: farms, error } = await supabase
+  let query = supabase
     .from('farms')
     .select('id, name, owner_name, village, phone, expected_next_harvest, active, created_at')
     .order('created_at', { ascending: false })
     .limit(30)
+
+  if (q) {
+    query = query.or(`name.ilike.%${q}%,owner_name.ilike.%${q}%,village.ilike.%${q}%,id.ilike.%${q}%`)
+  }
+
+  const { data: farms, error } = await query
 
   const hasFarms = Boolean(!error && farms && farms.length > 0)
 
@@ -35,14 +46,7 @@ export default async function FarmsPage() {
       </div>
 
       <div className="flex items-center space-x-2">
-        <div className="relative w-full sm:max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <Input 
-            type="search" 
-            placeholder="Search farms by ID, owner, or village..." 
-            className="w-full pl-9 h-11 text-base sm:text-sm rounded-lg border-slate-200 dark:border-slate-800" 
-          />
-        </div>
+        <ListSearchInput placeholder="Search farms by ID, owner, or village..." />
       </div>
 
       {!hasFarms ? (

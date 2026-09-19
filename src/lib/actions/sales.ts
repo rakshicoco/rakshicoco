@@ -82,7 +82,7 @@ export async function confirmSalesOrder(orderId: string) {
 }
 
 const DispatchSchema = z.object({
-  sales_order_id: z.string().uuid(),
+  sales_order_id: z.string().min(1),
   date: z.string(),
   vehicle_number: z.string().min(4),
   driver_name: z.string().optional(),

@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { TopBar } from '@/components/navigation/TopBar'
 import { BottomNav } from '@/components/navigation/BottomNav'
-import { QuickActionButton } from '@/components/ui/QuickActionButton'
+import { AiAssistantFab } from '@/components/ai/AiAssistantFab'
 
 export default async function DashboardLayout({
   children,
@@ -28,8 +28,8 @@ export default async function DashboardLayout({
         </main>
       </div>
 
-      {/* Floating Quick Action Button */}
-      <QuickActionButton />
+      {/* Floating Rakshi AI Assistant FAB */}
+      <AiAssistantFab />
       
       {/* Android Bottom Navigation */}
       <BottomNav />

@@ -335,3 +335,373 @@ DO NOT modify infrastructure or database architecture until
 the profiling evidence proves that the change is necessary.
 
 Final verdict must be evidence-based.
+
+
+
+
+# ============================================================
+# RAKSHI COCO ERP — BUILD 23
+# AUTH LATENCY OPTIMIZATION
+# ============================================================
+
+OBJECTIVE:
+
+Reduce the repeated Supabase authentication overhead identified
+in Build 22 WITHOUT weakening authentication, RLS, or authorization.
+
+CURRENT MEASURED BASELINE:
+
+Dashboard:       2680 ms
+P&L:              2015 ms
+Farms:            1459 ms
+Purchases:       1468 ms
+Transport:       1643 ms
+Sales:           1268 ms
+Bills:           1292 ms
+
+Build 22 identified repeated sequential auth calls as the
+dominant server-side latency source.
+
+DO NOT perform infrastructure migration.
+
+DO NOT change Supabase region.
+
+DO NOT change Vercel region.
+
+DO NOT disable RLS.
+
+DO NOT replace authenticated authorization with a client-provided
+user ID.
+
+DO NOT expose service-role credentials.
+
+============================================================
+PHASE 1 — TRACE AUTH FLOW
+============================================================
+
+Inspect:
+
+src/middleware.ts
+src/lib/supabase/server.ts
+src/app/dashboard/layout.tsx
+src/app/dashboard/page.tsx
+all dashboard layouts
+all requireAuth()
+all requireRole()
+all createClient()
+all supabase.auth.getUser()
+
+Create:
+
+BUILD_23_AUTH_LATENCY_AUDIT.md
+
+Map every request:
+
+Browser
+→ middleware
+→ Supabase auth
+→ layout
+→ page
+→ createClient
+→ getUser
+→ business query.
+
+Identify every actual network auth call.
+
+Do not infer from function names.
+
+============================================================
+PHASE 2 — REQUEST-SCOPED AUTH
+============================================================
+
+Implement a request-scoped authentication strategy.
+
+Goal:
+
+ONE verified authentication resolution per request where possible.
+
+Reuse the authenticated identity inside the same server request.
+
+Do NOT call getUser() independently from:
+
+middleware
+layout
+page
+server action
+
+when the same request has already established identity.
+
+Use a safe server-side mechanism such as:
+
+request-scoped cache/memoization
+
+or another framework-compatible server request context.
+
+The identity must remain derived from the authenticated session.
+
+============================================================
+CRITICAL SECURITY RULE
+============================================================
+
+NEVER trust:
+
+x-user-id
+
+or any arbitrary client-provided identity header.
+
+If middleware forwards identity metadata internally:
+
+1. Authenticate the request first.
+2. Overwrite any incoming identity header.
+3. Never use an incoming client value directly.
+4. Authorization must still use verified authentication.
+5. RLS must remain enabled.
+6. Role checks must remain server-side.
+
+Test explicitly:
+
+Request A authenticated as User A.
+
+Attempt to send:
+
+x-user-id: User B
+
+Expected:
+
+Request remains User A.
+
+Never allow User A to become User B through headers.
+
+============================================================
+PHASE 3 — SUPABASE CLIENT REVIEW
+============================================================
+
+Inspect createServerClient/createClient implementation.
+
+Do not accidentally create multiple Supabase clients per request.
+
+Ensure:
+
+middleware client
+server component client
+server action client
+
+are used appropriately.
+
+Do not switch blindly from getUser() to getSession() simply for speed.
+
+Server-side authorization must remain secure.
+
+If getSession() is used for optimization anywhere,
+verify that authorization is still cryptographically/session
+validated and that Supabase's recommended server-side security
+model is preserved.
+
+============================================================
+PHASE 4 — NO BUSINESS LOGIC CHANGES
+============================================================
+
+This build is ONLY authentication performance optimization.
+
+Do not modify:
+
+farms
+purchases
+sales
+buyers
+stock
+transport
+processing
+labour
+finance
+P&L formulas
+payments
+bills
+invoices
+follow-ups
+dashboard business calculations.
+
+Do not modify production data.
+
+============================================================
+PHASE 5 — PERFORMANCE TEST
+============================================================
+
+Run the same measurement methodology as Build 22.
+
+Measure at least 5 runs for:
+
+/dashboard
+/dashboard/pnl
+/dashboard/farms
+/dashboard/purchases
+/dashboard/transport
+/dashboard/sales
+/dashboard/bills
+/dashboard/stock
+
+Record:
+
+total
+Vercel execution
+auth
+Supabase queries
+Postgres
+RSC transfer
+
+Use median values.
+
+Do not cherry-pick the fastest run.
+
+============================================================
+PHASE 6 — SECURITY TEST
+============================================================
+
+Verify:
+
+[ ] authenticated user remains correct
+[ ] unauthenticated user is rejected
+[ ] role restrictions remain correct
+[ ] RLS remains enabled
+[ ] client cannot spoof user identity
+[ ] service-role key never reaches browser
+[ ] service-role key never reaches Android
+[ ] service-role key never reaches OpenRouter
+[ ] no authorization depends solely on x-user-id
+[ ] logout invalidates access
+[ ] expired session is rejected
+
+============================================================
+PHASE 7 — BUSINESS REGRESSION
+============================================================
+
+Verify these values remain unchanged:
+
+Ready Stock = 800
+Active Farms = 2
+Receivables = ₹2,000
+Payables = ₹14,000
+Revenue = ₹3,500
+COGS = ₹2,000
+Gross Profit = ₹1,500
+OPEX = ₹3,750
+Net Result = -₹2,250
+
+No database records may be created or deleted by this build.
+
+============================================================
+PHASE 8 — STRICT PERFORMANCE CLASSIFICATION
+============================================================
+
+For every route:
+
+PASS:
+actual <= target
+
+IMPROVED — TARGET NOT MET:
+actual < baseline but actual > target
+
+NO IMPROVEMENT:
+actual >= baseline
+
+REGRESSION:
+actual > baseline by meaningful margin
+
+Targets:
+
+Dashboard <= 1500 ms
+P&L <= 1200 ms
+Normal list <= 1000 ms
+Route transition <= 500 ms
+Tap feedback <= 100 ms
+
+Do NOT label a result PASS merely because it improved.
+
+============================================================
+PHASE 9 — DECISION FOR NEXT BUILD
+============================================================
+
+After testing:
+
+IF authentication is still >500 ms:
+
+investigate request/session architecture further.
+
+IF authentication drops substantially but dashboard remains >1500 ms:
+
+then evaluate Dashboard RPC aggregation.
+
+IF dashboard query latency remains dominant:
+
+profile SQL/RPC.
+
+IF list pages remain >1000 ms:
+
+profile individual list queries separately.
+
+DO NOT implement all optimizations simultaneously.
+
+============================================================
+FINAL REPORT
+============================================================
+
+Create:
+
+BUILD_23_AUTH_LATENCY_REPORT.md
+
+Include:
+
+1. Before/after table
+2. Number of auth calls before
+3. Number of auth calls after
+4. Authentication latency before
+5. Authentication latency after
+6. Dashboard latency before/after
+7. P&L latency before/after
+8. Security validation
+9. RLS validation
+10. Business regression validation
+11. Remaining bottleneck
+12. Recommended Build 24 action
+
+Use only measured evidence.
+
+Do not claim a theoretical performance improvement as an actual result.
+
+Commit only after all tests pass:
+
+git add .
+git commit -m "perf(auth): deduplicate request authentication safely"
+git push origin main
+
+
+
+
+Build 22
+   ↓
+AUTH ROOT CAUSE CONFIRMED
+   ↓
+Build 23
+Safe request-scoped auth optimization
+   ↓
+Measure again
+   ↓
+┌─────────────────────┐
+│ Auth fixed?         │
+└─────────┬───────────┘
+          │
+     YES  │  NO
+      ↓       ↓
+Dashboard   Continue
+RPC         auth profiling
+      ↓
+Measure
+      ↓
+Build 24
+Feature work:
+Recycle Bin
+AI
+Global Search
+Profile
+Routes
+Forms

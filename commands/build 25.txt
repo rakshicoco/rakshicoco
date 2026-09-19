@@ -1,0 +1,1408 @@
+# ============================================================
+# RAKSHI COCO ERP — BUILD 24
+# ROUTING + RECYCLE BIN + AI ASSISTANT + GLOBAL SEARCH
+# PROFILE + MOBILE NAVIGATION + FORM FIXES
+# ============================================================
+
+You are modifying the existing Rakshi Coco ERP production application.
+
+DO NOT create a new project.
+DO NOT replace the existing architecture.
+DO NOT reset or recreate the Supabase database.
+DO NOT delete existing production data.
+DO NOT use mock/localStorage data.
+DO NOT expose Supabase service-role credentials to the browser, APK, OpenRouter, or any AI prompt.
+
+Production:
+https://rakshicoco.vercel.app
+
+Stack:
+Next.js App Router + TypeScript + Tailwind + Supabase + Capacitor Android.
+
+Current Android package:
+com.rakshicoco.erp
+
+============================================================
+PHASE 0 — INSPECT BEFORE CHANGING ANYTHING
+============================================================
+
+First inspect the entire repository and current Supabase schema.
+
+Inspect:
+
+src/app/
+src/components/
+src/lib/
+src/lib/actions/
+supabase/migrations/
+capacitor.config.ts
+middleware.ts
+all navigation components
+all Quick Launchpad links
+all More/Sandwich navigation links
+all New Farm/Purchase/Sale/Payment/Transport buttons
+all search components
+all profile/account components
+all AI-related code if present.
+
+Also inspect the current database schema.
+
+Create:
+
+BUILD_24_ROUTE_AND_FEATURE_AUDIT.md
+
+Record:
+
+1. Every existing route under src/app
+2. Every navigation href
+3. Every route that is linked but does not exist
+4. Every page that exists but has broken navigation
+5. Every server action currently implemented
+6. Every relevant Supabase table
+7. Every missing table required by existing UI
+8. Existing RLS policies
+9. Existing audit log structure
+10. Existing profile structure
+11. Existing business_settings structure
+12. Existing storage buckets
+13. Existing notification structure
+14. Existing search implementations
+
+Do NOT assume that a missing route means a missing database table.
+
+The current 404 problem must first be diagnosed as:
+
+ROUTE MISSING
+or
+ROUTE EXISTS BUT LINK IS WRONG
+or
+PAGE EXISTS BUT SERVER ACTION/QUERY FAILS
+or
+DATABASE OBJECT MISSING.
+
+============================================================
+PHASE 1 — CREATE A COMPLETE ROUTE CONTRACT
+============================================================
+
+Create a route map for the entire application.
+
+Required functional areas:
+
+/dashboard
+
+Operations:
+/dashboard/operations
+/dashboard/operations/cutting
+/dashboard/operations/cutting/new
+/dashboard/operations/cutting/[id]
+
+/dashboard/operations/grouping
+/dashboard/operations/grouping/new
+/dashboard/operations/grouping/[id]
+
+/dashboard/operations/transport
+/dashboard/operations/transport/new
+/dashboard/operations/transport/[id]
+
+/dashboard/operations/processing
+/dashboard/operations/processing/new
+/dashboard/operations/processing/[id]
+
+/dashboard/operations/stock
+/dashboard/operations/stock/[id]
+
+/dashboard/operations/labour
+/dashboard/operations/labour/new
+/dashboard/operations/labour/[id]
+
+/dashboard/operations/teams
+/dashboard/operations/teams/new
+/dashboard/operations/teams/[id]
+
+/dashboard/operations/workers
+/dashboard/operations/workers/new
+/dashboard/operations/workers/[id]
+
+/dashboard/operations/wages
+/dashboard/operations/wages/new
+
+Farms:
+/dashboard/farms
+/dashboard/farms/new
+/dashboard/farms/[id]
+/dashboard/farms/[id]/edit
+
+Purchases:
+/dashboard/purchases
+/dashboard/purchases/new
+/dashboard/purchases/[id]
+/dashboard/purchases/[id]/edit
+
+Sales:
+/dashboard/sales
+/dashboard/sales/buyers
+/dashboard/sales/buyers/new
+/dashboard/sales/buyers/[id]
+/dashboard/sales/orders
+/dashboard/sales/orders/new
+/dashboard/sales/orders/[id]
+/dashboard/sales/dispatch
+/dashboard/sales/dispatch/new
+/dashboard/sales/dispatch/[id]
+
+Finance:
+/dashboard/finance
+/dashboard/finance/receivables
+/dashboard/finance/payables
+/dashboard/finance/payments
+/dashboard/finance/payments/new
+/dashboard/finance/expenses
+/dashboard/finance/expenses/new
+/dashboard/finance/bills
+/dashboard/finance/bills/new
+/dashboard/finance/bills/[id]
+/dashboard/finance/pnl
+
+System:
+/dashboard/followups
+/dashboard/alerts
+/dashboard/audit
+/dashboard/settings
+/dashboard/settings/account
+/dashboard/settings/business
+/dashboard/recycle-bin
+
+IMPORTANT:
+
+Do not create duplicate routes if equivalent routes already exist.
+
+Instead map existing routes to this contract and update hrefs consistently.
+
+Every "New ..." button must resolve to a real route.
+
+Every detail link must resolve to a real route.
+
+Every Edit button must resolve to a real route.
+
+Every Quick Launchpad item must resolve to a real route.
+
+Every More/Sandwich navigation item must resolve to a real route.
+
+No href may point to a nonexistent route.
+
+After implementation run a static route/link audit.
+
+============================================================
+PHASE 2 — FIX THE CURRENT 404 SYSTEMATICALLY
+============================================================
+
+The screenshot shows:
+
+404
+This page could not be found.
+
+Do NOT hide this with a generic redirect.
+
+Find the exact button/href that causes it.
+
+Trace:
+
+UI button
+→ href
+→ Next.js route
+→ page.tsx
+→ data loader
+→ server action if applicable
+→ Supabase table/query.
+
+For every missing "New X" page:
+
+Create a proper mobile-first form.
+
+Required minimum:
+
+New Farm
+New Purchase
+New Cutting Batch
+New Grouping
+New Transport
+New Processing
+New Buyer
+New Sales Order
+New Dispatch
+New Payment
+New Expense
+New Bill
+New Labour
+New Team
+New Worker
+New Wage.
+
+Forms must use real Server Actions and Supabase persistence.
+
+No fake success messages.
+
+After submit:
+
+validate
+→ write database
+→ audit log
+→ redirect to detail/list page
+→ show success state.
+
+============================================================
+PHASE 3 — FARM AND BUYER SELECTORS
+============================================================
+
+CURRENT BUG:
+
+New Purchase cannot select Farm.
+
+New Sale/Sales Order cannot select Buyer.
+
+Fix this properly.
+
+NEW PURCHASE:
+
+Required:
+Farm selector.
+
+Load active farms from Supabase.
+
+Display:
+Farm name
+Farm ID
+Location
+
+Store:
+farm_id
+
+Never store farm name as the primary relationship.
+
+Also show useful purchase information after selecting farm.
+
+NEW SALES ORDER:
+
+Required:
+Buyer selector.
+
+Load active buyers.
+
+Display:
+Buyer name
+Buyer ID
+Phone/location if available.
+
+Store:
+buyer_id
+
+Never store buyer name as the primary relationship.
+
+If the existing schema uses different valid foreign keys, preserve the existing schema rather than creating duplicate relationships.
+
+Add searchable combobox/select components.
+
+Must work on mobile.
+
+============================================================
+PHASE 4 — GLOBAL SEARCH
+============================================================
+
+CURRENT BUG:
+
+Search does not work consistently across farms, sales, bills/invoices, etc.
+
+Implement a reusable global search system.
+
+Create:
+
+src/components/search/GlobalSearch.tsx
+
+and appropriate server-side search functions.
+
+Search must support at minimum:
+
+Farms
+Purchases
+Cutting batches
+Grouping
+Transport
+Processing
+Stock
+Labour
+Teams
+Workers
+Buyers
+Sales Orders
+Dispatches
+Bills
+Invoices
+Payments
+Expenses
+Follow-ups.
+
+Search fields should include relevant identifiers and names.
+
+Examples:
+
+Farm:
+farm_id
+name
+location
+phone
+
+Purchase:
+purchase ID
+farm ID
+farm name
+
+Buyer:
+buyer ID
+name
+phone
+
+Sales order:
+order ID
+buyer name
+buyer ID
+
+Bill/invoice:
+bill ID
+invoice number
+buyer
+farm where relevant
+status
+
+Do NOT load the entire database into the browser.
+
+Search must be server-side.
+
+Use:
+
+query
+limit
+pagination
+
+Start with a reasonable result limit such as 20.
+
+Add debounce around 250–350ms.
+
+Show:
+
+entity type
+name/identifier
+status
+date
+amount/quantity when relevant.
+
+Clicking a result must navigate to the correct detail page.
+
+Create an optional global search accessible from the top navigation.
+
+============================================================
+PHASE 5 — RECYCLE BIN / 90-DAY TRASH
+============================================================
+
+Implement a proper soft-delete architecture.
+
+DO NOT immediately DELETE operational records.
+
+Create a generic recycle-bin mechanism compatible with existing tables.
+
+Preferred architecture:
+
+deleted_at TIMESTAMPTZ NULL
+deleted_by UUID NULL
+delete_reason TEXT NULL
+scheduled_delete_at TIMESTAMPTZ NULL
+
+Add these fields only to appropriate user-deletable entities after checking the existing schema.
+
+Do not blindly add them to every table.
+
+At minimum support:
+
+Farms
+Purchases
+Sales Orders
+Bills
+Invoices
+Buyers
+Expenses
+Transport records
+Labour records
+Teams
+Workers
+Grouping records
+Processing records
+Dispatch records
+
+For financial/operational records, deletion must be more restrictive.
+
+If an entity has downstream financial/stock references, prefer:
+
+ARCHIVE / VOID / CANCEL
+
+instead of allowing destructive deletion.
+
+The UI may still move it to Trash, but the underlying business status must remain auditable.
+
+============================================================
+RECYCLE BIN RULES
+============================================================
+
+When user deletes an eligible record:
+
+1. Do NOT hard delete.
+2. Set deleted_at = now()
+3. Set deleted_by = authenticated user.
+4. Set scheduled_delete_at = now() + 90 days.
+5. Create audit log entry.
+6. Remove from normal list queries.
+7. Move it into Recycle Bin.
+
+Recycle Bin page:
+
+/dashboard/recycle-bin
+
+Display:
+
+Entity
+Name / ID
+Deleted by
+Deleted date
+Permanent deletion date
+Days remaining
+Original status
+
+Actions:
+
+Restore
+Delete Permanently
+
+Restore:
+
+deleted_at = NULL
+deleted_by = NULL
+scheduled_delete_at = NULL
+
+Create audit event:
+
+RESTORED_FROM_TRASH
+
+Permanent delete:
+
+ONLY allowed when safe.
+
+Before permanent deletion verify:
+
+No dependent records
+No stock references
+No financial references
+No invoice/payment references
+No foreign-key dependencies
+No audit history dependency.
+
+If the record cannot safely be hard deleted:
+
+retain it as ARCHIVED/VOIDED instead.
+
+Never break referential integrity.
+
+============================================================
+AUTOMATIC 90-DAY CLEANUP
+============================================================
+
+Implement a server-side cleanup mechanism.
+
+Preferred:
+
+Supabase/Postgres scheduled job if supported by current infrastructure.
+
+Alternative:
+
+secured server-side scheduled endpoint.
+
+Never run cleanup from the browser.
+
+Delete only records where:
+
+deleted_at IS NOT NULL
+AND scheduled_delete_at <= now()
+
+Before hard deletion:
+
+write an audit event if possible.
+
+Create:
+
+docs/RECYCLE_BIN.md
+
+Explain:
+
+soft deletion
+restore
+90-day retention
+permanent deletion
+dependency protection
+audit behavior.
+
+============================================================
+PHASE 6 — MOVE HAMBURGER / MORE TO TOP
+============================================================
+
+CURRENT:
+
+Hamburger/More navigation is bottom-right/bottom navigation.
+
+CHANGE:
+
+Remove the large floating hamburger/menu control from bottom-right.
+
+Top navigation should contain:
+
+Back
+Page title
+Notifications
+Profile avatar
+
+Add a top-right More/Menu icon.
+
+The More menu should open the existing navigation drawer/menu.
+
+Bottom navigation remains:
+
+Dashboard
+Operations
+Sales
+Finance
+More
+
+BUT the bottom-right large floating "+" / menu behavior must be removed.
+
+Do not duplicate two hamburger menus.
+
+Bottom-right area should instead become the AI assistant button.
+
+============================================================
+PHASE 7 — AI ASSISTANT FAB
+============================================================
+
+Add a floating AI button at bottom-right.
+
+Example:
+
+🤖 / AI icon
+
+Label when expanded:
+
+Rakshi AI
+
+It should open:
+
+/dashboard/ai
+
+or a mobile bottom sheet / assistant panel.
+
+Use the OpenRouter API.
+
+CRITICAL SECURITY RULE:
+
+NEVER expose:
+
+OPENROUTER_API_KEY
+SUPABASE_SERVICE_ROLE_KEY
+
+to:
+
+browser
+APK
+client-side JavaScript
+React props
+localStorage
+Capacitor configuration
+AI prompt
+public environment variables.
+
+Use server-side environment variables only.
+
+Example:
+
+OPENROUTER_API_KEY=...
+
+Only server code may access it.
+
+============================================================
+AI ARCHITECTURE
+============================================================
+
+Do NOT give the LLM raw database credentials.
+
+Do NOT allow the model to generate arbitrary SQL against production.
+
+Create an application-level AI tool layer.
+
+Example:
+
+src/lib/ai/
+  client.ts
+  server.ts
+  tools.ts
+  prompts.ts
+  permissions.ts
+
+Tools:
+
+get_dashboard_summary
+search_farms
+get_farm
+create_farm
+update_farm
+
+search_purchases
+get_purchase
+create_purchase
+update_purchase
+
+search_buyers
+get_buyer
+create_buyer
+update_buyer
+
+search_sales_orders
+get_sales_order
+create_sales_order
+update_sales_order
+
+get_stock
+get_transport
+get_processing
+get_labour
+get_wages
+
+get_receivables
+get_payables
+get_expenses
+get_pnl
+
+search_bills
+get_bill
+create_bill
+
+create_payment
+
+get_followups
+get_alerts
+
+search_audit_logs
+
+The AI may READ broadly across the application according to the authenticated user's permissions.
+
+The AI may WRITE only through validated application tools.
+
+Every mutation must:
+
+authenticate user
+check role
+validate input with Zod
+execute existing business logic
+respect RLS/business rules
+write audit log
+return structured result.
+
+============================================================
+AI MUTATION SAFETY
+============================================================
+
+For CREATE operations:
+
+The AI may create records after the user explicitly asks.
+
+Example:
+
+"Create a new farm named Green Coconut Farm with 500 trees."
+
+AI should:
+
+1. Extract fields.
+2. Validate.
+3. Show confirmation/preview when material.
+4. Execute.
+5. Return created ID.
+
+For destructive operations:
+
+The AI MUST NOT permanently delete records.
+
+For trash/archive/payment/financial changes:
+
+Require explicit confirmation.
+
+Example:
+
+AI:
+"I found Farm F-102. Move it to Trash for 90 days?"
+
+User:
+"Yes."
+
+Then execute.
+
+Never let natural-language ambiguity trigger destructive financial operations.
+
+============================================================
+AI BUSINESS INTELLIGENCE
+============================================================
+
+The AI should be able to analyze the complete application dataset through tools.
+
+Examples:
+
+"Which farms haven't been purchased from recently?"
+
+"Which farms are due for harvest?"
+
+"How much money do buyers owe us?"
+
+"Which buyers have outstanding payments?"
+
+"How much ready stock do we have?"
+
+"Which purchases produced the highest losses?"
+
+"Where are our transport losses highest?"
+
+"What was our profit this month?"
+
+"Which bills are overdue?"
+
+"Create a purchase for Farm F-102 for 2,000 nuts at ₹20."
+
+"Create a new buyer."
+
+"Create a sales order for Buyer B-12 for 500 nuts at ₹35."
+
+The AI should NOT invent data.
+
+If data is unavailable, say so.
+
+Every AI-created/modified record must be visible in normal ERP pages.
+
+============================================================
+AI AUDIT
+============================================================
+
+Add audit fields/events:
+
+AI_ACTION_REQUESTED
+AI_ACTION_CONFIRMED
+AI_RECORD_CREATED
+AI_RECORD_UPDATED
+AI_RECORD_TRASHED
+
+Store:
+
+user_id
+timestamp
+action
+entity_type
+entity_id
+summary
+
+Do NOT store API keys.
+
+Do NOT store unnecessary sensitive information in AI logs.
+
+============================================================
+PHASE 8 — PROFILE AVATAR
+============================================================
+
+CURRENT:
+
+Top-right shows:
+
+RC
+
+Change this to a real account/profile control.
+
+Clicking avatar opens:
+
+Account
+Profile
+Settings
+Security
+Logout
+
+Allow profile photo upload.
+
+Use Supabase Storage.
+
+Create/use an appropriate bucket such as:
+
+avatars
+
+Check whether an existing bucket already exists before creating a new one.
+
+Profile fields:
+
+display name
+profile photo
+phone if existing schema supports it
+role
+
+Use authenticated user ID.
+
+Store avatar URL/path in profiles.
+
+Security:
+
+Users may update their own profile.
+
+Only authorized users can change privileged role fields.
+
+Do NOT allow client-side role escalation.
+
+Avatar should appear:
+
+top nav
+account settings
+mobile menu/profile panel.
+
+Fallback:
+
+initials if no photo exists.
+
+============================================================
+PHASE 9 — MORE / NAVIGATION MENU
+============================================================
+
+The More menu must include:
+
+Live Coconut ERP
+
+Operations Overview
+
+date
+
+Receivables
+Payables
+Ready Stock
+Farm Network
+
+Quick Launchpad:
+
+Purchase
+Sale Bill
+Payment
+New Farm
+
+Pipeline & Attention:
+
+Pending Harvests
+Pending Deliveries
+
+Main Coconut Godown
+
+View Stock
+New Farm
+New Purchase
+New Sale
+New Payment
+New Transport
+
+Rakshi Coco
+
+Navigation & Modules
+
+Operations
+Cutting
+Grouping
+Transport
+Processing
+Stock
+Labour
+Teams
+Workers
+Wages
+
+Sales
+Buyers
+Dispatch
+
+Finance
+Receivables
+Payables
+Expenses
+P & L
+
+System
+Follow-ups
+Alerts
+Audit Log
+Recycle Bin
+Settings
+
+Every item must navigate to a real existing route.
+
+NO placeholder hrefs.
+
+NO 404 routes.
+
+If a route does not exist, implement it before declaring the menu complete.
+
+============================================================
+PHASE 10 — DASHBOARD / MORE DATA
+============================================================
+
+Do not hardcode:
+
+₹0
+0 farms
+0 nuts
+0 pending
+
+unless the database actually contains zero.
+
+Use existing optimized queries.
+
+Maintain existing correct business numbers.
+
+Current known correct production state must not be corrupted:
+
+Ready Stock = 800
+Active Farms = 2
+Receivables = ₹2,000
+Payables = ₹14,000
+Revenue = ₹3,500
+COGS = ₹2,000
+Gross Profit = ₹1,500
+OPEX = ₹3,750
+Net Operating Result = -₹2,250
+
+Do not reset or overwrite this data.
+
+============================================================
+PHASE 11 — SEARCH ON EVERY LIST PAGE
+============================================================
+
+Add working search to:
+
+Farms
+Purchases
+Cutting
+Grouping
+Transport
+Processing
+Stock
+Labour
+Teams
+Workers
+Buyers
+Sales Orders
+Dispatch
+Bills
+Invoices
+Payments
+Expenses
+Receivables
+Payables
+Follow-ups
+Audit Logs where appropriate.
+
+Search must query the relevant database fields.
+
+Do not implement search as:
+
+array.filter() on only currently loaded rows.
+
+Use server/database filtering.
+
+For large tables use pagination.
+
+============================================================
+PHASE 12 — MOBILE UX
+============================================================
+
+Maintain mobile-first design.
+
+Target widths:
+
+360
+375
+390
+412
+
+No horizontal scrolling.
+
+Minimum touch target:
+
+44px.
+
+Forms must be comfortable on Android.
+
+Use:
+
+numeric keyboard for quantity
+numeric/decimal keyboard for money
+date picker
+searchable combobox
+clear validation messages
+loading states
+disabled submit during mutation
+success feedback
+error feedback.
+
+AI FAB must not cover:
+
+bottom navigation
+important buttons
+input fields.
+
+Respect Android safe-area insets.
+
+============================================================
+PHASE 13 — DATABASE / RLS
+============================================================
+
+Any schema changes must be migration-based.
+
+Create a new migration:
+
+supabase/migrations/0003_build24_recycle_ai_profile_search.sql
+
+ONLY include changes actually required.
+
+Before adding columns/tables:
+
+inspect current schema.
+
+Do not duplicate:
+
+profiles
+buyers
+farms
+purchase tables
+sales tables
+audit logs
+settings.
+
+RLS must be updated for any new tables.
+
+Recycle Bin must not expose records that the authenticated user is not allowed to see.
+
+AI must operate under authenticated application permissions.
+
+Never use the Supabase service role in client components.
+
+============================================================
+PHASE 14 — PERFORMANCE
+============================================================
+
+Do not regress Build 21 performance work.
+
+Preserve:
+
+parallel queries
+explicit select columns
+pagination
+loading states
+route prefetching
+optimized navigation.
+
+Do not add a global search query that fires on every keystroke without debounce.
+
+Do not load the complete database for AI.
+
+AI tool calls must be scoped and paginated.
+
+============================================================
+PHASE 15 — TEST THE COMPLETE APPLICATION
+============================================================
+
+Run:
+
+npm run lint
+npm run build
+
+Then test production URL.
+
+Test all routes.
+
+Especially:
+
+New Farm
+New Purchase
+New Buyer
+New Sales Order
+New Payment
+New Transport
+New Cutting
+New Grouping
+New Processing
+New Labour
+New Team
+New Worker
+New Wage
+New Expense
+New Bill
+New Dispatch
+
+Verify none return 404.
+
+Test:
+
+Farm selector in Purchase.
+
+Buyer selector in Sales Order.
+
+Global search:
+
+Farm
+Buyer
+Sales Order
+Bill
+Invoice
+Purchase.
+
+Recycle Bin:
+
+create record
+trash record
+verify disappears from active list
+open Recycle Bin
+restore
+verify record returns
+trash again
+verify scheduled deletion date is approximately 90 days
+verify permanent delete safety.
+
+Profile:
+
+upload avatar
+refresh
+avatar remains
+avatar appears in top nav
+account settings shows avatar.
+
+AI:
+
+open AI
+ask read-only question
+verify correct database data
+ask it to create a farm
+confirm
+verify database record
+verify normal Farm page shows it
+verify audit event exists.
+
+Test AI cannot access service-role credentials.
+
+Test AI cannot execute arbitrary SQL.
+
+Test destructive operation requires confirmation.
+
+============================================================
+PHASE 16 — ANDROID APK
+============================================================
+
+After web verification:
+
+build Android debug APK.
+
+Use:
+
+com.rakshicoco.erp
+
+Production server:
+
+https://rakshicoco.vercel.app
+
+No:
+
+localhost
+10.0.2.2
+HTTP cleartext
+development placeholder HTML.
+
+Install APK on emulator/device.
+
+Test:
+
+login
+dashboard
+More menu
+top navigation
+profile
+Farm
+Purchase
+Sales
+Bills
+Search
+Recycle Bin
+AI
+New forms
+Back navigation.
+
+============================================================
+PHASE 17 — SECURITY AUDIT
+============================================================
+
+Search repository AND git history for:
+
+service_role
+SUPABASE_SERVICE_ROLE_KEY
+OPENROUTER_API_KEY
+sk-or-
+eyJ
+Authorization:
+Bearer
+
+Do NOT print any secret value in the report.
+
+If a real credential is found hardcoded in source, generated scripts, documentation, test files, or reports:
+
+STOP before shipping.
+
+Report the file/path without exposing the secret.
+
+Ensure secrets exist only in secure environment variables.
+
+If a Supabase service-role key was previously committed to Git history, flag it for immediate rotation.
+
+============================================================
+PHASE 18 — FINAL REPORT
+============================================================
+
+Create:
+
+BUILD_24_FINAL_REPORT.md
+
+Include:
+
+1. Build summary
+2. Route audit
+3. Previously broken 404 routes
+4. Routes created
+5. Forms created
+6. Farm selector fix
+7. Buyer selector fix
+8. Search implementation
+9. Recycle Bin implementation
+10. 90-day cleanup
+11. Profile/avatar implementation
+12. Navigation redesign
+13. AI architecture
+14. AI tools
+15. AI mutation controls
+16. AI audit logging
+17. Database migrations
+18. RLS changes
+19. Performance impact
+20. Web test results
+21. Android test results
+22. Security audit
+23. Remaining issues
+
+Use strict classifications:
+
+PASS
+PARTIAL
+FAIL
+BLOCKED
+
+Do NOT mark something PASS merely because the code exists.
+
+PASS requires actual runtime verification.
+
+For every failed test provide:
+
+feature
+expected
+actual
+root cause
+file
+recommended fix.
+
+============================================================
+FINAL ACCEPTANCE CRITERIA
+============================================================
+
+Build 24 is complete only if:
+
+[ ] No broken "New..." navigation
+[ ] No 404 from More menu
+[ ] All declared routes exist
+[ ] New Purchase can select Farm
+[ ] New Sales Order can select Buyer
+[ ] Global search works
+[ ] Farm search works
+[ ] Sales search works
+[ ] Bill/Invoice search works
+[ ] Recycle Bin works
+[ ] Restore works
+[ ] 90-day retention works
+[ ] Permanent deletion is dependency-safe
+[ ] Audit logs exist for trash/restore/AI actions
+[ ] Hamburger moved to top navigation
+[ ] Bottom-right is AI assistant
+[ ] Profile avatar upload works
+[ ] Account settings works
+[ ] AI can read authorized ERP data through application tools
+[ ] AI can create/update authorized records through validated tools
+[ ] AI cannot execute arbitrary SQL
+[ ] AI cannot access service-role credentials
+[ ] Destructive AI operations require confirmation
+[ ] RLS remains enforced
+[ ] Existing business data remains intact
+[ ] Existing financial numbers remain correct
+[ ] Production build passes
+[ ] Android APK builds
+[ ] Android APK points to production HTTPS
+[ ] No localhost/10.0.2.2 in production APK configuration
+[ ] No hardcoded secrets
+[ ] No mock data
+[ ] No localStorage database
+[ ] No production database reset
+
+DO NOT stop after implementing UI.
+
+The objective is a working production ERP, not a visual prototype.
+
+Begin with PHASE 0 and produce BUILD_24_ROUTE_AND_FEATURE_AUDIT.md before making destructive or structural changes.
+
+
+
+
+                  ┌─────────────────────┐
+                  │   Rakshi AI UI      │
+                  │ Android / Web       │
+                  └──────────┬──────────┘
+                             │
+                             ▼
+                  ┌─────────────────────┐
+                  │  AI Server Gateway  │
+                  │ /api/ai             │
+                  └──────────┬──────────┘
+                             │
+                    OpenRouter API
+                             │
+                             ▼
+                  ┌─────────────────────┐
+                  │       LLM           │
+                  └──────────┬──────────┘
+                             │
+                    Tool calls only
+                             ▼
+       ┌─────────────────────────────────────────┐
+       │        Rakshi ERP Tool Layer            │
+       │                                         │
+       │ Farms   Purchases   Buyers   Sales      │
+       │ Stock   Transport   Finance  Followups │
+       │ Bills   Payments    Labour   Reports   │
+       └──────────────────────┬──────────────────┘
+                              │
+                              ▼
+                    ┌─────────────────┐
+                    │ Supabase / PG   │
+                    │ RLS + Audit     │
+                    └─────────────────┘

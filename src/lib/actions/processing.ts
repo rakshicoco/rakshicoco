@@ -5,8 +5,8 @@ import { requireRole, logAudit } from "./utils";
 import { revalidatePath } from "next/cache";
 
 const CuttingBatchSchema = z.object({
-  purchase_id: z.string().uuid(),
-  team_id: z.string().uuid(),
+  purchase_id: z.string().min(1),
+  team_id: z.string().min(1),
   date: z.string(),
   expected_output_nuts: z.number().int().positive(),
   rate_per_nut: z.number().positive(),
@@ -61,7 +61,7 @@ export async function completeCuttingBatch(batchId: string, data: z.infer<typeof
 }
 
 const GroupingBatchSchema = z.object({
-  cutting_batch_ids: z.array(z.string().uuid()).min(1),
+  cutting_batch_ids: z.array(z.string().min(1)).min(1),
   date: z.string(),
   destination_godown: z.string(),
 });
@@ -70,7 +70,6 @@ export async function createGroupingBatch(data: z.infer<typeof GroupingBatchSche
   const { supabase, user } = await requireRole(["ADMIN", "MANAGER", "OPERATOR"]);
   const validated = GroupingBatchSchema.parse(data);
 
-  // Here an RPC should be used to atomically link cutting batches to a new grouping batch
   const { data: group, error } = await supabase
     .from("grouping_batches")
     .insert({
@@ -93,4 +92,38 @@ export async function createGroupingBatch(data: z.infer<typeof GroupingBatchSche
   await logAudit(supabase, user.id, "CREATE", "GROUPING", group.id, { created: group, linked_cutting: validated.cutting_batch_ids });
   revalidatePath("/dashboard/grouping");
   return group;
+}
+
+const ProcessingBatchSchema = z.object({
+  purchase_id: z.string().min(1).optional(),
+  team_id: z.string().min(1).optional(),
+  qty_given: z.number().min(0),
+  rate: z.number().min(0),
+  date: z.string(),
+  notes: z.string().optional(),
+});
+
+export async function createProcessingBatch(data: z.infer<typeof ProcessingBatchSchema>) {
+  const { supabase, user } = await requireRole(["ADMIN", "MANAGER", "OPERATOR"]);
+  const validated = ProcessingBatchSchema.parse(data);
+
+  const labour_amount = Number(validated.qty_given || 0) * Number(validated.rate || 0);
+
+  const { data: batch, error } = await supabase
+    .from("processing_batches")
+    .insert({
+      ...validated,
+      labour_amount,
+      balance: labour_amount,
+      status: "PENDING",
+      created_at: new Date().toISOString()
+    })
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+
+  await logAudit(supabase, user.id, "CREATE", "PROCESSING", batch.id, { created: batch });
+  revalidatePath("/dashboard/processing");
+  return batch;
 }

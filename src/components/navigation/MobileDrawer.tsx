@@ -98,8 +98,10 @@ export function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) {
 
           {/* Settings & System */}
           <div className="space-y-2.5">
-            <h4 className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">System</h4>
+            <h4 className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">System & Tools</h4>
             <div className="grid grid-cols-2 gap-2">
+              <DrawerLink href="/dashboard/ai" icon={<Activity size={16} />} label="Rakshi AI" onClick={() => onOpenChange(false)} />
+              <DrawerLink href="/dashboard/recycle-bin" icon={<Archive size={16} />} label="Recycle Bin" onClick={() => onOpenChange(false)} />
               <DrawerLink href="/dashboard/farm-followups" icon={<CalendarClock size={16} />} label="Follow-ups" onClick={() => onOpenChange(false)} />
               <DrawerLink href="/dashboard/notifications" icon={<Bell size={16} />} label="Alerts" onClick={() => onOpenChange(false)} />
               <DrawerLink href="/dashboard/audit-log" icon={<Activity size={16} />} label="Audit Log" onClick={() => onOpenChange(false)} />
