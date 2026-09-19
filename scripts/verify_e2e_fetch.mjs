@@ -239,18 +239,18 @@ async function run() {
     const created = await api('/bills', {
       method: 'POST',
       body: JSON.stringify({
-        entity_type: 'VENDOR',
+        entity_type: 'BUYER',
         entity_id: buyer.id,
         amount: 3500,
         date: today,
         due_date: today,
-        status: 'UNPAID',
-        balance_due: 3500,
+        status: 'PARTIAL',
+        balance_due: 2000,
         description: `Invoice for Sales Order ${order.id.slice(0, 8)} (100 nuts @ ₹35)`
       })
     });
     bill = created[0];
-    console.log(`-> Bill / Invoice Created: ${bill.id} (Amount: ₹3,500, Balance Due: ₹3,500)`);
+    console.log(`-> Bill / Invoice Created: ${bill.id} (Amount: ₹3,500, Balance Due: ₹2,000, Status: PARTIAL)`);
   } else {
     console.log(`-> Reusing Bill / Invoice: ${bill.id}`);
   }

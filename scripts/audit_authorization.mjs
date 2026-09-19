@@ -1,5 +1,7 @@
-const SUPABASE_URL = 'https://woligfdwsweiqcxhtdtt.supabase.co';
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+import fs from 'fs';
+const envFile = fs.existsSync('.env.local') ? fs.readFileSync('.env.local', 'utf8') : '';
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || envFile.match(/NEXT_PUBLIC_SUPABASE_URL=(.*)/)?.[1]?.trim() || 'https://woligfdwsweiqcxhtdtt.supabase.co';
+const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || envFile.match(/SUPABASE_SERVICE_ROLE_KEY=(.*)/)?.[1]?.trim() || '';
 
 // Simulating requireRole logic from src/lib/actions/utils.ts
 async function simulateRequireRole(user, allowedRoles) {

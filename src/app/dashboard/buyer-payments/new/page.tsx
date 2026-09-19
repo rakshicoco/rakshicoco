@@ -52,24 +52,50 @@ export default function NewBuyerPaymentPage() {
     };
 
     try {
-      const { error: insertError } = await supabase.from("buyer_payments").insert(paymentData);
-      if (insertError) {
-        // Fallback to payments table if buyer_payments schema differs
-        const { error: fallbackError } = await supabase.from("payments").insert({
-          type: "IN",
-          ref_type: "BUYER",
-          ref_id: paymentData.buyer_id,
-          bill_id: prefillBillId || null,
-          amount: paymentData.amount_received,
-          date: paymentData.payment_date,
-          method: paymentData.payment_method,
-          tx_ref: paymentData.reference_no,
-          notes: paymentData.notes,
-        });
-        if (fallbackError) throw new Error(insertError.message || fallbackError.message);
+      // 1. Insert into payments table
+      const { data: payment, error: paymentError } = await supabase.from("payments").insert({
+        entity_type: "BUYER",
+        entity_id: paymentData.buyer_id,
+        amount: paymentData.amount_received,
+        date: paymentData.payment_date,
+        payment_method: paymentData.payment_method,
+        reference: paymentData.reference_no,
+        notes: paymentData.notes,
+        type: "IN",
+      }).select().single();
+
+      if (paymentError) throw new Error(paymentError.message);
+
+      // 2. Settle bill balance
+      if (prefillBillId) {
+        const { data: targetBill } = await supabase.from("bills").select("id, balance_due").eq("id", prefillBillId).single();
+        if (targetBill) {
+          const newDue = Math.max(0, Number(targetBill.balance_due || 0) - paymentData.amount_received);
+          const newStatus = newDue <= 0 ? "PAID" : "PARTIAL";
+          await supabase.from("bills").update({ balance_due: newDue, status: newStatus }).eq("id", prefillBillId);
+        }
+      } else {
+        const { data: openBills } = await supabase
+          .from("bills")
+          .select("id, amount, balance_due")
+          .eq("entity_id", paymentData.buyer_id)
+          .gt("balance_due", 0)
+          .order("created_at", { ascending: true });
+
+        let rem = paymentData.amount_received;
+        for (const b of openBills || []) {
+          if (rem <= 0) break;
+          const due = Number(b.balance_due || 0);
+          const deduction = Math.min(rem, due);
+          const newDue = due - deduction;
+          const newStatus = newDue <= 0 ? "PAID" : "PARTIAL";
+          await supabase.from("bills").update({ balance_due: newDue, status: newStatus }).eq("id", b.id);
+          rem -= deduction;
+        }
       }
 
       router.push("/dashboard/buyer-payments");
+      router.refresh();
     } catch (err: any) {
       setError(err.message || "Failed to record payment");
       setLoading(false);

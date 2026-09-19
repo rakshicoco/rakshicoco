@@ -82,8 +82,8 @@ export default async function BillsPage() {
                     <p className="text-sm font-medium text-slate-900 dark:text-slate-100 mt-0.5">
                       {bill.buyers?.name || 'Customer'}
                     </p>
-                    {bill.buyers?.company && (
-                      <p className="text-xs text-slate-500">{bill.buyers.company}</p>
+                    {bill.buyers?.contact_person && (
+                      <p className="text-xs text-slate-500">{bill.buyers.contact_person}</p>
                     )}
                   </div>
                   <span className={`px-2.5 py-1 text-xs rounded-full font-medium ${
@@ -158,7 +158,7 @@ export default async function BillsPage() {
                           </td>
                           <td className="px-4 py-3">
                             <div className="font-medium">{bill.buyers?.name}</div>
-                            <div className="text-xs text-slate-500">{bill.buyers?.company || '-'}</div>
+                            <div className="text-xs text-slate-500">{bill.buyers?.contact_person || '-'}</div>
                           </td>
                           <td className="px-4 py-3 text-xs text-slate-600">
                             <div>SO: <Link href={`/dashboard/sales/${bill.sales_order_id}`} className="hover:underline">{bill.sales_order_id}</Link></div>
