@@ -1,0 +1,127 @@
+BUILD 21 — STOP FINAL SIGN-OFF AND RECONCILE FARM COUNT
+
+The Build 21 performance report contains a baseline inconsistency.
+
+Build 20 authoritative reconciliation established:
+Farm Network = 2 active farms.
+
+Build 21 report now says:
+Build 20 Baseline = 3 farms
+Build 21 = 3 farms
+
+This must be investigated before declaring Build 21 complete.
+
+1. Query the current production Supabase farms table.
+
+2. List EVERY farm:
+   - id
+   - name
+   - active
+   - created_at
+   - relevant purchase relationship
+
+3. Identify exactly when the third farm was created.
+
+4. Determine whether the third farm:
+   A. existed before Build 20,
+   B. was created during Build 21 testing,
+   C. was created by some other workflow,
+   D. is an unintended test/duplicate record.
+
+5. Compare the actual database state against the Build 20
+   reconciliation evidence.
+
+6. DO NOT delete any farm automatically.
+
+7. If the third farm is legitimate business data:
+   - keep it
+   - document why the count changed from 2 to 3
+   - correct the Build 21 report baseline.
+
+8. If it is an unintended E2E/test record:
+   - do not blindly DELETE it
+   - determine whether the application's supported archive/deactivate
+     workflow should be used
+   - preserve auditability
+   - then re-query the KPI.
+
+9. Update BUILD_21_PERFORMANCE_REPORT.md with the factual timeline.
+
+IMPORTANT:
+Do not change the dashboard number merely to make it match Build 20.
+The database is authoritative.
+
+Final report must explicitly state:
+
+Build 20 active farm count:
+Current active farm count:
+Third farm ID:
+Third farm creation time:
+Reason:
+Final legitimate active farm count:
+
+Only then provide the final performance verdict.
+
+
+
+
+
+
+
+BUILD 21 — CORRECT PERFORMANCE STATUS CLASSIFICATION
+
+Review BUILD_21_PERFORMANCE_REPORT.md.
+
+Several rows are marked PASSED even though the measured latency is
+above the stated target.
+
+Correct the classification without changing measurements.
+
+Rules:
+
+IF actual <= target:
+    PASSED
+
+IF actual > target but improved from baseline:
+    IMPROVED — TARGET NOT MET
+
+IF actual >= baseline:
+    NO IMPROVEMENT
+
+Specifically verify:
+
+Dashboard:
+2680 ms vs 1500 ms target
+=> IMPROVED — TARGET NOT MET
+
+P&L:
+2015 ms vs 1200 ms target
+=> IMPROVED — TARGET NOT MET
+
+Sales Order List:
+1268 ms vs 1000 ms target
+=> IMPROVED — TARGET NOT MET
+
+Bills:
+1292 ms vs 1000 ms target
+=> IMPROVED — TARGET NOT MET
+
+Godown Stock:
+1518 ms vs 1000 ms target
+=> IMPROVED — TARGET NOT MET
+
+Do NOT manipulate the targets or measurements to obtain PASS.
+
+Keep the actual measured values.
+
+Also distinguish:
+
+1. Tap responsiveness
+2. Route transition
+3. Content rendering
+4. Full page/data loading
+
+The navigation result of 66–90 ms is a genuine PASS for route transition,
+while content rendering of 1280–1489 ms is a separate measurement.
+
+Update BUILD_21_PERFORMANCE_REPORT.md accordingly.
