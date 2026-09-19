@@ -36,6 +36,7 @@ export async function searchGlobal(query: string, limit = 20): Promise<SearchRes
       { data: workers },
       { data: payments },
       { data: expenses },
+      { data: stockMovements },
     ] = await Promise.all([
       supabase.from("farms").select("id, name, village, phone").or(`name.ilike.${pattern},village.ilike.${pattern},phone.ilike.${pattern},id.ilike.${pattern}`).limit(perTableLimit),
       supabase.from("buyers").select("id, name, phone, address").or(`name.ilike.${pattern},phone.ilike.${pattern},address.ilike.${pattern},id.ilike.${pattern}`).limit(perTableLimit),
@@ -50,6 +51,7 @@ export async function searchGlobal(query: string, limit = 20): Promise<SearchRes
       supabase.from("workers").select("id, name, phone, role").or(`name.ilike.${pattern},phone.ilike.${pattern},role.ilike.${pattern}`).limit(perTableLimit),
       supabase.from("payments").select("id, entity_type, entity_id, amount, date, payment_method, reference").or(`id.ilike.${pattern},reference.ilike.${pattern}`).limit(perTableLimit),
       supabase.from("expenses").select("id, category, description, amount, date").or(`category.ilike.${pattern},description.ilike.${pattern}`).limit(perTableLimit),
+      supabase.from("stock_movements").select("id, godown_id, product_type, qty, to_state, notes").or(`product_type.ilike.${pattern},notes.ilike.${pattern}`).limit(perTableLimit),
     ]);
 
     const results: SearchResultItem[] = [];
@@ -221,6 +223,18 @@ export async function searchGlobal(query: string, limit = 20): Promise<SearchRes
         amount: e.amount ? `₹${Number(e.amount).toLocaleString()}` : undefined,
         href: "/dashboard/expenses",
         date: e.date,
+      });
+    });
+
+    // Format Stock Movements
+    (stockMovements || []).forEach((sm: any) => {
+      results.push({
+        id: sm.id,
+        type: "Stock Movement",
+        title: `Stock: ${sm.product_type} (${sm.qty} nuts)`,
+        subtitle: `State: ${sm.to_state} • Godown: ${sm.godown_id || "Main"}`,
+        badge: sm.to_state || "STOCK",
+        href: `/dashboard/stock/${sm.id}`,
       });
     });
 

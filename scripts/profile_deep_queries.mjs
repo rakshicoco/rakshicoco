@@ -1,7 +1,9 @@
 import fs from 'fs';
 
-const SUPABASE_URL = 'https://woligfdwsweiqcxhtdtt.supabase.co';
-const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndvbGlnZmR3c3dlaXFjeGh0ZHR0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4OTc2MjMyMiwiZXhwIjoyMTA1MzM4MzIyfQ.qWrjIXcpPlveOPnrjOtcPZ1tmooizoF-rw6P3Xdcv9w';
+import 'dotenv/config';
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://woligfdwsweiqcxhtdtt.supabase.co';
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
 const headers = {
   'apikey': SERVICE_KEY,
