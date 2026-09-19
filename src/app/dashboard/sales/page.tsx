@@ -98,13 +98,13 @@ export default async function SalesPage() {
                     <span className="text-slate-400 block mb-0.5">Quantity</span>
                     <span className="font-medium text-slate-800 dark:text-slate-200 flex items-center gap-1 text-sm">
                       <Scale className="w-3.5 h-3.5 text-slate-400" />
-                      {Number(order.qty).toLocaleString()} nuts
+                      {Number(order.quantity || order.qty || 0).toLocaleString()} nuts
                     </span>
                   </div>
                   <div>
                     <span className="text-slate-400 block mb-0.5">Total Amount</span>
                     <span className="font-bold text-slate-900 dark:text-slate-100 text-sm">
-                      ₹{Number(order.total).toLocaleString(undefined, {minimumFractionDigits: 2})}
+                      ₹{Number(order.total_amount || order.total || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}
                     </span>
                   </div>
                   <div>
@@ -158,11 +158,11 @@ export default async function SalesPage() {
                           </td>
                           <td className="px-4 py-3">{order.date ? new Date(order.date).toLocaleDateString() : '-'}</td>
                           <td className="px-4 py-3 text-right">
-                            <div className="font-medium">{Number(order.qty).toLocaleString()}</div>
+                            <div className="font-medium">{Number(order.quantity || order.qty || 0).toLocaleString()}</div>
                             {order.dispatched_qty > 0 && <div className="text-xs text-slate-500">{Number(order.dispatched_qty).toLocaleString()} disp.</div>}
                           </td>
                           <td className="px-4 py-3 text-right font-bold text-slate-900">
-                            ₹{Number(order.total).toLocaleString(undefined, {minimumFractionDigits: 2})}
+                            ₹{Number(order.total_amount || order.total || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}
                           </td>
                           <td className="px-4 py-3">
                             <span className={`px-2 py-1 text-xs rounded-full font-medium ${
