@@ -1,0 +1,350 @@
+BUILD 16 — APPROVE AND EXECUTE
+
+Proceed with the Build 16 implementation plan exactly as specified.
+
+IMPORTANT ACCEPTANCE RULES:
+
+1. DO NOT mark a feature PASS based only on source-code inspection.
+   PASS means the feature was actually opened and tested in the running
+   application.
+
+2. Perform the E2E workflow using the actual production application:
+   https://rakshicoco.vercel.app
+
+   Prefer the Android emulator:
+   emulator-5554
+
+3. Preserve ALL existing business logic:
+   - Server Actions
+   - Supabase queries
+   - validation
+   - authentication
+   - authorization
+   - stock calculations
+   - finance calculations
+   - audit logging
+   - harvest follow-up logic
+   - desktop UI
+
+4. MOBILE UI:
+   At widths below 768px, primary list presentation MUST be vertical
+   stacked cards.
+
+   Use:
+     block md:hidden
+     hidden md:block
+
+   Do NOT solve the problem merely with overflow-x-auto.
+
+   The following must NOT horizontally overflow on mobile:
+   - page itself
+   - cards
+   - headings
+   - search fields
+   - primary buttons
+   - empty states
+   - important record information
+
+5. Test mobile layouts at:
+   - 360px
+   - 375px
+   - 390px
+   - 412px
+
+6. Touch targets:
+   minimum approximately 44px.
+
+7. Mobile cards must expose the important information directly.
+   Secondary information may be available on the detail page.
+
+8. Desktop:
+   Keep the existing desktop table experience at md and above.
+   Do not replace desktop tables with cards.
+
+9. EMPTY STATES:
+   Replace clipped table empty states with proper centered mobile
+   EmptyState components containing:
+   - icon
+   - title
+   - explanatory text
+   - primary CTA
+
+10. FUNCTIONAL E2E TEST:
+
+Execute this exact workflow:
+
+LOGIN
+  ↓
+DASHBOARD BASELINE
+  ↓
+NEW FARM
+  ↓
+NEW PURCHASE
+  ↓
+CUTTING / HARVEST
+  ↓
+GROUPING
+  ↓
+FARM → GODOWN TRANSPORT
+  ↓
+PROCESSING / DEHUSKING
+  ↓
+READY STOCK
+  ↓
+NEW BUYER
+  ↓
+NEW SALES ORDER
+  ↓
+DISPATCH
+  ↓
+GODOWN → BUYER TRANSPORT
+  ↓
+SALES BILL / INVOICE
+  ↓
+PAYMENT
+  ↓
+RECEIVABLE
+  ↓
+PAYABLE
+  ↓
+EXPENSE
+  ↓
+P&L
+  ↓
+DASHBOARD KPI RECHECK
+
+11. TEST DATA:
+
+Use:
+
+Farm:
+TEST FARM — RAKSHI E2E
+
+Buyer:
+TEST BUYER — RAKSHI E2E
+
+Do not create duplicate test records if these already exist.
+Reuse existing test records where appropriate.
+
+12. DATABASE VERIFICATION:
+
+After each important mutation, verify the corresponding Supabase
+record actually exists.
+
+At minimum verify:
+- generated ID
+- farm_id
+- purchase relationship
+- quantities
+- rates
+- amounts
+- status
+- transport quantities
+- stock state
+- buyer relationship
+- sales order
+- dispatch
+- invoice
+- payment
+- receivable
+- payable
+- expense
+
+Do not use:
+- localStorage
+- mock data
+- hard-coded arrays
+- fake success states
+
+13. QUANTITY INTEGRITY:
+
+Where applicable verify:
+
+Loaded Quantity
+vs
+Received Quantity
+vs
+Difference
+
+And:
+
+Processing Input
+=
+Ready Output
++
+Damaged
++
+Rejected
+
+Do not silently accept impossible quantities.
+
+14. STOCK INTEGRITY:
+
+Verify the complete stock transition:
+
+RECEIVED
+→ PROCESSING
+→ READY / DAMAGED / REJECTED
+→ RESERVED
+→ DISPATCHED
+→ DELIVERED
+
+Do not allow the test to create negative or duplicated stock.
+
+15. FINANCE:
+
+Keep these concepts separate:
+
+PROFIT:
+Revenue - Relevant Costs
+
+CASH FLOW:
+Money Received - Money Paid
+
+Verify:
+- Receivables
+- Payables
+- Partial payment
+- Outstanding amount
+- P&L
+
+16. DASHBOARD:
+
+Record dashboard values BEFORE the E2E test.
+
+Then record them AFTER the E2E test.
+
+Compare:
+- Farm Network
+- Ready Stock
+- Receivables
+- Payables
+- Pending Harvests
+- Pending Deliveries
+
+If a number does not change, determine whether that is:
+A. expected from the business logic
+B. a calculation bug
+C. stale UI/cache
+D. failed database mutation
+
+Do not simply report "PASS".
+
+17. AUTHORIZATION / SECURITY:
+
+Because previous builds introduced server-side admin client usage,
+verify that privileged server operations still perform authenticated
+role/authorization checks BEFORE using the admin/service-role client.
+
+Do not weaken authorization just to make database mutations work.
+
+Never expose:
+- SUPABASE_SERVICE_ROLE_KEY
+- database credentials
+- authentication tokens
+- secrets
+
+18. PRODUCTION APK:
+
+After all UI and functional fixes:
+
+Set:
+
+CAPACITOR_SERVER_URL=https://rakshicoco.vercel.app
+
+Run Capacitor sync.
+
+Build:
+
+.\gradlew.bat assembleDebug
+
+Install on:
+
+emulator-5554
+
+Launch:
+
+com.rakshicoco.erp
+
+Verify the APK loads the HTTPS production application.
+
+19. PRODUCTION APK MUST NOT depend on:
+
+localhost
+10.0.2.2
+HTTP cleartext
+local Next.js dev server
+placeholder HTML
+mock data
+
+20. APK REGRESSION TEST:
+
+Inside the final APK verify:
+
+- Login
+- Dashboard
+- New Farm
+- New Purchase
+- New Sale
+- New Payment
+- New Transport
+- Navigation
+- Back button
+- More drawer
+- Mobile cards
+- Search
+- Forms
+- Database persistence
+
+21. DO NOT STOP AT THE FIRST FAILURE.
+
+If something fails:
+- identify the root cause
+- fix it where safe
+- rerun the affected test
+- continue with the remaining tests
+
+22. FINAL REPORT:
+
+Produce the complete Build 16 report with:
+
+A. Environment
+B. Functional E2E test table
+C. Database persistence verification
+D. Before/after dashboard KPIs
+E. Mobile responsive test matrix
+F. Problems discovered
+G. Problems fixed
+H. Remaining failures
+I. Blocked tests
+J. APK build result
+K. APK installation result
+L. APK production verification
+M. Security verification
+N. Screenshots
+
+For every PASS, provide concrete evidence such as:
+- route tested
+- record ID
+- database row verified
+- resulting quantity/amount
+- screenshot where appropriate
+
+For every FAIL, provide:
+- exact feature
+- reproduction
+- error
+- suspected/root cause
+- whether fixed
+
+FINAL VERDICT must be exactly one of:
+
+PRODUCTION TEST PASSED
+
+OR
+
+PRODUCTION TEST FAILED — [specific blockers]
+
+Do not use "mostly working", "looks good", or equivalent.
+
+Proceed with implementation and testing now.

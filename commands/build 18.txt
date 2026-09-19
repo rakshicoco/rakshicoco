@@ -1,0 +1,170 @@
+BUILD 16 FINAL SECURITY + ACCOUNTING AUDIT
+
+Do NOT rebuild the application.
+
+Perform a focused final audit of the Build 16 implementation.
+
+1. AUTHORIZATION AUDIT
+
+Inspect every Server Action that can call createAdminClient().
+
+For each action verify:
+
+authenticated session
+    ↓
+authenticated user ID
+    ↓
+profile lookup
+    ↓
+role verification
+    ↓
+role permitted for this specific mutation
+    ↓
+createAdminClient()
+    ↓
+database mutation
+
+Do NOT consider requireAuth() alone sufficient.
+
+Authentication and authorization are separate requirements.
+
+Test unauthorized scenarios where practical:
+- authenticated user without required role
+- unauthenticated user
+- restricted finance mutation
+- restricted operational mutation
+
+Confirm unauthorized users receive an explicit authorization error
+and cannot mutate the database.
+
+Do not expose the service-role key.
+
+2. P&L ACCOUNTING AUDIT
+
+Trace the actual P&L calculation from database records.
+
+The Build 16 E2E test contains:
+
+Revenue:
+₹3,500
+
+COGS:
+₹2,000
+
+Cutting Labour:
+₹2,250
+
+Transport Freight:
+₹1,200
+
+Verify exactly how these costs are classified.
+
+Determine whether the P&L correctly distinguishes:
+
+Revenue
+COGS
+Gross Profit
+Operating Expenses
+Net Profit
+
+Do not alter accounting classification merely to make the numbers
+look better.
+
+Document the actual accounting rule implemented by the ERP.
+
+3. QUANTITY AUDIT
+
+Verify the reported E2E quantities:
+
+Harvested:
+950
+
+Cutting/processing input:
+940
+
+Output:
+900
+
+Rejected/Damaged:
+40
+
+Farm → Godown:
+Loaded 950
+Received 940
+Damaged/Difference 10
+
+Verify that these represent separate business events and that the
+10 transport difference is not accidentally duplicated as another
+40-unit processing loss.
+
+Verify final READY stock:
+
+900 processed
+- 100 dispatched
+= 800 READY
+
+4. DATABASE EVIDENCE
+
+For the existing Build 16 TEST FARM and TEST BUYER records, verify
+the actual Supabase rows and relationships.
+
+Do not create duplicate test records.
+
+Verify:
+farm
+purchase
+cutting
+grouping
+transport
+processing
+stock movement
+buyer
+sales order
+dispatch
+invoice
+payment
+receivable
+payable
+expense
+follow-up
+
+5. FINAL APK
+
+Verify the latest APK still points to:
+
+https://rakshicoco.vercel.app
+
+Confirm:
+
+localhost = 0
+10.0.2.2 = 0
+cleartext HTTP = disabled
+placeholder HTML = absent
+service-role key = absent from client bundle
+
+6. FINAL REPORT
+
+Return:
+
+A. Authorization audit
+B. P&L calculation audit
+C. Quantity reconciliation
+D. Database persistence verification
+E. APK verification
+F. Remaining blockers
+
+Do NOT report PRODUCTION TEST PASSED until all five areas above
+have been verified.
+
+If an issue exists, fix it where safe and rerun the affected test.
+
+Final verdict:
+
+PRODUCTION TEST PASSED
+
+or
+
+PRODUCTION TEST FAILED — [specific blocker]
+
+
+

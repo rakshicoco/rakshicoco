@@ -1,0 +1,1128 @@
+# RAKSHI COCO ERP — FULL E2E FUNCTIONAL TEST + MOBILE UI FIX
+# ============================================================
+# Objective:
+# 1. Open and run the actual Rakshi Coco ERP application.
+# 2. Test the complete business workflow using REAL UI interactions.
+# 3. Create test records for Farm, Purchase, Sale, Payment, Transport.
+# 4. Verify every created record is actually persisted in Supabase.
+# 5. Verify dashboard/KPI values change correctly.
+# 6. Verify related modules receive the correct data.
+# 7. Test the major Operations, Sales and Finance modules.
+# 8. Fix the mobile UI so Operations/Sales/Finance pages are genuinely
+#    mobile-first and vertically arranged instead of desktop tables
+#    being squeezed into a horizontal viewport.
+#
+# IMPORTANT:
+# - Do NOT simply inspect source code and report PASS.
+# - Actually open the running application and interact with it.
+# - Prefer Android emulator/device testing at approximately 390x844.
+# - Use the real production application:
+#     https://rakshicoco.vercel.app/
+# - If the application is currently configured for local development,
+#   use the appropriate running environment, but clearly distinguish
+#   local vs production in the final report.
+# - Do NOT use fake/localStorage/mock data.
+# - Do NOT bypass the UI for the primary E2E test.
+# - Database verification may use Supabase/server-side inspection after
+#   the UI action to confirm persistence.
+# - Do not delete existing business data.
+# - Use clearly identifiable TEST records only.
+# - If a test record must be removed, archive/delete ONLY the test
+#   records after all verification is complete and only if the
+#   application's supported workflow permits it.
+# - Never expose Supabase secrets, service-role keys, passwords or tokens
+#   in the report.
+
+# ============================================================
+# PHASE 1 — START APPLICATION
+# ============================================================
+
+1. Open the Rakshi Coco ERP application.
+
+2. Verify:
+   - Login screen loads.
+   - Rakshi Coco logo is displayed.
+   - Login works.
+   - Authenticated dashboard loads.
+   - No blank WebView.
+   - No localhost/10.0.2.2 dependency in the production build.
+   - No console/runtime fatal errors.
+
+3. Confirm dashboard initially displays the current business state.
+
+Expected dashboard sections:
+
+Live Coconut ERP
+Operations Overview
+Sat, 19 Sept
+
+Receivables
+₹0
+To collect from buyers
+
+Payables
+₹0
+To pay farmers / labor
+
+Ready Stock
+0 nuts
+In Godowns
+
+Farm Network
+0 farms
+Active Groves
+
+Quick Launchpad
+Purchase
+Sale Bill
+Payment
+New Farm
+
+Pipeline & Attention
+Pending Harvests
+Pending Deliveries
+
+Main Coconut Godown
+
+Quick actions:
+New Farm
+New Purchase
+New Sale
+New Payment
+New Transport
+
+# ============================================================
+# PHASE 2 — CREATE TEST FARM
+# ============================================================
+
+Create a new FARM through the actual UI.
+
+Use clearly identifiable test data:
+
+Farm Name / Owner:
+TEST FARM — RAKSHI E2E
+
+Village / Location:
+TEST VILLAGE
+
+Phone:
+9999999999
+
+Use any other required fields with valid test values.
+
+Requirements:
+- Farm ID must be generated automatically according to the application's
+  actual Farm ID logic.
+- Save the farm.
+- Verify success feedback.
+- Return to Farm Network/Farms.
+- Verify the new farm appears in the list.
+- Search for the farm by ID/owner.
+- Open the farm details if supported.
+- Verify the database contains the farm.
+- Verify dashboard Farm Network count increases accordingly.
+
+Do NOT create a duplicate farm if the test was already executed.
+If the same TEST FARM already exists, reuse it and continue.
+
+# ============================================================
+# PHASE 3 — CREATE TEST PURCHASE
+# ============================================================
+
+Create a NEW PURCHASE against the TEST FARM through the UI.
+
+Use realistic test values:
+
+Farm:
+TEST FARM — RAKSHI E2E
+
+Purchase date:
+Today
+
+Expected quantity:
+1000 nuts
+
+Actual harvested quantity:
+950 nuts
+
+Purchase/rate:
+Use a realistic test rate supported by the form.
+
+Example:
+₹20 per nut
+
+Purchase amount should therefore be approximately:
+₹19,000
+
+Use any mandatory fields such as harvest date, notes, etc.
+
+IMPORTANT:
+Verify that:
+- Farm is selected from the permanent Farm master.
+- Purchase is a separate transaction.
+- Purchase ID / Batch ID is generated.
+- The purchase is linked to the correct Farm ID.
+- Quantity fields remain separate where supported.
+- The purchase is persisted in Supabase.
+
+Then open the purchase list and verify the new purchase appears.
+
+# ============================================================
+# PHASE 4 — VERIFY PURCHASE DOWNSTREAM FLOW
+# ============================================================
+
+Inspect the purchase details and verify the operational workflow supports:
+
+Farm
+→ Purchase
+→ Harvest/Cutting
+→ Grouping
+→ Farm-to-Godown Transport
+→ Godown
+→ Processing/Dehusking
+→ Ready Stock
+
+Do not assume these modules are working merely because routes exist.
+
+Open each relevant module and verify:
+- Correct purchase can be selected.
+- Correct quantities are displayed.
+- Previous records can be referenced.
+- Required fields validate correctly.
+- Save buttons actually persist records.
+- No silent failure.
+- No fake success toast.
+
+If a stage cannot yet be created because an earlier prerequisite is
+missing, report the exact blocker instead of marking it PASS.
+
+# ============================================================
+# PHASE 5 — TEST TRANSPORT
+# ============================================================
+
+Create a NEW FARM_TO_GODOWN transport record through the UI.
+
+Example:
+
+Transport Type:
+FARM_TO_GODOWN
+
+Source:
+TEST FARM — RAKSHI E2E
+
+Destination:
+Main Coconut Godown
+
+Loaded Quantity:
+950
+
+Received Quantity:
+940
+
+Difference:
+10
+
+Difference reason:
+Handling / transit loss
+
+Driver:
+Use an existing valid driver if available.
+If no driver exists, create a TEST driver through the supported
+Workers/Teams/Driver workflow first.
+
+Verify:
+- Transport ID generated.
+- Source/destination correct.
+- Loaded quantity recorded.
+- Received quantity recorded.
+- Difference calculated/displayed correctly.
+- Difference reason stored.
+- Record persisted.
+- Related purchase/stock traceability remains intact.
+
+Then verify GODOWN stock reflects the RECEIVED quantity according to
+the application's implemented stock rules.
+
+# ============================================================
+# PHASE 6 — TEST PROCESSING / READY STOCK
+# ============================================================
+
+Open Processing / Dehusking.
+
+Create a valid TEST processing record linked to the received purchase/
+stock.
+
+Use example quantities:
+
+Processing input:
+940 nuts
+
+Ready output:
+900 nuts
+
+Damaged:
+25 nuts
+
+Rejected:
+15 nuts
+
+Verify:
+
+940 = 900 + 25 + 15
+
+The application must reject invalid quantities where totals do not
+balance.
+
+Verify stock state transitions:
+
+RECEIVED
+→ PROCESSING
+→ READY / DAMAGED / REJECTED
+
+Verify the Ready Stock dashboard KPI changes appropriately.
+
+Do not mark PASS just because the UI accepts the form.
+Confirm the resulting database/stock state.
+
+# ============================================================
+# PHASE 7 — CREATE TEST BUYER / SALES ORDER
+# ============================================================
+
+Open Sales → Buyers.
+
+If no suitable buyer exists, create:
+
+TEST BUYER — RAKSHI E2E
+
+with valid required contact details.
+
+Then create a NEW SALES ORDER.
+
+Example:
+
+Buyer:
+TEST BUYER — RAKSHI E2E
+
+Quantity:
+100 nuts
+
+Rate:
+₹35 per nut
+
+Expected value:
+₹3,500
+
+Verify:
+- Sales Order ID generated.
+- Buyer relationship correct.
+- Quantity cannot exceed available/eligible stock where that rule
+  is implemented.
+- Order persists.
+- Stock reservation is created if the application supports reservation.
+- Sales Orders list displays the order.
+- Order details can be opened.
+
+# ============================================================
+# PHASE 8 — TEST SALE / DISPATCH / BILLING
+# ============================================================
+
+Continue the test sales workflow:
+
+Sales Order
+→ Stock Reservation
+→ Dispatch
+→ GODOWN_TO_BUYER Transport
+→ Delivery
+→ Sales Bill / Invoice
+
+Create a test dispatch for the TEST BUYER.
+
+Create GODOWN_TO_BUYER transport where required.
+
+Verify:
+- Buyer is correct.
+- Quantity is correct.
+- Stock decreases/reservation changes correctly.
+- Dispatch status changes correctly.
+- Transport is linked correctly.
+- Bill/invoice can be generated.
+- Invoice contains correct buyer, quantity, rate and amount.
+- Invoice is persisted.
+- No negative stock is silently created.
+
+# ============================================================
+# PHASE 9 — TEST PAYMENT
+# ============================================================
+
+Create a NEW PAYMENT using the actual UI.
+
+Test buyer collection:
+
+Buyer:
+TEST BUYER — RAKSHI E2E
+
+Amount:
+₹1,500
+
+Payment type:
+PARTIAL / ADVANCE according to available options.
+
+Verify:
+- Payment ID generated.
+- Payment persists.
+- Correct buyer/account relationship.
+- Receivable decreases appropriately.
+- Partial payment does NOT incorrectly mark the invoice fully paid.
+- Remaining receivable is calculated correctly.
+
+If supplier/farmer payment workflow exists, also test a small TEST
+farmer payment against the purchase/payable workflow.
+
+# ============================================================
+# PHASE 10 — TEST FINANCE
+# ============================================================
+
+Open:
+
+Finance
+→ Receivables
+→ Payables
+→ Expenses
+→ P&L
+→ Bills & Invoices
+→ Payments
+
+Verify the TEST transaction flows into the correct financial modules.
+
+Check:
+
+Revenue
+− Purchase Costs
+− Labour Costs
+− Transport Costs
+− Processing Costs
+− Other Relevant Costs
+=
+Profit
+
+Separately verify:
+
+Cash Received
+− Cash Paid
+=
+Cash Flow
+
+Do NOT mix Profit and Cash Flow.
+
+Verify:
+- Receivables
+- Payables
+- Payment status
+- Outstanding amount
+- P&L
+- Invoice totals
+- Expense totals
+
+All should reflect the newly created TEST transactions.
+
+# ============================================================
+# PHASE 11 — TEST DASHBOARD AFTER TRANSACTIONS
+# ============================================================
+
+Return to Dashboard.
+
+Verify the dashboard dynamically reflects the test data.
+
+Check:
+
+Farm Network
+→ should show the TEST FARM
+
+Ready Stock
+→ should reflect the actual resulting ready quantity
+
+Receivables
+→ should reflect the outstanding TEST BUYER amount
+
+Payables
+→ should reflect applicable outstanding farmer/labour amounts
+
+Pending Harvests
+→ should reflect farm follow-up state where applicable
+
+Pending Deliveries
+→ should reflect dispatch/delivery state where applicable
+
+Do not hard-code expected numbers if the application's business rules
+calculate them differently. Compare against the actual underlying
+transaction records and explain any intentional difference.
+
+# ============================================================
+# PHASE 12 — TEST HARVEST FOLLOW-UP
+# ============================================================
+
+Verify the farm follow-up system.
+
+For the TEST FARM:
+- Actual harvest completion date should be the source event.
+- Expected next harvest should be based on the configured cycle.
+- Default cycle is 40 days unless business settings specify otherwise.
+
+Verify follow-up states and notifications where applicable:
+
+UPCOMING
+DUE
+OVERDUE
+CONTACTED
+NEGOTIATING
+PURCHASED
+POSTPONED
+SKIPPED
+
+Verify the 40-day calculation is configurable through Settings and is
+not scattered as hard-coded values throughout the UI.
+
+# ============================================================
+# PHASE 13 — TEST ALL MAJOR MODULE ROUTES
+# ============================================================
+
+Open every module from the navigation and verify it renders correctly
+and does not produce 404, blank screens or runtime errors.
+
+OPERATIONS:
+- Farms
+- Purchases
+- Cutting
+- Grouping
+- Transport
+- Processing
+- Stock
+- Labour
+- Teams
+- Workers
+- Wages
+
+SALES:
+- Buyers
+- Sales Orders
+- Dispatch
+
+FINANCE:
+- Bills & Invoices
+- Receivables
+- Payables
+- Expenses
+- P&L
+
+SYSTEM:
+- Follow-ups
+- Alerts
+- Audit Log
+- Settings
+
+For each:
+1. Open page.
+2. Verify page title.
+3. Verify data loads.
+4. Verify search/filter where present.
+5. Verify primary CTA.
+6. Verify form validation.
+7. Verify create/save if applicable.
+8. Verify detail page if applicable.
+9. Verify back navigation.
+10. Verify no horizontal layout break on mobile.
+
+# ============================================================
+# PHASE 14 — CRITICAL MOBILE UI FIX
+# ============================================================
+
+The current Operations, Sales and Finance screens are NOT sufficiently
+mobile-first.
+
+The attached screenshots show the problem:
+
+- Tables are being rendered like desktop tables.
+- Columns extend horizontally.
+- Text is cut off.
+- "No farms found", "No sales orders", "No bills" content is partially
+  outside the visible mobile card.
+- Search fields are too wide.
+- Important information requires horizontal scrolling.
+- The screen is technically responsive but not ergonomically mobile.
+
+DO NOT merely add overflow-x-auto and call this fixed.
+
+The target is a genuinely MOBILE-FIRST vertical layout.
+
+Use the uploaded screenshots as the visual reference for the current
+problem.
+
+# ============================================================
+# MOBILE UI REQUIREMENTS
+# ============================================================
+
+For mobile widths:
+
+360px
+375px
+390px
+412px
+
+Operations / Sales / Finance list pages must use:
+
+MOBILE:
+┌─────────────────────────────┐
+│ Top App Bar                 │
+├─────────────────────────────┤
+│ Page Title                  │
+│ Description                 │
+│                             │
+│ Search / Filter             │
+│                             │
+│ ┌─────────────────────────┐ │
+│ │ Record Card             │ │
+│ │ ID                      │ │
+│ │ Owner / Buyer           │ │
+│ │ Date                    │ │
+│ │ Quantity                │ │
+│ │ Amount                  │ │
+│ │ Status                  │ │
+│ │              View →     │ │
+│ └─────────────────────────┘ │
+│                             │
+│ ┌─────────────────────────┐ │
+│ │ Next Record             │ │
+│ └─────────────────────────┘ │
+│                             │
+│                       (+)   │
+├─────────────────────────────┤
+│ Dashboard Operations Sales  │
+│ Finance More                │
+└─────────────────────────────┘
+
+Do NOT force desktop tables into 360–412px screens.
+
+For mobile:
+- Convert data tables into stacked cards.
+- Show the most important 4–6 fields.
+- Move secondary fields into a detail screen/drawer.
+- Use badges for status.
+- Use compact key/value rows.
+- Use full-width primary CTAs.
+- Search fields should fit the viewport.
+- Filters should become a horizontal scroll of compact chips OR a
+  filter bottom sheet.
+- Avoid horizontal scrolling for primary information.
+- No text should be clipped.
+- No important button should be outside viewport.
+- No card should exceed viewport width.
+- Maintain 16–20px horizontal page padding.
+- Touch targets should be at least ~44px.
+- Inputs should remain at least 16px font size.
+- Maintain Android safe-area insets.
+- Preserve the existing green Rakshi Coco branding.
+
+# ============================================================
+# SPECIFIC MODULE MOBILE TRANSFORMATION
+# ============================================================
+
+FARMS:
+
+Instead of:
+
+Farm ID | Owner | Village | Phone | ...
+
+Use:
+
+Farm Card
+
+TEST FARM — RAKSHI E2E
+Farm ID: RC-FARM-XXXX
+Owner: ...
+Village: ...
+Phone: ...
+Status: Active
+
+[View Farm →]
+
+PURCHASES:
+
+Purchase Card
+
+Purchase ID
+Farm
+Purchase Date
+Actual Quantity
+Amount
+Status
+
+[View Purchase →]
+
+SALES ORDERS:
+
+Sales Order Card
+
+Order ID
+Buyer
+Date
+Quantity
+Amount
+Status
+
+[View Order →]
+
+BILLS:
+
+Invoice Card
+
+Bill No
+Buyer
+Invoice Date
+Amount
+Payment Status
+
+[View Bill →]
+
+PAYMENTS:
+
+Payment Card
+
+Payment ID
+Party
+Date
+Amount
+Payment Type
+Status
+
+[View Payment →]
+
+TRANSPORT:
+
+Transport Card
+
+Transport ID
+Type
+Source
+Destination
+Loaded
+Received
+Difference
+Status
+
+[View Transport →]
+
+STOCK:
+
+Stock Card
+
+Godown
+Stock State
+Quantity
+Reserved
+Available
+
+[View Stock →]
+
+RECEIVABLES:
+
+Receivable Card
+
+Buyer
+Invoice
+Invoice Amount
+Paid
+Outstanding
+Due Status
+
+[View →]
+
+PAYABLES:
+
+Payable Card
+
+Party
+Bill
+Total
+Paid
+Outstanding
+Due Status
+
+[View →]
+
+EXPENSES:
+
+Expense Card
+
+Expense ID
+Category
+Date
+Amount
+Payment Status
+
+[View →]
+
+P&L:
+
+Keep the financial statement hierarchical, but make it vertically
+stacked:
+
+Revenue
+₹XX
+
+Purchase Costs
+₹XX
+
+Labour
+₹XX
+
+Transport
+₹XX
+
+Processing
+₹XX
+
+Other Costs
+₹XX
+
+────────────────
+Net Profit
+₹XX
+
+Do not create a horizontally overflowing accounting table on mobile.
+
+# ============================================================
+# DESKTOP BEHAVIOR
+# ============================================================
+
+Do NOT destroy the existing desktop UI.
+
+Use responsive breakpoints:
+
+Mobile:
+stacked cards / vertical layout
+
+Tablet:
+hybrid layout
+
+Desktop:
+existing data table / desktop layout
+
+Example conceptual approach:
+
+<640px:
+  MobileCardList
+
+640px–1023px:
+  HybridResponsiveList
+
+1024px+:
+  DesktopDataTable
+
+Reuse the same data source and actions.
+Do not duplicate business logic.
+
+# ============================================================
+# EMPTY STATES
+# ============================================================
+
+Fix empty states too.
+
+Current screenshots show:
+
+"No farms found"
+"No sales orders"
+"No bills"
+
+being clipped by the table viewport.
+
+Instead create a centered mobile empty state:
+
+        [icon]
+
+     No farms yet
+
+Create your first farm to start
+tracking procurement.
+
+     + Add New Farm
+
+Same principle for:
+- Sales Orders
+- Bills
+- Payments
+- Transport
+- Stock
+- Buyers
+- Expenses
+etc.
+
+# ============================================================
+# PHASE 15 — RESPONSIVE TESTING
+# ============================================================
+
+After implementation, test at:
+
+360 × 800
+375 × 812
+390 × 844
+412 × 915
+
+And Android emulator actual viewport.
+
+For each width verify:
+
+- No horizontal page scrolling.
+- No clipped text.
+- No clipped buttons.
+- No overflowing cards.
+- Bottom navigation remains visible.
+- FAB does not overlap content.
+- TopBar safe area works.
+- Search works.
+- Forms fit vertically.
+- Keyboard does not hide important submit buttons.
+- Back navigation works.
+- Drawer works.
+- Cards are readable.
+- Tables are transformed into mobile cards where appropriate.
+
+Also test landscape only as a secondary compatibility check.
+Portrait is the primary ERP experience.
+
+# ============================================================
+# PHASE 16 — FUNCTIONAL REGRESSION
+# ============================================================
+
+After mobile UI changes, repeat the critical workflow:
+
+Login
+→ Dashboard
+→ New Farm
+→ New Purchase
+→ Transport
+→ Processing
+→ Stock
+→ Buyer
+→ Sales Order
+→ Dispatch
+→ Sale Bill
+→ Payment
+→ Receivable
+→ P&L
+
+Make sure the responsive refactor did NOT break:
+- Server Actions
+- Supabase queries
+- Forms
+- Validation
+- Authentication
+- RLS/authorization
+- Stock calculations
+- Finance calculations
+- Navigation
+
+# ============================================================
+# PHASE 17 — PRODUCTION APK VERIFICATION
+# ============================================================
+
+After all fixes:
+
+1. Ensure Capacitor still points to:
+
+https://rakshicoco.vercel.app/
+
+2. Run Capacitor sync.
+
+3. Build:
+
+.\gradlew.bat assembleDebug
+
+4. Install APK on emulator.
+
+5. Open the APK.
+
+6. Verify the APK loads the HTTPS production application.
+
+7. Repeat at minimum:
+
+Login
+Dashboard
+New Farm
+New Purchase
+New Sale
+New Payment
+New Transport
+
+8. Verify data persists after:
+- navigating away
+- closing/reopening the app
+- refreshing/reloading the WebView
+
+9. Confirm:
+- no localhost
+- no 10.0.2.2
+- no cleartext HTTP
+- no placeholder HTML
+- no fake success
+- no blank WebView
+
+# ============================================================
+# FINAL REPORT REQUIRED
+# ============================================================
+
+Do NOT simply say "all tests passed."
+
+Generate a detailed final report with this exact structure:
+
+## 1. Environment
+- Production URL:
+- APK path:
+- Android emulator:
+- Viewport tested:
+- Supabase project:
+- Build result:
+
+## 2. Functional E2E Test
+
+| Test | Result | Record/ID | Database Verified | Notes |
+|------|--------|-----------|-------------------|-------|
+| Login | PASS/FAIL | | | |
+| New Farm | PASS/FAIL | | | |
+| New Purchase | PASS/FAIL | | | |
+| Cutting | PASS/FAIL | | | |
+| Grouping | PASS/FAIL | | | |
+| Farm→Godown Transport | PASS/FAIL | | | |
+| Processing | PASS/FAIL | | | |
+| Stock | PASS/FAIL | | | |
+| New Buyer | PASS/FAIL | | | |
+| Sales Order | PASS/FAIL | | | |
+| Dispatch | PASS/FAIL | | | |
+| Godown→Buyer Transport | PASS/FAIL | | | |
+| Bill/Invoice | PASS/FAIL | | | |
+| Payment | PASS/FAIL | | | |
+| Receivables | PASS/FAIL | | | |
+| Payables | PASS/FAIL | | | |
+| Expenses | PASS/FAIL | | | |
+| P&L | PASS/FAIL | | | |
+| Follow-ups | PASS/FAIL | | | |
+| Alerts | PASS/FAIL | | | |
+| Audit Log | PASS/FAIL | | | |
+| Settings | PASS/FAIL | | | |
+
+## 3. Dashboard Verification
+
+Report before/after values:
+
+Farm Network:
+Before:
+After:
+
+Ready Stock:
+Before:
+After:
+
+Receivables:
+Before:
+After:
+
+Payables:
+Before:
+After:
+
+Pending Harvests:
+Before:
+After:
+
+Pending Deliveries:
+Before:
+After:
+
+## 4. Mobile UI Verification
+
+| Screen | 360px | 375px | 390px | 412px | Horizontal Overflow |
+|--------|-------|-------|-------|-------|---------------------|
+| Farms | | | | | |
+| Purchases | | | | | |
+| Cutting | | | | | |
+| Grouping | | | | | |
+| Transport | | | | | |
+| Processing | | | | | |
+| Stock | | | | | |
+| Labour | | | | | |
+| Buyers | | | | | |
+| Sales Orders | | | | | |
+| Dispatch | | | | | |
+| Bills | | | | | |
+| Payments | | | | | |
+| Receivables | | | | | |
+| Payables | | | | | |
+| Expenses | | | | | |
+| P&L | | | | | |
+
+## 5. Critical Findings
+
+Separate into:
+
+### PASS
+Actual verified functionality.
+
+### FIXED
+Problems discovered and fixed during this run.
+
+### FAIL
+Still broken.
+
+### BLOCKED
+Could not test because of an external dependency.
+
+Do NOT call something PASS merely because the source code appears
+correct. PASS means it was actually tested.
+
+## 6. Screenshots
+
+Capture screenshots of:
+
+1. Dashboard
+2. Farms mobile card layout
+3. Purchases mobile card layout
+4. Sales Orders mobile card layout
+5. Bills mobile card layout
+6. Payments mobile card layout
+7. Transport mobile card layout
+8. P&L mobile layout
+9. New Farm form
+10. New Purchase form
+11. New Sale form
+12. New Payment form
+13. New Transport form
+14. Final production APK dashboard
+
+## 7. Final Security Check
+
+Confirm:
+
+- No service-role key in client bundle
+- No secrets committed
+- No localhost production dependency
+- No 10.0.2.2 production dependency
+- HTTPS only
+- Authentication enforced
+- Server-side authorization enforced
+- No fake/localStorage business records
+- Database persistence verified
+
+## 8. FINAL VERDICT
+
+Use ONLY one of:
+
+PRODUCTION TEST PASSED
+
+or
+
+PRODUCTION TEST FAILED — [specific blockers]
+
+Do not use vague wording such as "mostly working" or "looks good".
+
+Proceed autonomously. Fix issues you discover where safe and
+straightforward. Do not stop after finding the first issue; continue
+testing the complete workflow and report every remaining blocker.
