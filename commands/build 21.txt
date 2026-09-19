@@ -1,0 +1,543 @@
+# BUILD 21 — PERFORMANCE ENGINEERING & LATENCY ELIMINATION
+# Rakshi Coco ERP
+#
+# Problem:
+# The Android application is functionally correct, but it feels too slow.
+# Some taps/clicks take too long to respond, navigation feels delayed,
+# and forms/actions sometimes appear to hang before updating.
+#
+# IMPORTANT:
+# Do NOT blindly optimize or add fake loading animations.
+# First measure the actual latency sources, then fix them.
+#
+# TARGET:
+# Make the Rakshi Coco Android APK feel like a fast native business app.
+#
+# Production architecture:
+# Android Capacitor WebView
+#   -> https://rakshicoco.vercel.app
+#   -> Next.js App Router
+#   -> Server Actions / Supabase
+#
+# Current Android:
+# package: com.rakshicoco.erp
+# emulator: emulator-5554
+#
+# ============================================================
+# PHASE 1 — PERFORMANCE BASELINE
+# ============================================================
+#
+# Audit the complete application before modifying behavior.
+#
+# Measure:
+#
+# 1. Initial application load
+# 2. Login
+# 3. Dashboard load
+# 4. Farm list
+# 5. Farm creation
+# 6. Purchase creation
+# 7. Transport creation
+# 8. Processing
+# 9. Sales order creation
+# 10. Dispatch
+# 11. Invoice creation
+# 12. Payment creation
+# 13. Navigation between major modules
+# 14. Dashboard refresh
+# 15. Godown stock loading
+#
+# For every operation record:
+#
+# - UI interaction -> handler start
+# - handler start -> network request
+# - network request -> response
+# - response -> database update
+# - database update -> UI refresh
+# - total perceived latency
+#
+# Create:
+#
+# PERFORMANCE_AUDIT.md
+#
+# Include a table:
+#
+# | Operation | Current latency | Network | DB | UI/render | Root cause |
+#
+# Do not claim a performance improvement without measuring it.
+#
+# ============================================================
+# PHASE 2 — FIND SLOW CODE
+# ============================================================
+#
+# Audit all:
+#
+# src/app/**
+# src/components/**
+# src/lib/actions/**
+# src/lib/**
+#
+# Search specifically for:
+#
+# - sequential Supabase queries that can be parallelized
+# - duplicate Supabase queries
+# - queries fetching unnecessary columns
+# - select('*') where only a few columns are needed
+# - repeated queries for the same data
+# - unnecessary router.refresh()
+# - unnecessary revalidation
+# - unnecessary full-page navigation
+# - Server Actions called repeatedly by one click
+# - useEffect request chains
+# - waterfalls
+# - queries executed on every render
+# - large table queries without pagination
+# - expensive dashboard calculations
+# - unnecessary COUNT queries
+# - duplicate data fetching between parent and child components
+# - unnecessary loading of entire datasets
+# - large client-side JavaScript bundles
+# - images/assets that are unnecessarily large
+# - synchronous/blocking UI work
+#
+# Produce a list of every confirmed performance bottleneck.
+#
+# ============================================================
+# PHASE 3 — FIX DATABASE ROUND TRIPS
+# ============================================================
+#
+# Optimize Supabase access WITHOUT changing business logic.
+#
+# Rules:
+#
+# 1. Never use select('*') unless genuinely required.
+#
+# 2. Replace with explicit columns.
+#
+# Example:
+#
+# BAD:
+# .select('*')
+#
+# GOOD:
+# .select('id,name,phone,location,active')
+#
+# 3. Parallelize independent queries.
+#
+# BAD:
+#
+# const farms = await ...
+# const buyers = await ...
+# const stats = await ...
+#
+# GOOD:
+#
+# const [farms, buyers, stats] = await Promise.all([
+#   ...,
+#   ...,
+#   ...
+# ])
+#
+# 4. Never issue the same query multiple times during one page load
+# unless the data genuinely changed.
+#
+# 5. Add pagination to large lists.
+#
+# Default mobile page size:
+# 20–30 records.
+#
+# 6. Add appropriate database indexes only where query analysis
+# demonstrates they are useful.
+#
+# Do NOT create random indexes.
+#
+# Inspect existing Supabase/PostgreSQL schema and migrations first.
+#
+# ============================================================
+# PHASE 4 — FIX NEXT.JS NAVIGATION
+# ============================================================
+#
+# Audit App Router navigation.
+#
+# Goal:
+# Clicking Dashboard / Operations / Sales / Finance / More must
+# transition quickly without unnecessary full application reloads.
+#
+# Use Next.js client navigation where appropriate.
+#
+# Do NOT convert the entire application into a client-side SPA.
+#
+# Preserve:
+# - authentication
+# - Server Components where useful
+# - Server Actions
+# - RLS
+# - Supabase security
+# - existing production behavior
+#
+# Remove unnecessary:
+# - router.refresh()
+# - duplicate server requests
+# - redundant revalidation
+#
+# where they are not required for correctness.
+#
+# ============================================================
+# PHASE 5 — OPTIMIZE SERVER ACTIONS
+# ============================================================
+#
+# Audit every important mutation:
+#
+# Farm
+# Purchase
+# Cutting
+# Grouping
+# Transport
+# Processing
+# Sales Order
+# Dispatch
+# Billing
+# Payment
+# Expenses
+#
+# For each action:
+#
+# 1. Validate input once.
+# 2. Authenticate once.
+# 3. Authorize once.
+# 4. Execute only required DB operations.
+# 5. Avoid unnecessary read-after-write queries.
+# 6. Return the minimum data required by the UI.
+#
+# If a mutation currently performs:
+#
+# INSERT
+# -> SELECT
+# -> SELECT
+# -> SELECT
+# -> router.refresh()
+#
+# determine whether it can safely become:
+#
+# INSERT
+# -> return required result
+# -> targeted UI update
+#
+# NEVER remove a query that is required for financial,
+# inventory, audit, or security correctness.
+#
+# ============================================================
+# PHASE 6 — DASHBOARD PERFORMANCE
+# ============================================================
+#
+# Dashboard is high priority.
+#
+# Audit all dashboard queries.
+#
+# Independent KPI queries should execute concurrently.
+#
+# Avoid loading entire tables merely to calculate:
+#
+# - farm count
+# - ready stock
+# - receivables
+# - payables
+# - pending harvests
+# - pending deliveries
+#
+# Prefer database aggregation/count queries where appropriate.
+#
+# IMPORTANT:
+#
+# Ready Stock must remain:
+#
+# READY inflows - valid dispatch outflows
+#
+# Do NOT reintroduce the Build 20 inventory bug while optimizing.
+#
+# Financial calculations must remain unchanged.
+#
+# ============================================================
+# PHASE 7 — MOBILE UX PERFORMANCE
+# ============================================================
+#
+# Optimize for Android WebView specifically.
+#
+# Audit:
+#
+# - excessive React re-renders
+# - unnecessarily large component trees
+# - expensive lists
+# - unnecessary animations
+# - heavy shadows/blur effects
+# - excessive DOM nodes
+# - large images
+# - unnecessary icons/assets
+#
+# Keep animations subtle.
+#
+# Do not sacrifice usability.
+#
+# Touch response should feel immediate.
+#
+# Buttons should provide immediate pressed/disabled feedback
+# while the actual operation runs asynchronously.
+#
+# ============================================================
+# PHASE 8 — FORM SUBMISSION UX
+# ============================================================
+#
+# Every important form must behave like this:
+#
+# TAP
+# ↓
+# immediate visual feedback (<100ms target)
+# ↓
+# button disabled
+# ↓
+# concise progress state
+# ↓
+# server mutation
+# ↓
+# targeted UI update
+# ↓
+# success/error
+#
+# Prevent double submission.
+#
+# Do NOT allow a user to tap Save 5 times and create 5 records.
+#
+# Do NOT use artificial setTimeout delays.
+#
+# ============================================================
+# PHASE 9 — LOADING STATES
+# ============================================================
+#
+# Replace blank waiting screens with proper contextual states.
+#
+# Use:
+#
+# - skeletons for initial page loading
+# - button pending states for mutations
+# - optimistic UI ONLY where data correctness is not endangered
+# - immediate navigation feedback
+#
+# Never fake completion.
+#
+# Never show "success" before the database mutation succeeds.
+#
+# ============================================================
+# PHASE 10 — MOBILE DATA CACHING
+# ============================================================
+#
+# Identify read-heavy data that can safely be cached:
+#
+# - farm list
+# - buyer list
+# - labour/team lists
+# - godown list
+# - business settings
+#
+# Do NOT cache financial balances, stock quantities,
+# payment balances, or transaction results in a way that can
+# display stale authoritative values after mutations.
+#
+# If TanStack Query is already installed and appropriate,
+# use it selectively rather than introducing a second state
+# management system.
+#
+# ============================================================
+# PHASE 11 — CAPACITOR / WEBVIEW AUDIT
+# ============================================================
+#
+# Inspect capacitor.config.ts.
+#
+# Production must remain:
+#
+# https://rakshicoco.vercel.app
+#
+# Do NOT switch production back to:
+#
+# http://10.0.2.2:3000
+# localhost
+# cleartext HTTP
+#
+# Verify:
+#
+# cleartext = false for production HTTPS.
+#
+# Check whether Capacitor is unnecessarily causing reloads
+# when navigating or returning from Android background.
+#
+# Do not introduce native complexity unless measurement proves
+# the WebView is the bottleneck.
+#
+# ============================================================
+# PHASE 12 — PERFORMANCE TARGETS
+# ============================================================
+#
+# Establish and report these targets:
+#
+# Initial interactive UI:
+# <= 2 seconds on normal connection
+#
+# Navigation between already-loaded modules:
+# <= 500 ms perceived response
+#
+# Button/tap visual response:
+# <= 100 ms
+#
+# Normal database mutation:
+# target <= 1.5 seconds
+#
+# Dashboard:
+# target <= 1.5 seconds after required data is available
+#
+# These are targets, not excuses to fake timing.
+#
+# If network latency makes a target impossible, report the
+# measured network latency separately.
+#
+# ============================================================
+# PHASE 13 — REAL ANDROID PERFORMANCE TEST
+# ============================================================
+#
+# Use the actual:
+#
+# emulator-5554
+#
+# Test:
+#
+# Dashboard
+# Farms
+# Purchases
+# Operations
+# Transport
+# Processing
+# Sales
+# Finance
+# Bills
+# Payments
+#
+# Measure actual interaction latency.
+#
+# Test repeated navigation:
+#
+# Dashboard
+# -> Farms
+# -> Dashboard
+# -> Purchases
+# -> Dashboard
+# -> Sales
+# -> Dashboard
+#
+# Test repeated form submission.
+#
+# Test back navigation.
+#
+# Test after app background/foreground.
+#
+# Test slow-network behavior if possible.
+#
+# ============================================================
+# PHASE 14 — PRODUCTION SAFETY
+# ============================================================
+#
+# DO NOT:
+#
+# - change business calculations
+# - change stock accounting
+# - change P&L formulas
+# - bypass RLS
+# - expose service-role credentials
+# - introduce localStorage as a fake database
+# - remove authentication
+# - delete audit logging
+# - remove required database validation
+# - hide errors
+#
+# Performance optimization must preserve all Build 20
+# correctness guarantees.
+#
+# ============================================================
+# PHASE 15 — BUILD AND VERIFY
+# ============================================================
+#
+# Run:
+#
+# npm run lint
+# npm run build
+#
+# Then verify production:
+#
+# https://rakshicoco.vercel.app
+#
+# Build the Android debug APK after changes.
+#
+# Install on:
+#
+# emulator-5554
+#
+# Verify:
+#
+# - login
+# - dashboard
+# - farm list
+# - farm creation
+# - purchase
+# - transport
+# - processing
+# - stock
+# - sales
+# - dispatch
+# - billing
+# - payment
+# - P&L
+#
+# Ensure all previous Build 20 KPI values remain correct:
+#
+# Ready Stock = 800
+# Farms = 2
+# Receivables = ₹2,000
+# Payables = ₹14,000
+# Revenue = ₹3,500
+# COGS = ₹2,000
+# Gross Profit = ₹1,500
+# OPEX = ₹3,750
+# Net Result = -₹2,250
+#
+# ============================================================
+# FINAL DELIVERABLE
+# ============================================================
+#
+# Create:
+#
+# BUILD_21_PERFORMANCE_REPORT.md
+#
+# Include:
+#
+# 1. Root causes discovered
+# 2. Before/after latency measurements
+# 3. Database query optimizations
+# 4. Server Action optimizations
+# 5. Navigation optimizations
+# 6. Dashboard optimizations
+# 7. Mobile/WebView optimizations
+# 8. Caching introduced, if any
+# 9. Files changed
+# 10. Git commit hashes
+# 11. Production deployment status
+# 12. Android APK build status
+# 13. Actual measured Android interaction latency
+# 14. Remaining bottlenecks
+#
+# FINAL RULE:
+#
+# Do not declare "performance fixed" merely because the app
+# feels better to the developer.
+#
+# Provide measured before/after evidence.
+#
+# Start with profiling and diagnosis.
+# Then implement the highest-impact fixes.
+# Then re-test the complete application.

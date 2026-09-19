@@ -1,0 +1,349 @@
+BUILD 21 — DO NOT STOP UNTIL PERFORMANCE RESULTS ARE PROVEN
+
+The optimization implementation has been made, but the supplied logs currently
+show that the post-optimization benchmark was triggered without showing the
+final measured results.
+
+Continue from the current state.
+
+DO NOT make more speculative optimizations yet.
+
+============================================================
+1. COMPLETE THE BENCHMARK
+============================================================
+
+Run the post-optimization benchmark to completion:
+
+node scripts/measure_performance_after.mjs
+
+If it hangs, debug the benchmark itself rather than assuming the application
+is slow.
+
+Capture actual measurements for:
+
+- Dashboard
+- P&L
+- Farms
+- Purchases
+- Transport
+- Sales
+- Bills
+- Godown Stock
+- Operations
+- Finance
+- module navigation
+- important creation forms
+
+Record:
+
+- TTFB
+- DOM Interactive
+- DOM Complete
+- total route duration
+- client-side navigation duration
+- mutation duration where measurable
+
+============================================================
+2. PRODUCE A REAL BEFORE/AFTER TABLE
+============================================================
+
+Create:
+
+BUILD_21_PERFORMANCE_REPORT.md
+
+Use this exact structure:
+
+| Operation | Build 20 Before | Build 21 After | Improvement | Target | Status |
+|---|---:|---:|---:|---:|---|
+| Dashboard | 4472 ms | ACTUAL | ACTUAL | <=1500 ms | |
+| P&L | 2828 ms | ACTUAL | ACTUAL | <=1200 ms | |
+| Tab Navigation | ~3000 ms | ACTUAL | ACTUAL | <=500 ms | |
+| Farms | ACTUAL | ACTUAL | ACTUAL | <=1000 ms | |
+| Purchases | ACTUAL | ACTUAL | ACTUAL | <=1000 ms | |
+| Transport | ACTUAL | ACTUAL | ACTUAL | <=1000 ms | |
+| Sales | ACTUAL | ACTUAL | ACTUAL | <=1000 ms | |
+| Bills | ACTUAL | ACTUAL | ACTUAL | <=1000 ms | |
+| Stock | 1754 ms | ACTUAL | ACTUAL | <=1000 ms | |
+
+Do NOT fabricate missing Build 20 measurements.
+
+If a value was not measured, write "N/A".
+
+Calculate:
+
+Improvement % =
+((Before - After) / Before) * 100
+
+============================================================
+3. TEST ACTUAL USER PERCEPTION
+============================================================
+
+The original user complaint was:
+
+"the application was too slow, some times the clicks are too slower"
+
+Therefore benchmark more than page load.
+
+Using emulator-5554, test actual taps.
+
+For every major navigation item:
+
+1. Tap
+2. Measure time until visual pressed feedback
+3. Measure time until route changes
+4. Measure time until meaningful content appears
+
+Especially test:
+
+Dashboard
+Operations
+Sales
+Finance
+More
+
+Repeat each navigation at least 3 times:
+
+- cold navigation
+- second navigation
+- third navigation
+
+Report median latency.
+
+Do NOT report only the fastest measurement.
+
+============================================================
+4. TEST BUTTON RESPONSIVENESS
+============================================================
+
+Test:
+
+New Farm
+New Purchase
+New Sales Order
+New Transport
+New Payment
+
+Measure:
+
+Tap
+-> visual response
+
+Target:
+
+<=100 ms
+
+Then:
+
+Tap
+-> successful database operation
+
+Report both numbers separately.
+
+IMPORTANT:
+
+A button can visually respond immediately while the database operation
+takes 1–2 seconds. That is acceptable if the UI communicates progress correctly.
+
+============================================================
+5. VERIFY NO REGRESSION
+============================================================
+
+After performance optimization, query production Supabase and verify:
+
+Ready Stock = 800
+Farm Network = 2
+Receivables = ₹2,000
+Payables = ₹14,000
+
+P&L:
+
+Revenue = ₹3,500
+COGS = ₹2,000
+Gross Profit = ₹1,500
+OPEX = ₹3,750
+Net Result = -₹2,250
+
+These values MUST remain unchanged.
+
+Do not modify accounting or inventory logic merely to improve benchmark numbers.
+
+============================================================
+6. CHECK THE IMPORTANT ARCHITECTURAL OPTIMIZATION
+============================================================
+
+Verify that Dashboard independent queries are actually concurrent.
+
+The intended implementation is approximately:
+
+const [
+  farms,
+  purchases,
+  salesOrders,
+  readyInflows,
+  dispatches,
+  receivables,
+  payables
+] = await Promise.all([
+  ...,
+  ...,
+  ...,
+  ...,
+  ...,
+  ...,
+  ...
+]);
+
+Likewise verify P&L uses Promise.all for independent queries.
+
+Do NOT merely claim parallelization from the source code.
+Measure its effect.
+
+============================================================
+7. CHECK NEXT.JS PREFETCHING
+============================================================
+
+Verify BottomNav contains prefetch-enabled navigation.
+
+Then test:
+
+Dashboard -> Operations
+Operations -> Sales
+Sales -> Finance
+Finance -> Dashboard
+
+Do not measure only:
+
+"URL changed."
+
+Measure:
+
+tap
+-> route transition
+-> meaningful page content
+
+Report all three.
+
+============================================================
+8. CHECK FOR NEW PERFORMANCE REGRESSIONS
+============================================================
+
+Search the final code for:
+
+select('*')
+
+router.refresh()
+
+revalidatePath(
+
+useEffect(
+
+fetch(
+
+supabase.from(
+
+Look specifically for:
+
+- duplicate requests
+- unnecessary refreshes
+- sequential queries
+- large unbounded queries
+- duplicate database fetches
+- queries executed repeatedly during rendering
+
+Report remaining occurrences and explain whether each is justified.
+
+============================================================
+9. BUILD PRODUCTION
+============================================================
+
+Run:
+
+npm run lint
+npm run build
+
+Then verify:
+
+https://rakshicoco.vercel.app
+
+Confirm the production deployment contains the latest commit.
+
+============================================================
+10. ANDROID TEST
+============================================================
+
+Build and install the Android APK.
+
+Use:
+
+emulator-5554
+
+Test:
+
+- login
+- dashboard
+- farms
+- purchases
+- operations
+- transport
+- stock
+- sales
+- dispatch
+- bills
+- payments
+- P&L
+- Android back button
+- background -> foreground
+
+Pay special attention to perceived click responsiveness.
+
+============================================================
+11. DO NOT OVER-OPTIMIZE
+============================================================
+
+Do NOT:
+
+- remove authentication
+- bypass RLS
+- expose service-role credentials
+- replace Supabase with fake/local data
+- remove audit logging
+- remove financial validation
+- alter stock accounting
+- hardcode dashboard numbers
+- cache authoritative financial/stock values incorrectly
+- introduce artificial setTimeout "speed improvements"
+- show fake success before the database succeeds
+
+============================================================
+12. FINAL VERDICT RULE
+============================================================
+
+Only use:
+
+PERFORMANCE OPTIMIZATION PASSED
+
+if actual measurements demonstrate improvement.
+
+Otherwise use:
+
+PERFORMANCE OPTIMIZATION PARTIALLY PASSED
+
+and list the remaining bottlenecks.
+
+The final report MUST contain:
+
+1. Before/after measurements
+2. Percentage improvements
+3. Median navigation latency
+4. Median tap-response latency
+5. Database query improvements
+6. Remaining bottlenecks
+7. Build result
+8. Android verification
+9. Production verification
+10. Build 20 business-value regression check
+11. Git commit hash
+12. Screenshots/evidence
+
+Do not stop at "benchmark started".
+Finish the benchmark and provide the actual numbers.

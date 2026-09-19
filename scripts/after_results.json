@@ -1,0 +1,276 @@
+{
+  "timestamp": "2026-09-19T09:16:22.598Z",
+  "routes": [
+    {
+      "operation": "Initial Load / Login Check",
+      "url": "https://rakshicoco.vercel.app/",
+      "totalLatencyMs": 4329,
+      "ttfb": 33,
+      "domInteractive": "N/A",
+      "domComplete": "N/A",
+      "duration": 4329
+    },
+    {
+      "operation": "Dashboard Load",
+      "url": "https://rakshicoco.vercel.app/dashboard",
+      "totalLatencyMs": 3295,
+      "ttfb": 37,
+      "domInteractive": 2676,
+      "domComplete": 2679,
+      "duration": 2680
+    },
+    {
+      "operation": "Farm List",
+      "url": "https://rakshicoco.vercel.app/dashboard/farms",
+      "totalLatencyMs": 3043,
+      "ttfb": 35,
+      "domInteractive": 1428,
+      "domComplete": 1458,
+      "duration": 1459
+    },
+    {
+      "operation": "Farm Creation Form",
+      "url": "https://rakshicoco.vercel.app/dashboard/farms/new",
+      "totalLatencyMs": 3039,
+      "ttfb": 34,
+      "domInteractive": 783,
+      "domComplete": 861,
+      "duration": 861
+    },
+    {
+      "operation": "Purchases List",
+      "url": "https://rakshicoco.vercel.app/dashboard/purchases",
+      "totalLatencyMs": 3045,
+      "ttfb": 36,
+      "domInteractive": 1445,
+      "domComplete": 1468,
+      "duration": 1468
+    },
+    {
+      "operation": "Purchase Creation Form",
+      "url": "https://rakshicoco.vercel.app/dashboard/purchases/new",
+      "totalLatencyMs": 3256,
+      "ttfb": 34,
+      "domInteractive": 1053,
+      "domComplete": 1123,
+      "duration": 1123
+    },
+    {
+      "operation": "Cutting / Operations",
+      "url": "https://rakshicoco.vercel.app/dashboard/cuttings",
+      "totalLatencyMs": 2832,
+      "ttfb": 33,
+      "domInteractive": 420,
+      "domComplete": 476,
+      "duration": 476
+    },
+    {
+      "operation": "Transport List",
+      "url": "https://rakshicoco.vercel.app/dashboard/transport",
+      "totalLatencyMs": 3260,
+      "ttfb": 34,
+      "domInteractive": 1620,
+      "domComplete": 1643,
+      "duration": 1643
+    },
+    {
+      "operation": "Transport Creation Form",
+      "url": "https://rakshicoco.vercel.app/dashboard/transport/new",
+      "totalLatencyMs": 2991,
+      "ttfb": 35,
+      "domInteractive": 784,
+      "domComplete": 878,
+      "duration": 879
+    },
+    {
+      "operation": "Godown Stock Loading",
+      "url": "https://rakshicoco.vercel.app/dashboard/stock",
+      "totalLatencyMs": 3269,
+      "ttfb": 39,
+      "domInteractive": 1460,
+      "domComplete": 1517,
+      "duration": 1518
+    },
+    {
+      "operation": "Sales Order List",
+      "url": "https://rakshicoco.vercel.app/dashboard/sales",
+      "totalLatencyMs": 3075,
+      "ttfb": 34,
+      "domInteractive": 1141,
+      "domComplete": 1266,
+      "duration": 1268
+    },
+    {
+      "operation": "Sales Order Creation Form",
+      "url": "https://rakshicoco.vercel.app/dashboard/sales/new",
+      "totalLatencyMs": 3034,
+      "ttfb": 37,
+      "domInteractive": 847,
+      "domComplete": 935,
+      "duration": 935
+    },
+    {
+      "operation": "Dispatch List",
+      "url": "https://rakshicoco.vercel.app/dashboard/dispatches",
+      "totalLatencyMs": 2849,
+      "ttfb": 39,
+      "domInteractive": 474,
+      "domComplete": 514,
+      "duration": 518
+    },
+    {
+      "operation": "Bills / Invoices List",
+      "url": "https://rakshicoco.vercel.app/dashboard/bills",
+      "totalLatencyMs": 3043,
+      "ttfb": 35,
+      "domInteractive": 1265,
+      "domComplete": 1292,
+      "duration": 1292
+    },
+    {
+      "operation": "Payments List",
+      "url": "https://rakshicoco.vercel.app/dashboard/payments",
+      "totalLatencyMs": 2901,
+      "ttfb": 40,
+      "domInteractive": 491,
+      "domComplete": 511,
+      "duration": 512
+    },
+    {
+      "operation": "Buyer Payments Form",
+      "url": "https://rakshicoco.vercel.app/dashboard/buyer-payments/new",
+      "totalLatencyMs": 3059,
+      "ttfb": 35,
+      "domInteractive": 855,
+      "domComplete": 942,
+      "duration": 942
+    },
+    {
+      "operation": "P&L Statement",
+      "url": "https://rakshicoco.vercel.app/dashboard/pnl",
+      "totalLatencyMs": 3043,
+      "ttfb": 35,
+      "domInteractive": 2011,
+      "domComplete": 2015,
+      "duration": 2015
+    }
+  ],
+  "tabNavigation": [
+    {
+      "tab": "Dashboard -> Operations (Farms)",
+      "targetHref": "/dashboard/farms",
+      "runs": [
+        {
+          "visualFeedbackMs": 33,
+          "routeChangeMs": 138,
+          "contentAppearedMs": 1509
+        },
+        {
+          "visualFeedbackMs": 4,
+          "routeChangeMs": 78,
+          "contentAppearedMs": 1243
+        },
+        {
+          "visualFeedbackMs": 1,
+          "routeChangeMs": 90,
+          "contentAppearedMs": 1280
+        }
+      ],
+      "medianVisualMs": 4,
+      "medianRouteMs": 90,
+      "medianContentMs": 1280
+    },
+    {
+      "tab": "Operations -> Sales",
+      "targetHref": "/dashboard/sales",
+      "runs": [
+        {
+          "visualFeedbackMs": 2,
+          "routeChangeMs": 66,
+          "contentAppearedMs": 1289
+        },
+        {
+          "visualFeedbackMs": 3,
+          "routeChangeMs": 69,
+          "contentAppearedMs": 1501
+        },
+        {
+          "visualFeedbackMs": 3,
+          "routeChangeMs": 73,
+          "contentAppearedMs": 1311
+        }
+      ],
+      "medianVisualMs": 3,
+      "medianRouteMs": 69,
+      "medianContentMs": 1311
+    },
+    {
+      "tab": "Sales -> Finance (Bills)",
+      "targetHref": "/dashboard/bills",
+      "runs": [
+        {
+          "visualFeedbackMs": 1,
+          "routeChangeMs": 75,
+          "contentAppearedMs": 1382
+        },
+        {
+          "visualFeedbackMs": 2,
+          "routeChangeMs": 70,
+          "contentAppearedMs": 1489
+        },
+        {
+          "visualFeedbackMs": 4,
+          "routeChangeMs": 75,
+          "contentAppearedMs": 1691
+        }
+      ],
+      "medianVisualMs": 2,
+      "medianRouteMs": 75,
+      "medianContentMs": 1489
+    },
+    {
+      "tab": "Finance -> Dashboard",
+      "targetHref": "/dashboard",
+      "runs": [
+        {
+          "visualFeedbackMs": 6,
+          "routeChangeMs": 66,
+          "contentAppearedMs": 2144
+        },
+        {
+          "visualFeedbackMs": 2,
+          "routeChangeMs": 68,
+          "contentAppearedMs": 2042
+        },
+        {
+          "visualFeedbackMs": 2,
+          "routeChangeMs": 65,
+          "contentAppearedMs": 1893
+        }
+      ],
+      "medianVisualMs": 2,
+      "medianRouteMs": 66,
+      "medianContentMs": 2042
+    }
+  ],
+  "buttonResponsiveness": {
+    "tapVisualResponseMs": 3,
+    "hasTouchManipulation": false,
+    "hasDisabledFeedback": true
+  },
+  "validations": {
+    "dashboard": {
+      "has800Stock": true,
+      "hasFarms": true,
+      "has2000Receivables": true,
+      "has14000Payables": true
+    },
+    "pnl": {
+      "hasRevenue3500": true,
+      "hasCogs2000": true,
+      "hasGrossProfit1500": true,
+      "hasOpex3750": true,
+      "hasNetNegative2250": true
+    }
+  }
+}
