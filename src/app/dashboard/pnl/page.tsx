@@ -20,9 +20,10 @@ export default async function PnlPage() {
   const { data: purchases } = await supabase
     .from('purchases')
     .select('actual_quantity, expected_quantity, rate')
-    .neq('status', 'CANCELLED')
-  const totalPurchasedNuts = (purchases || []).reduce((acc, p: any) => acc + Number(p.actual_quantity || p.expected_quantity || 0), 0)
-  const totalPurchaseSpend = (purchases || []).reduce((acc, p: any) => acc + Number((p.actual_quantity || p.expected_quantity || 0) * (p.rate || 0)), 0)
+    .in('status', ['CONFIRMED', 'COMPLETED'])
+    .not('actual_quantity', 'is', null)
+  const totalPurchasedNuts = (purchases || []).reduce((acc, p: any) => acc + Number(p.actual_quantity || 0), 0)
+  const totalPurchaseSpend = (purchases || []).reduce((acc, p: any) => acc + Number((p.actual_quantity || 0) * (p.rate || 0)), 0)
   const avgPurchaseRate = totalPurchasedNuts > 0 ? (totalPurchaseSpend / totalPurchasedNuts) : 20
   const totalCogs = totalDispatchedQty * avgPurchaseRate
   
