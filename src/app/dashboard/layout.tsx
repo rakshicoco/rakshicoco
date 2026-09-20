@@ -22,7 +22,7 @@ export default async function DashboardLayout({
       <TopBar />
 
       {/* Main Scrollable Content Area */}
-      <div className="flex-1 w-full overflow-y-auto overscroll-contain">
+      <div className="flex-1 w-full scroll-container">
         <main className="w-full max-w-lg md:max-w-4xl lg:max-w-6xl mx-auto px-4 py-4 pb-32 sm:px-6 sm:pb-24">
           {children}
         </main>

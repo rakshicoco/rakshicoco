@@ -58,10 +58,11 @@
   * {
     @apply border-border;
   }
-  
+
+  /* FIX: html must NOT have overscroll-behavior — it blocks child scroll in Capacitor WebView.
+     Give it height: 100% so the flex layout chain works correctly. */
   html {
-    /* Prevent rubber-banding on Android / iOS WebView */
-    overscroll-behavior-y: none;
+    height: 100%;
     -webkit-tap-highlight-color: transparent;
   }
 
@@ -70,13 +71,18 @@
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* height: 100% completes the flex chain: html > body > #root > layout */
+    height: 100%;
+    /* overscroll-behavior on BODY (not html) prevents rubber-banding
+       without blocking the inner scroll container */
+    overscroll-behavior-y: none;
   }
 
   /* Prevent text selection on interactive UI elements */
-  button, 
-  nav, 
-  header, 
-  [role="button"], 
+  button,
+  nav,
+  header,
+  [role="button"],
   .no-select {
     user-select: none;
     -webkit-user-select: none;
@@ -96,10 +102,10 @@
     table {
       min-width: 540px;
     }
-    
-    /* Ensure form inputs are comfortably sized for mobile touch */
+
+    /* Prevent auto-zoom on mobile inputs */
     input, select, textarea {
-      font-size: 16px !important; /* Prevents auto-zoom on mobile inputs */
+      font-size: 16px !important;
     }
   }
 
@@ -116,5 +122,22 @@
   .bottom-nav-offset {
     padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
   }
-}
 
+  /* FIX: AI Chat Panel keyboard-safe layout.
+     100dvh = dynamic viewport height — shrinks when Android keyboard opens.
+     This keeps the input bar visible above the keyboard WITHOUT the header
+     scrolling off the top of the screen. */
+  .chat-panel-safe {
+    height: 100dvh;
+    max-height: 100dvh;
+  }
+
+  /* FIX: Main app scroll container.
+     overflow-y: scroll (not auto) + -webkit-overflow-scrolling: touch
+     is required for momentum/inertia scrolling in Capacitor Android WebView. */
+  .scroll-container {
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+}

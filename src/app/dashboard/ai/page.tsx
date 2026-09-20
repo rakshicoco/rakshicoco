@@ -96,7 +96,7 @@ export default function AiDashboardPage() {
   ];
 
   return (
-    <div className="space-y-4 max-w-4xl mx-auto h-[calc(100vh-140px)] flex flex-col">
+    <div className="space-y-4 max-w-4xl mx-auto" style={{ height: 'calc(100dvh - 140px)', display: 'flex', flexDirection: 'column' }}>
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-md">
           <Sparkles size={20} />
@@ -127,7 +127,7 @@ export default function AiDashboardPage() {
 
       {/* Chat Messages */}
       <Card className="flex-1 flex flex-col border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
-        <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
+        <CardContent className="flex-1 scroll-container p-4 space-y-4">
           {messages.map((m, idx) => {
             const isUser = m.role === "user";
             return (

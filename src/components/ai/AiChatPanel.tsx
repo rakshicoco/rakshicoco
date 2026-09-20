@@ -128,8 +128,8 @@ export function AiChatPanel({ open, onOpenChange }: Props) {
         onClick={() => onOpenChange(false)}
       />
 
-      {/* Slide-over Panel */}
-      <div className="relative z-50 flex w-full max-w-md flex-col bg-white dark:bg-slate-900 shadow-2xl h-full pt-safe pb-safe animate-in slide-in-from-right duration-200">
+      {/* Slide-over Panel — chat-panel-safe uses 100dvh so keyboard shrinks it, not pushes header off */}
+      <div className="relative z-50 flex w-full max-w-md flex-col bg-white dark:bg-slate-900 shadow-2xl chat-panel-safe pt-safe pb-safe animate-in slide-in-from-right duration-200">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
           <div className="flex items-center gap-2.5">
@@ -169,7 +169,7 @@ export function AiChatPanel({ open, onOpenChange }: Props) {
         </div>
 
         {/* Message Thread */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 scroll-container p-4 space-y-4">
           {messages.map((m, idx) => {
             const isUser = m.role === "user";
             return (
