@@ -41,15 +41,15 @@ export async function logAudit(
 ) {
   const adminClient = createAdminClient();
   // Fire audit log asynchronously to eliminate round-trip latency on user response
-  adminClient.from('audit_logs').insert({
+  Promise.resolve(adminClient.from('audit_logs').insert({
     user_id: userId,
     action,
     entity_type: entityType,
     entity_id: entityId,
     details,
-  }).then(({ error }) => {
+  })).then(({ error }: any) => {
     if (error) console.error('Failed to write audit log:', error);
-  }).catch((err) => {
+  }).catch((err: any) => {
     console.error('Audit log write exception:', err);
   });
 }

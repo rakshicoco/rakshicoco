@@ -2,23 +2,10 @@
 
 import { createAdminClient } from "@/lib/supabase/server";
 import { requireAuth, requireRole } from "./utils";
+import { getClassification, TrashItem } from "@/lib/recycle_bin_utils";
+export type { EntityClassification } from "@/lib/recycle_bin_utils";
+export type { TrashItem } from "@/lib/recycle_bin_utils";
 
-export type EntityClassification = "MASTER" | "OPERATIONAL" | "FINANCIAL";
-
-export interface TrashItem {
-  id: string;
-  entityType: string;
-  entityId: string;
-  title: string;
-  classification: EntityClassification;
-  reason: string;
-  deletedAt: string;
-  scheduledDeleteAt: string;
-  daysRemaining: number;
-  hasDependencies: boolean;
-  dependencySummary?: string;
-  canPermanentlyDelete: boolean;
-}
 
 const TABLE_MAP: Record<string, string> = {
   FARM: "farms",
@@ -36,12 +23,6 @@ const TABLE_MAP: Record<string, string> = {
   EXPENSE: "expenses",
 };
 
-export function getClassification(entityType: string): EntityClassification {
-  const t = entityType.toUpperCase();
-  if (["FARM", "BUYER", "TEAM", "WORKER"].includes(t)) return "MASTER";
-  if (["BILL", "PAYMENT", "EXPENSE"].includes(t)) return "FINANCIAL";
-  return "OPERATIONAL";
-}
 
 export async function checkEntityDependencies(entityType: string, entityId: string) {
   const admin = createAdminClient();

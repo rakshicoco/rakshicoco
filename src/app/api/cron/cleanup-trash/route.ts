@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
-import { checkEntityDependencies, getClassification } from "@/lib/actions/recycle_bin";
+import { checkEntityDependencies } from "@/lib/actions/recycle_bin";
+import { getClassification } from "@/lib/recycle_bin_utils";
 
 export const dynamic = "force-dynamic";
 

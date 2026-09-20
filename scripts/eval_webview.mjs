@@ -27,5 +27,9 @@ async function runEval(expr) {
   });
 }
 
-const expr = process.argv[2] || 'window.location.href';
-runEval(expr).then(res => console.log('Result:', JSON.stringify(res, null, 2))).catch(console.error);
+export { runEval };
+
+if (process.argv[1] && process.argv[1].endsWith('eval_webview.mjs')) {
+  const expr = process.argv[2] || 'window.location.href';
+  runEval(expr).then(res => console.log('Result:', JSON.stringify(res, null, 2))).catch(console.error);
+}
