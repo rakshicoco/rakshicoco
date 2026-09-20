@@ -2,16 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Compass, ShoppingCart, Landmark, Menu } from "lucide-react";
+import { LayoutDashboard, Compass, ShoppingCart, Landmark } from "lucide-react";
 import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { MobileDrawer } from "./MobileDrawer";
 import { AiChatPanel } from "@/components/ai/AiChatPanel";
 import { useState } from "react";
 
 export function BottomNav() {
   const pathname = usePathname();
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
 
   const navItems = [
@@ -28,7 +26,7 @@ export function BottomNav() {
         role="navigation"
         aria-label="Bottom Navigation"
       >
-        <div className="grid h-16 max-w-lg md:max-w-xl grid-cols-6 mx-auto px-1">
+        <div className="grid h-16 max-w-lg md:max-w-xl grid-cols-5 mx-auto px-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive =
@@ -79,23 +77,9 @@ export function BottomNav() {
             </div>
             <span className="text-[10px] font-bold tracking-tight leading-none">AI</span>
           </button>
-
-          {/* More / Sandwich */}
-          <button
-            onClick={() => setDrawerOpen(true)}
-            type="button"
-            className="inline-flex flex-col items-center justify-center py-1 transition-transform duration-75 active:scale-95 group text-slate-500 dark:text-slate-400 hover:text-slate-700 touch-manipulation"
-            aria-label="Open full menu"
-          >
-            <div className="flex items-center justify-center w-10 h-7 rounded-full mb-0.5 group-hover:bg-slate-100 dark:group-hover:bg-slate-800 transition-colors">
-              <Menu size={19} />
-            </div>
-            <span className="text-[10px] font-medium tracking-tight leading-none">More</span>
-          </button>
         </div>
       </nav>
 
-      <MobileDrawer open={drawerOpen} onOpenChange={setDrawerOpen} />
       <AiChatPanel open={aiOpen} onOpenChange={setAiOpen} />
     </>
   );

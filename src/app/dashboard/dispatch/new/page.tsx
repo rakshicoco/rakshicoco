@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { createDispatch } from "@/lib/actions/sales";
 import { Button } from "@/components/ui/button";
 import { SearchableSelect, type SearchableOption } from "@/components/ui/SearchableSelect";
-import { createClient } from "@/lib/supabase/client";
+import { getSalesOrdersForSelect } from "@/lib/actions/select_options";
 import { ArrowLeft, Truck } from "lucide-react";
 import Link from "next/link";
 
@@ -17,25 +17,15 @@ export default function NewDispatchPage() {
   const [selectedOrderId, setSelectedOrderId] = useState<string>("");
 
   useEffect(() => {
+    let active = true;
     async function loadData() {
-      const supabase = createClient();
-      const { data } = await supabase
-        .from("sales_orders")
-        .select("id, quantity, product_type, buyers(name)")
-        .order("created_at", { ascending: false });
-
-      if (data) {
-        setSalesOrders(
-          data.map((so: any) => ({
-            value: so.id,
-            label: `${so.id} — ${(so.buyers as any)?.name || "Buyer"}`,
-            sublabel: `${Number(so.quantity || 0).toLocaleString()} nuts (${so.product_type || "COCONUT"})`,
-            badge: "SO",
-          }))
-        );
+      const data = await getSalesOrdersForSelect();
+      if (active) {
+        setSalesOrders(data);
       }
     }
     loadData();
+    return () => { active = false; };
   }, []);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {

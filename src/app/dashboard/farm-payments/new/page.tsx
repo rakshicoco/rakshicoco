@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createPayment } from "@/lib/actions/finance";
 import { Button } from "@/components/ui/button";
 import { SearchableSelect, type SearchableOption } from "@/components/ui/SearchableSelect";
-import { createClient } from "@/lib/supabase/client";
+import { getFarmsForSelect } from "@/lib/actions/select_options";
 import { ArrowLeft, HandCoins, Building2, Trees } from "lucide-react";
 import Link from "next/link";
 
@@ -21,26 +21,15 @@ function FarmPaymentForm() {
   const [selectedFarmId, setSelectedFarmId] = useState<string>(initialFarmId);
 
   useEffect(() => {
+    let active = true;
     async function loadFarms() {
-      const supabase = createClient();
-      const { data } = await supabase
-        .from("farms")
-        .select("id, name, village, owner_name")
-        .eq("active", true)
-        .order("name");
-
-      if (data) {
-        setFarms(
-          data.map((f: any) => ({
-            value: f.id,
-            label: f.name,
-            sublabel: f.village ? `Village: ${f.village}` : undefined,
-            badge: `ID: ${f.id}`,
-          }))
-        );
+      const data = await getFarmsForSelect();
+      if (active) {
+        setFarms(data);
       }
     }
     loadFarms();
+    return () => { active = false; };
   }, []);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {

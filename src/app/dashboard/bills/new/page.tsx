@@ -5,7 +5,12 @@ import { useRouter } from "next/navigation";
 import { createBill } from "@/lib/actions/finance";
 import { Button } from "@/components/ui/button";
 import { SearchableSelect, type SearchableOption } from "@/components/ui/SearchableSelect";
-import { createClient } from "@/lib/supabase/client";
+import { 
+  getBuyersForSelect, 
+  getFarmsForSelect, 
+  getTeamsForSelect, 
+  getVendorsForSelect 
+} from "@/lib/actions/select_options";
 import { ArrowLeft, FileText, Calendar, IndianRupee } from "lucide-react";
 import Link from "next/link";
 
@@ -18,46 +23,28 @@ export default function NewBillPage() {
   const [selectedEntityId, setSelectedEntityId] = useState<string>("");
 
   useEffect(() => {
+    let active = true;
     async function loadEntities() {
-      const supabase = createClient();
       let options: SearchableOption[] = [];
 
       if (entityType === "BUYER") {
-        const { data } = await supabase.from("buyers").select("id, name, phone, address").order("name");
-        options = (data || []).map((b: any) => ({
-          value: b.id,
-          label: b.name,
-          sublabel: b.phone ? `Ph: ${b.phone}` : b.address,
-          badge: `BUYER`
-        }));
+        options = await getBuyersForSelect();
       } else if (entityType === "FARM") {
-        const { data } = await supabase.from("farms").select("id, name, village").eq("active", true).order("name");
-        options = (data || []).map((f: any) => ({
-          value: f.id,
-          label: f.name,
-          sublabel: f.village ? `Village: ${f.village}` : undefined,
-          badge: `FARM`
-        }));
+        options = await getFarmsForSelect();
       } else if (entityType === "TEAM") {
-        const { data } = await supabase.from("teams").select("id, name").order("name");
-        options = (data || []).map((t: any) => ({
-          value: t.id,
-          label: t.name,
-          badge: `TEAM`
-        }));
+        options = await getTeamsForSelect();
       } else {
-        options = [
-          { value: "VENDOR-GENERAL", label: "General Operational Vendor", badge: "VENDOR" },
-          { value: "VENDOR-DIESEL", label: "Diesel / Fuel Station", badge: "VENDOR" },
-          { value: "VENDOR-PACKAGING", label: "Packaging Supplies", badge: "VENDOR" }
-        ];
+        options = await getVendorsForSelect();
       }
 
-      setEntities(options);
-      setSelectedEntityId("");
+      if (active) {
+        setEntities(options);
+        setSelectedEntityId("");
+      }
     }
 
     loadEntities();
+    return () => { active = false; };
   }, [entityType]);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {

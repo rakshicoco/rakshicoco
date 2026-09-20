@@ -4,48 +4,28 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createSalesOrder } from "@/lib/actions/sales";
 import { Button } from "@/components/ui/button";
-import { SearchableSelect, type SearchableOption } from "@/components/ui/SearchableSelect";
-import { createClient } from "@/lib/supabase/client";
+import { SearchableSelect } from "@/components/ui/SearchableSelect";
+import { getBuyersForSelect, type ExtendedBuyerOption } from "@/lib/actions/select_options";
 import { Building2, Phone, MapPin, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-
-interface BuyerOption extends SearchableOption {
-  contact_person?: string;
-  phone?: string;
-  address?: string;
-  gstin?: string;
-}
 
 export default function NewSalesOrderPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [buyers, setBuyers] = useState<BuyerOption[]>([]);
+  const [buyers, setBuyers] = useState<ExtendedBuyerOption[]>([]);
   const [selectedBuyerId, setSelectedBuyerId] = useState<string>("");
 
   useEffect(() => {
+    let active = true;
     async function loadData() {
-      const supabase = createClient();
-      const { data } = await supabase
-        .from("buyers")
-        .select("id, name, contact_person, phone, address, gstin")
-        .order("name", { ascending: true });
-
-      if (data) {
-        const formatted: BuyerOption[] = data.map((b: any) => ({
-          value: b.id,
-          label: b.name,
-          sublabel: b.phone ? `Ph: ${b.phone}` : b.address ? `Addr: ${b.address}` : undefined,
-          badge: `ID: ${b.id}`,
-          contact_person: b.contact_person,
-          phone: b.phone,
-          address: b.address,
-          gstin: b.gstin,
-        }));
-        setBuyers(formatted);
+      const data = await getBuyersForSelect();
+      if (active) {
+        setBuyers(data);
       }
     }
     loadData();
+    return () => { active = false; };
   }, []);
 
   const selectedBuyer = buyers.find((b) => b.value === selectedBuyerId);

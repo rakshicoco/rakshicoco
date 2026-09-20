@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { ArrowLeft, Edit, MapPin, Phone, Calendar, History, TrendingUp, AlertCircle } from 'lucide-react'
+import { TrashButton } from '@/components/ui/TrashButton'
 
 export default async function FarmDetailPage({ params }: { params: { id: string } }) {
   const supabase = await createClient()
@@ -52,11 +53,14 @@ export default async function FarmDetailPage({ params }: { params: { id: string 
           </div>
           <p className="text-slate-500 font-mono mt-1">{farm.id}</p>
         </div>
-        <Button variant="outline" asChild>
-          <Link href={`/dashboard/farms/${farm.id}/edit`}>
-            <Edit className="mr-2 h-4 w-4" /> Edit Details
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" asChild>
+            <Link href={`/dashboard/farms/${farm.id}/edit`}>
+              <Edit className="mr-2 h-4 w-4" /> Edit Details
+            </Link>
+          </Button>
+          <TrashButton entityType="FARM" entityId={farm.id} label="Move to Trash" redirectHref="/dashboard/farms" />
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">

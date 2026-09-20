@@ -4,49 +4,28 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createPurchase } from "@/lib/actions/purchase";
 import { Button } from "@/components/ui/button";
-import { SearchableSelect, type SearchableOption } from "@/components/ui/SearchableSelect";
-import { createClient } from "@/lib/supabase/client";
+import { SearchableSelect } from "@/components/ui/SearchableSelect";
+import { getFarmsForSelect, type ExtendedFarmOption } from "@/lib/actions/select_options";
 import { MapPin, Trees, Calendar, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-
-interface FarmOption extends SearchableOption {
-  total_trees?: number;
-  village?: string;
-  expected_yield?: number;
-  last_harvest_date?: string;
-}
 
 export default function NewPurchasePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [farms, setFarms] = useState<FarmOption[]>([]);
+  const [farms, setFarms] = useState<ExtendedFarmOption[]>([]);
   const [selectedFarmId, setSelectedFarmId] = useState<string>("");
 
   useEffect(() => {
+    let active = true;
     async function loadFarms() {
-      const supabase = createClient();
-      const { data } = await supabase
-        .from("farms")
-        .select("id, name, village, total_trees, expected_yield, last_harvest_date")
-        .eq("active", true)
-        .order("name", { ascending: true });
-
-      if (data) {
-        const formatted: FarmOption[] = data.map((f: any) => ({
-          value: f.id,
-          label: f.name,
-          sublabel: f.village ? `Village: ${f.village}` : undefined,
-          badge: `ID: ${f.id}`,
-          total_trees: f.total_trees,
-          village: f.village,
-          expected_yield: f.expected_yield,
-          last_harvest_date: f.last_harvest_date,
-        }));
-        setFarms(formatted);
+      const data = await getFarmsForSelect();
+      if (active) {
+        setFarms(data);
       }
     }
     loadFarms();
+    return () => { active = false; };
   }, []);
 
   const selectedFarm = farms.find((f) => f.value === selectedFarmId);

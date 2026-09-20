@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Map, Plus, Phone, Calendar, ArrowRight } from 'lucide-react'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ListSearchInput } from '@/components/ui/ListSearchInput'
+import { TrashButton } from '@/components/ui/TrashButton'
 
 export default async function FarmsPage({
   searchParams,
@@ -14,10 +15,11 @@ export default async function FarmsPage({
   const supabase = await createClient()
   const q = searchParams?.q?.trim()
   
-  // Fetch farms with explicit column selection and page limit
+  // Fetch active farms with explicit column selection and page limit
   let query = supabase
     .from('farms')
     .select('id, name, owner_name, village, phone, expected_next_harvest, active, created_at')
+    .eq('active', true)
     .order('created_at', { ascending: false })
     .limit(30)
 
@@ -105,12 +107,15 @@ export default async function FarmsPage({
                   </div>
                 </div>
 
-                <Button variant="outline" asChild className="w-full min-h-[44px] justify-between text-sm font-medium border-slate-200 dark:border-slate-800 mt-1">
-                  <Link href={`/dashboard/farms/${farm.id}`}>
-                    <span>View Farm Details</span>
-                    <ArrowRight className="w-4 h-4 ml-1" />
-                  </Link>
-                </Button>
+                <div className="flex items-center gap-2 mt-1">
+                  <Button variant="outline" asChild className="flex-1 min-h-[44px] justify-between text-sm font-medium border-slate-200 dark:border-slate-800">
+                    <Link href={`/dashboard/farms/${farm.id}`}>
+                      <span>View Farm Details</span>
+                      <ArrowRight className="w-4 h-4 ml-1" />
+                    </Link>
+                  </Button>
+                  <TrashButton entityType="FARM" entityId={farm.id} label="Trash" />
+                </div>
               </div>
             ))}
           </div>
@@ -151,9 +156,12 @@ export default async function FarmsPage({
                             {farm.expected_next_harvest_date ? new Date(farm.expected_next_harvest_date).toLocaleDateString() : '-'}
                           </td>
                           <td className="px-4 py-3 text-right">
-                            <Button variant="ghost" size="sm" asChild>
-                              <Link href={`/dashboard/farms/${farm.id}`}>View</Link>
-                            </Button>
+                            <div className="flex items-center justify-end gap-1.5">
+                              <Button variant="ghost" size="sm" asChild>
+                                <Link href={`/dashboard/farms/${farm.id}`}>View</Link>
+                              </Button>
+                              <TrashButton entityType="FARM" entityId={farm.id} label="Trash" />
+                            </div>
                           </td>
                         </tr>
                       ))}

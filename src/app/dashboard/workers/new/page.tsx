@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { createWorker } from "@/lib/actions/workers";
 import { Button } from "@/components/ui/button";
 import { SearchableSelect, type SearchableOption } from "@/components/ui/SearchableSelect";
-import { createClient } from "@/lib/supabase/client";
+import { getTeamsForSelect } from "@/lib/actions/select_options";
 import { ArrowLeft, UserSquare } from "lucide-react";
 import Link from "next/link";
 
@@ -17,25 +17,15 @@ export default function NewWorkerPage() {
   const [selectedTeamId, setSelectedTeamId] = useState<string>("");
 
   useEffect(() => {
+    let active = true;
     async function loadTeams() {
-      const supabase = createClient();
-      const { data } = await supabase
-        .from("teams")
-        .select("id, name")
-        .eq("active", true)
-        .order("name");
-
-      if (data) {
-        setTeams(
-          data.map((t: any) => ({
-            value: t.id,
-            label: t.name,
-            badge: "TEAM",
-          }))
-        );
+      const data = await getTeamsForSelect();
+      if (active) {
+        setTeams(data);
       }
     }
     loadTeams();
+    return () => { active = false; };
   }, []);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {

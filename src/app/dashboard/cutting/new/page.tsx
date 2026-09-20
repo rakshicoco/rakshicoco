@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { createCuttingBatch } from "@/lib/actions/processing";
 import { Button } from "@/components/ui/button";
 import { SearchableSelect, type SearchableOption } from "@/components/ui/SearchableSelect";
-import { createClient } from "@/lib/supabase/client";
+import { getPurchasesForSelect, getTeamsForSelect } from "@/lib/actions/select_options";
 import { ArrowLeft, Scissors } from "lucide-react";
 import Link from "next/link";
 
@@ -19,44 +19,20 @@ export default function NewCuttingBatchPage() {
   const [selectedTeamId, setSelectedTeamId] = useState<string>("");
 
   useEffect(() => {
+    let active = true;
     async function loadData() {
-      const supabase = createClient();
-      
-      // Load purchases
-      const { data: purData } = await supabase
-        .from("purchases")
-        .select("id, farm_id, expected_quantity, farms(name)")
-        .order("created_at", { ascending: false });
+      const [purData, teamData] = await Promise.all([
+        getPurchasesForSelect(),
+        getTeamsForSelect()
+      ]);
 
-      if (purData) {
-        setPurchases(
-          purData.map((p: any) => ({
-            value: p.id,
-            label: `${p.id} — ${(p.farms as any)?.name || "Farm"}`,
-            sublabel: `Expected: ${Number(p.expected_quantity || 0).toLocaleString()} nuts`,
-            badge: "PO",
-          }))
-        );
-      }
-
-      // Load teams
-      const { data: teamData } = await supabase
-        .from("teams")
-        .select("id, name")
-        .eq("active", true)
-        .order("name");
-
-      if (teamData) {
-        setTeams(
-          teamData.map((t: any) => ({
-            value: t.id,
-            label: t.name,
-            badge: "TEAM",
-          }))
-        );
+      if (active) {
+        setPurchases(purData);
+        setTeams(teamData);
       }
     }
     loadData();
+    return () => { active = false; };
   }, []);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {

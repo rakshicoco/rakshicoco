@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { createGroupingBatch } from "@/lib/actions/processing";
 import { Button } from "@/components/ui/button";
 import { SearchableSelect, type SearchableOption } from "@/components/ui/SearchableSelect";
-import { createClient } from "@/lib/supabase/client";
+import { getCuttingBatchesForSelect } from "@/lib/actions/select_options";
 import { ArrowLeft, Route } from "lucide-react";
 import Link from "next/link";
 
@@ -17,25 +17,15 @@ export default function NewGroupingBatchPage() {
   const [selectedBatchId, setSelectedBatchId] = useState<string>("");
 
   useEffect(() => {
+    let active = true;
     async function loadData() {
-      const supabase = createClient();
-      const { data } = await supabase
-        .from("cutting_batches")
-        .select("id, actual_output_nuts, expected_output_nuts, date, purchase_id")
-        .order("created_at", { ascending: false });
-
-      if (data) {
-        setCuttingBatches(
-          data.map((b: any) => ({
-            value: b.id,
-            label: `${b.id} — PO: ${b.purchase_id || "Direct"}`,
-            sublabel: `Harvested: ${Number(b.actual_output_nuts || b.expected_output_nuts || 0).toLocaleString()} nuts`,
-            badge: "CUTTING",
-          }))
-        );
+      const data = await getCuttingBatchesForSelect();
+      if (active) {
+        setCuttingBatches(data);
       }
     }
     loadData();
+    return () => { active = false; };
   }, []);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {

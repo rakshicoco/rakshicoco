@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { createPayment } from "@/lib/actions/finance";
 import { Button } from "@/components/ui/button";
 import { SearchableSelect, type SearchableOption } from "@/components/ui/SearchableSelect";
-import { createClient } from "@/lib/supabase/client";
+import { getTeamsForSelect, getWorkersForSelect } from "@/lib/actions/select_options";
 import { ArrowLeft, CreditCard, UsersRound, UserSquare } from "lucide-react";
 import Link from "next/link";
 
@@ -18,32 +18,21 @@ export default function NewLabourPaymentPage() {
   const [selectedEntityId, setSelectedEntityId] = useState<string>("");
 
   useEffect(() => {
+    let active = true;
     async function loadEntities() {
-      const supabase = createClient();
+      let options: SearchableOption[] = [];
       if (targetType === "TEAM") {
-        const { data } = await supabase.from("teams").select("id, name, leader_name").order("name");
-        setEntities(
-          (data || []).map((t: any) => ({
-            value: t.id,
-            label: t.name,
-            sublabel: t.leader_name ? `Mestri: ${t.leader_name}` : undefined,
-            badge: "TEAM",
-          }))
-        );
+        options = await getTeamsForSelect();
       } else {
-        const { data } = await supabase.from("workers").select("id, name, role, phone").order("name");
-        setEntities(
-          (data || []).map((w: any) => ({
-            value: w.id,
-            label: w.name,
-            sublabel: w.role || w.phone,
-            badge: "WORKER",
-          }))
-        );
+        options = await getWorkersForSelect();
       }
-      setSelectedEntityId("");
+      if (active) {
+        setEntities(options);
+        setSelectedEntityId("");
+      }
     }
     loadEntities();
+    return () => { active = false; };
   }, [targetType]);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
