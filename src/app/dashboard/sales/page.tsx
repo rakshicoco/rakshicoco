@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Plus, FileText, ArrowRight, Calendar, Scale } from 'lucide-react'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ListSearchInput } from '@/components/ui/ListSearchInput'
+import { TrashButton } from '@/components/ui/TrashButton'
 
 export default async function SalesPage({
   searchParams,
@@ -30,6 +31,7 @@ export default async function SalesPage({
       created_at,
       buyers:buyer_id (name, contact_person)
     `)
+    .neq('status', 'CANCELLED')
     .order('created_at', { ascending: false })
     .limit(30)
 
@@ -133,12 +135,15 @@ export default async function SalesPage({
                   </div>
                 </div>
 
-                <Button variant="outline" asChild className="w-full min-h-[44px] justify-between text-sm font-medium border-slate-200 dark:border-slate-800 mt-1">
-                  <Link href={`/dashboard/sales/${order.id}`}>
-                    <span>View Order Details</span>
-                    <ArrowRight className="w-4 h-4 ml-1" />
-                  </Link>
-                </Button>
+                <div className="flex gap-2 mt-1">
+                  <Button variant="outline" asChild className="flex-1 min-h-[44px] justify-between text-sm font-medium border-slate-200 dark:border-slate-800">
+                    <Link href={`/dashboard/sales/${order.id}`}>
+                      <span>View Order Details</span>
+                      <ArrowRight className="w-4 h-4 ml-1" />
+                    </Link>
+                  </Button>
+                  <TrashButton entityType="SALES_ORDER" entityId={order.id} label="Trash" />
+                </div>
               </div>
             ))}
           </div>
@@ -196,6 +201,9 @@ export default async function SalesPage({
                             }`}>
                               {order.payment_status}
                             </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <TrashButton entityType="SALES_ORDER" entityId={order.id} label="Trash" />
                           </td>
                         </tr>
                       ))}

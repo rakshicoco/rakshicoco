@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Plus, FileSignature, ArrowRight, Calendar } from 'lucide-react'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ListSearchInput } from '@/components/ui/ListSearchInput'
+import { TrashButton } from '@/components/ui/TrashButton'
 
 export default async function BillsPage({
   searchParams,
@@ -17,6 +18,7 @@ export default async function BillsPage({
   let billsQuery = supabase
     .from('bills')
     .select('id, entity_type, entity_id, amount, date, due_date, description, status, balance_due, created_at')
+    .neq('status', 'VOIDED')
     .order('created_at', { ascending: false })
     .limit(30)
 
@@ -132,12 +134,15 @@ export default async function BillsPage({
                   </div>
                 </div>
 
-                <Button variant="outline" asChild className="w-full min-h-[44px] justify-between text-sm font-medium border-slate-200 dark:border-slate-800 mt-1">
-                  <Link href={`/dashboard/bills/${bill.id}`}>
-                    <span>View Commercial Invoice</span>
-                    <ArrowRight className="w-4 h-4 ml-1" />
-                  </Link>
-                </Button>
+                <div className="flex gap-2 mt-1">
+                  <Button variant="outline" asChild className="flex-1 min-h-[44px] justify-between text-sm font-medium border-slate-200 dark:border-slate-800">
+                    <Link href={`/dashboard/bills/${bill.id}`}>
+                      <span>View Invoice</span>
+                      <ArrowRight className="w-4 h-4 ml-1" />
+                    </Link>
+                  </Button>
+                  <TrashButton entityType="BILL" entityId={bill.id} label="Trash" />
+                </div>
               </div>
             ))}
           </div>
@@ -188,6 +193,9 @@ export default async function BillsPage({
                             }`}>
                               {bill.status}
                             </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <TrashButton entityType="BILL" entityId={bill.id} label="Trash" />
                           </td>
                         </tr>
                       ))}

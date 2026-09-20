@@ -52,8 +52,10 @@ export default async function FarmDetailPage({ params }: { params: { id: string 
           </div>
           <p className="text-slate-500 font-mono mt-1">{farm.id}</p>
         </div>
-        <Button variant="outline">
-          <Edit className="mr-2 h-4 w-4" /> Edit Details
+        <Button variant="outline" asChild>
+          <Link href={`/dashboard/farms/${farm.id}/edit`}>
+            <Edit className="mr-2 h-4 w-4" /> Edit Details
+          </Link>
         </Button>
       </div>
 
